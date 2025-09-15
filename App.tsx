@@ -42,8 +42,8 @@ export default function App() {
 
   const processPDF = async (uri: string, fileName: string, fileSize?: number) => {
     try {
-      // NOTA: Para Expo Go usamos texto de ejemplo
-      // En el build nativo (GitHub Actions) esto será reemplazado por extracción real
+      // NOTA: Para MVP usamos texto de ejemplo
+      // La extracción real de PDF se implementará en v2.0
       const demoText = `Este es un texto de ejemplo para demostrar ReaderChunks mientras desarrollamos en Expo Go. La extracción real de PDF funcionará solo en la versión compilada nativamente. Cada oración se muestra individualmente para crear una experiencia de lectura enfocada. Puedes navegar entre oraciones usando los botones de navegación. Esta funcionalidad te ayuda a concentrarte en una idea a la vez. El objetivo es mejorar la comprensión lectora mediante la lectura pausada. Una vez compilada la app nativa, podrás cargar PDFs reales y extraer su contenido automáticamente.`;
 
       const sentenceArray = splitIntoSentences(demoText);
@@ -55,11 +55,11 @@ export default function App() {
       const info = `📄 Archivo: ${fileName}
 📏 Tamaño: ${sizeText}
 📝 Oraciones extraídas: ${sentenceArray.length}
-⚠️ Usando texto de ejemplo (Expo Go)
+⚠️ Usando texto de ejemplo (MVP v1.0)
 
-NOTA: La extracción real de PDF funciona
-solo en la versión compilada nativamente.
-En Expo Go se usa este texto de demostración.`;
+NOTA: Esta versión demuestra la funcionalidad
+de lectura por oraciones. La extracción real
+de PDF se implementará en la v2.0.`;
 
       setPdfInfo(info);
       setIsLoading(false);

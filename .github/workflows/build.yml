@@ -32,8 +32,8 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install react-native-pdf-lib
-      run: npm install react-native-pdf-lib
+    # - name: Install react-native-pdf-lib
+    #   run: npm install react-native-pdf-lib
 
     - name: Expo prebuild (Android)
       run: npx expo prebuild --platform android --clean
@@ -64,8 +64,8 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install react-native-pdf-lib
-      run: npm install react-native-pdf-lib
+    # - name: Install react-native-pdf-lib
+    #   run: npm install react-native-pdf-lib
 
     - name: Install CocoaPods
       run: sudo gem install cocoapods
