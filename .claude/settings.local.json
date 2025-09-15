@@ -5,7 +5,9 @@
       "Bash(npm install:*)",
       "Bash(cat:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx expo prebuild:*)"
     ],
     "deny": [],
     "ask": []
