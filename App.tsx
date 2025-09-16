@@ -50,6 +50,12 @@ export default function App() {
         encoding: FileSystem.EncodingType.Base64,
       });
 
+      console.log('Base64 data length:', base64Data?.length);
+
+      if (!base64Data) {
+        throw new Error('No se pudo leer el archivo PDF');
+      }
+
       // Extraer texto usando API gratuita de PDF.co
       const response = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
         method: 'POST',
