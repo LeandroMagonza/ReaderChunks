@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 
 export default function App() {
   const [pdfInfo, setPdfInfo] = useState<string | null>(null);
@@ -42,11 +43,39 @@ export default function App() {
 
   const processPDF = async (uri: string, fileName: string, fileSize?: number) => {
     try {
-      // NOTA: Para MVP usamos texto de ejemplo
-      // La extracción real de PDF se implementará en v2.0
-      const demoText = `Este es un texto de ejemplo para demostrar ReaderChunks mientras desarrollamos en Expo Go. La extracción real de PDF funcionará solo en la versión compilada nativamente. Cada oración se muestra individualmente para crear una experiencia de lectura enfocada. Puedes navegar entre oraciones usando los botones de navegación. Esta funcionalidad te ayuda a concentrarte en una idea a la vez. El objetivo es mejorar la comprensión lectora mediante la lectura pausada. Una vez compilada la app nativa, podrás cargar PDFs reales y extraer su contenido automáticamente.`;
+      setPdfInfo('🔍 Extrayendo texto del PDF...');
 
-      const sentenceArray = splitIntoSentences(demoText);
+      // Leer el PDF como base64
+      const base64Data = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Extraer texto usando API gratuita de PDF.co
+      const response = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'demo' // Clave demo gratuita
+        },
+        body: JSON.stringify({
+          file: `data:application/pdf;base64,${base64Data}`,
+          inline: true
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        throw new Error(result.message || 'Error al extraer texto del PDF');
+      }
+
+      const extractedText = result.body || '';
+
+      if (!extractedText.trim()) {
+        throw new Error('No se pudo extraer texto del PDF. Puede ser un PDF de solo imágenes.');
+      }
+
+      const sentenceArray = splitIntoSentences(extractedText);
       setSentences(sentenceArray);
       setCurrentSentenceIndex(0);
       setShowReader(true);
@@ -55,17 +84,29 @@ export default function App() {
       const info = `📄 Archivo: ${fileName}
 📏 Tamaño: ${sizeText}
 📝 Oraciones extraídas: ${sentenceArray.length}
-⚠️ Usando texto de ejemplo (MVP v1.0)
+✅ Texto extraído exitosamente
 
-NOTA: Esta versión demuestra la funcionalidad
-de lectura por oraciones. La extracción real
-de PDF se implementará en la v2.0.`;
+✨ ¡ReaderChunks está leyendo tu PDF real!`;
 
       setPdfInfo(info);
       setIsLoading(false);
     } catch (error) {
       console.error('Error processing PDF:', error);
-      Alert.alert('Error', 'Failed to process PDF file');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      Alert.alert('Error', `No se pudo procesar el PDF: ${errorMessage}`);
+
+      // Fallback a texto de demo si falla la extracción
+      const demoText = `[DEMO] Este texto aparece porque no se pudo extraer el contenido del PDF. Esto puede suceder si: 1) El PDF contiene solo imágenes, 2) Está protegido con contraseña, 3) Problemas de conectividad. ReaderChunks funciona mejor con PDFs que contienen texto seleccionable.`;
+
+      const sentenceArray = splitIntoSentences(demoText);
+      setSentences(sentenceArray);
+      setCurrentSentenceIndex(0);
+      setShowReader(true);
+
+      setPdfInfo(`📄 Archivo: ${fileName}
+⚠️ Usando texto de demostración
+🔧 Motivo: ${errorMessage}`);
+
       setIsLoading(false);
     }
   };
