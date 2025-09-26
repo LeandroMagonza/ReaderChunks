@@ -1,7 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, NativeModules } from 'react-native';
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+
+const { PDFTextExtractorModule } = NativeModules;
 
 export default function App() {
   const [pdfInfo, setPdfInfo] = useState<string | null>(null);
@@ -42,11 +45,112 @@ export default function App() {
 
   const processPDF = async (uri: string, fileName: string, fileSize?: number) => {
     try {
-      // NOTA: Para Expo Go usamos texto de ejemplo
-      // En el build nativo (GitHub Actions) esto será reemplazado por extracción real
-      const demoText = `Este es un texto de ejemplo para demostrar ReaderChunks mientras desarrollamos en Expo Go. La extracción real de PDF funcionará solo en la versión compilada nativamente. Cada oración se muestra individualmente para crear una experiencia de lectura enfocada. Puedes navegar entre oraciones usando los botones de navegación. Esta funcionalidad te ayuda a concentrarte en una idea a la vez. El objetivo es mejorar la comprensión lectora mediante la lectura pausada. Una vez compilada la app nativa, podrás cargar PDFs reales y extraer su contenido automáticamente.`;
+      // Input validation
+      if (!uri || typeof uri !== 'string' || uri.trim().length === 0) {
+        throw new Error('Invalid file URI provided');
+      }
 
-      const sentenceArray = splitIntoSentences(demoText);
+      if (!fileName || typeof fileName !== 'string') {
+        throw new Error('Invalid file name provided');
+      }
+
+      // Check if file appears to be a PDF
+      if (!fileName.toLowerCase().endsWith('.pdf')) {
+        Alert.alert('Invalid File', 'Please select a PDF file');
+        setIsLoading(false);
+        return;
+      }
+
+      let extractedText = '';
+      let isNativeExtraction = false;
+
+      // Try to use native PDF extraction first
+      if (PDFTextExtractorModule && PDFTextExtractorModule.extractText) {
+        try {
+          console.log('Starting PDF extraction process...');
+          console.log('Original file URI:', uri);
+
+          // First, try to pass the URI directly to the native module
+          try {
+            console.log('Attempting direct URI extraction...');
+            extractedText = await PDFTextExtractorModule.extractText(uri);
+            isNativeExtraction = true;
+            console.log('Successfully extracted text using direct URI');
+          } catch (directError: any) {
+            console.log('Direct URI failed, trying file copy approach:', directError?.message || directError);
+
+            // If direct URI fails, copy the file to a temp location
+            const timestamp = Date.now().toString();
+            const tempFileName = `temp_pdf_${timestamp}.pdf`;
+
+            try {
+              // Create a more robust file copy approach
+              console.log('Creating temp file for PDF extraction...');
+
+              // Use a simpler approach - copy to app's cache directory
+              const tempDir = FileSystem.cacheDirectory;
+              const tempFilePath = `${tempDir}${tempFileName}`;
+
+              console.log('Temp file path:', tempFilePath);
+
+              // Copy the file using expo-file-system
+              await FileSystem.copyAsync({
+                from: uri,
+                to: tempFilePath
+              });
+              console.log('File copied successfully to:', tempFilePath);
+
+              // Extract using the copied file path (remove file:// prefix for native module)
+              const nativeFilePath = tempFilePath.replace('file://', '');
+              console.log('Extracting from copied file:', nativeFilePath);
+
+              extractedText = await PDFTextExtractorModule.extractText(nativeFilePath);
+              isNativeExtraction = true;
+              console.log('Successfully extracted text from copied file');
+
+              // Clean up the temporary file
+              try {
+                await FileSystem.deleteAsync(tempFilePath);
+                console.log('Temp file cleaned up');
+              } catch (cleanupError) {
+                console.warn('Failed to cleanup temp file:', cleanupError);
+              }
+
+            } catch (copyError: any) {
+              console.error('File copy failed:', copyError);
+              throw new Error(`Failed to copy file for extraction: ${copyError?.message || copyError}`);
+            }
+          }
+
+        } catch (nativeError: any) {
+          console.error('Native PDF extraction failed:', nativeError);
+
+          // Provide more user-friendly error messages
+          let errorMessage = 'Unknown error occurred';
+          const errorMsg = nativeError?.message || String(nativeError);
+
+          if (errorMsg) {
+            if (errorMsg.includes('FILE_NOT_FOUND')) {
+              errorMessage = 'PDF file could not be found or accessed';
+            } else if (errorMsg.includes('ENCRYPTED_PDF')) {
+              errorMessage = 'This PDF is password protected and cannot be processed';
+            } else if (errorMsg.includes('undefined')) {
+              errorMessage = 'File system access error. Please try selecting a different PDF file.';
+            } else {
+              errorMessage = errorMsg;
+            }
+          }
+
+          Alert.alert('PDF Processing Error', errorMessage);
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // No native module available
+        throw new Error('PDF extraction module not available');
+      }
+
+      const sentenceArray = splitIntoSentences(extractedText);
       setSentences(sentenceArray);
       setCurrentSentenceIndex(0);
       setShowReader(true);
@@ -55,11 +159,13 @@ export default function App() {
       const info = `📄 Archivo: ${fileName}
 📏 Tamaño: ${sizeText}
 📝 Oraciones extraídas: ${sentenceArray.length}
-⚠️ Usando texto de ejemplo (Expo Go)
+${isNativeExtraction ? '✅ Extracción nativa de PDF exitosa!' : '⚠️ Usando texto de ejemplo'}
+📊 Caracteres extraídos: ${extractedText.length}
 
-NOTA: La extracción real de PDF funciona
-solo en la versión compilada nativamente.
-En Expo Go se usa este texto de demostración.`;
+${isNativeExtraction
+  ? 'La extracción real de PDF está funcionando correctamente.'
+  : 'NOTA: La extracción real funciona solo en la versión compilada nativamente. En Expo Go se usa texto de demostración.'
+}`;
 
       setPdfInfo(info);
       setIsLoading(false);

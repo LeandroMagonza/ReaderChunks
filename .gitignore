@@ -39,3 +39,46 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Additional build artifacts and temp files
+build/
+*.class
+*.jar
+*.zip
+*.tar.gz
+*.rar
+*.log
+*.tmp
+*.temp
+
+# Android SDK and build tools
+android-sdk/
+build-tools.zip
+
+# Test files and PDFs
+example.pdf
+*.pdf
+
+# Error logs
+error.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Java compiled files
+*.class
+
+# Gradle
+.gradle/
+**/build/
+
+# Local configuration files
+.claude/
