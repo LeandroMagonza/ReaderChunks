@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReaderChunks</string>
+    <string name="select_pdf">Elegir PDF</string>
+    <string name="processing">Procesando...</string>
+    <string name="error_title">Error</string>
+    <string name="error_pdf_not_found">PDF no encontrado</string>
+    <string name="error_pdf_encrypted">PDF encriptado, no se puede procesar</string>
+    <string name="error_pdf_processing">Error procesando PDF</string>
+    <string name="sentences_extracted">Oraciones extraídas: %d</string>
+    <string name="progress_format" formatted="false">%d / %d</string>
+    <string name="next">Siguiente</string>
+    <string name="previous">Anterior</string>
+    <string name="back">Volver</string>
+    <string name="finished_reading">¡Lectura completada!</string>
+    <string name="congratulations">¡Felicitaciones! Has terminado de leer el documento.</string>
+</resources>

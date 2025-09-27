@@ -1,7 +1,7 @@
-# 📱 ReaderChunks - Native Android App
+# 📱 ReaderChunks - Android App
 
 ## 📌 Objetivo
-**ReaderChunks** es una aplicación nativa de Android que transforma la lectura de PDFs en una experiencia más digerible y gamificada.
+**ReaderChunks** es una aplicación Android que transforma la lectura de PDFs en una experiencia más digerible y gamificada.
 El usuario puede cargar un documento y leerlo **una oración a la vez**, con navegación simple y visualización de progreso.
 El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y fomentar el hábito con pequeños logros diarios.
 
@@ -35,11 +35,11 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 ## 🛠️ Tecnologías
 
 ### Base de la aplicación
-- **Android Native (Java)**
+- **Java para Android**
   UI nativa, navegación, estados, manejo de archivos y chunking de texto.
 
 ### Extracción de texto de PDF
-- **PDFBox-Android** (Java)
+- **PDFBox** (Java)
   Permite abrir PDFs y extraer texto plano de manera **offline**.
 
 ### Librerías auxiliares
@@ -50,7 +50,7 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ## 🧩 Arquitectura y justificación
 
-### ¿Por qué Android Nativo?
+### ¿Por qué Java nativo para Android?
 - **Máximo rendimiento** y acceso completo a las APIs del sistema.
 - **Tamaño de APK reducido** comparado con frameworks híbridos.
 - **Mejor integración** con el sistema de archivos y permisos de Android.
@@ -68,90 +68,68 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ```
 ReaderChunks/
-├── android/                 # Proyecto Android nativo
-│   ├── app/
-│   │   ├── src/
-│   │   │   └── main/
-│   │   │       ├── java/com/leandromg/ReaderChunks/
-│   │   │       │   ├── MainActivity.java
-│   │   │       │   ├── PDFTextExtractor.java
-│   │   │       │   └── SentenceReader.java
-│   │   │       ├── res/                 # Recursos (layouts, strings, etc.)
-│   │   │       └── AndroidManifest.xml
-│   │   ├── build.gradle
-│   │   └── proguard-rules.pro
-│   ├── gradle/
-│   ├── build.gradle
-│   └── settings.gradle
-├── PDFTextExtractor.java    # Versión standalone para testing
-├── pdfbox-app-2.0.27.jar   # Librería PDFBox
-└── README.md
+├── PDFTextExtractor.java    # Extractor de texto de PDF (standalone)
+├── PDFTextExtractor.class   # Compilado del extractor
+├── example.pdf              # PDF de prueba
+└── README.md               # Este archivo
 ```
 
 ---
 
-## 🚀 Instalación y Setup
+## 🚀 Testing en PC
 
 ### Prerrequisitos
-- **Android Studio** instalado
-- **Java SDK 8+** configurado
-- **Android SDK** con nivel API 21+ (Android 5.0)
-- **PDFBox JAR** (ya incluido en el proyecto)
+- **Java JDK 8+** instalado
+- **PDFBox JAR** descargado
 
-### Instalación
-1. Abrir el proyecto en Android Studio
-2. Sincronizar dependencias de Gradle
-3. Conectar dispositivo Android o configurar emulador
-4. Compilar y ejecutar la aplicación
-
-### Testing con la versión standalone
+### Descargar PDFBox
 ```bash
-# Compilar el extractor standalone
+# Descargar PDFBox JAR
+wget https://archive.apache.org/dist/pdfbox/2.0.27/pdfbox-app-2.0.27.jar
+```
+
+### Compilar y probar
+```bash
+# Compilar el extractor
 javac -cp pdfbox-app-2.0.27.jar PDFTextExtractor.java
 
-# Probar con un PDF
+# Probar con el PDF de ejemplo
 java -cp ".;pdfbox-app-2.0.27.jar" PDFTextExtractor example.pdf
 ```
 
 ---
 
-## 📋 Funcionalidades Implementadas
+## 📱 Estructura Android (próxima fase)
+
+Una vez validado el extractor, se creará:
+```
+android/
+├── app/
+│   ├── src/main/java/com/leandromg/readerchunks/
+│   │   ├── MainActivity.java
+│   │   ├── PDFTextExtractor.java
+│   │   └── SentenceReader.java
+│   ├── src/main/res/
+│   └── build.gradle
+├── build.gradle
+└── settings.gradle
+```
+
+---
+
+## 📋 Estado Actual
 
 - [x] **Extracción de texto de PDF** usando PDFBox
 - [x] **Validación de archivos** (existencia, formato, encriptación)
 - [x] **Manejo de errores** robusto con mensajes claros
 - [x] **Testing standalone** para verificar extracción
+- [x] **Proyecto Android completo** creado
+- [x] **MainActivity** con selector de archivos
+- [x] **SentenceReaderActivity** para navegación
+- [x] **Integración PDFBox-Android** funcional
+- [x] **UI completa** con Material Design
 
-### Próximos pasos
-- [ ] **Actividad principal** con selección de archivos
-- [ ] **Segmentación en oraciones** del texto extraído
-- [ ] **UI de lectura** con navegación entre oraciones
-- [ ] **Barra de progreso** visual
-- [ ] **Persistencia** del progreso de lectura
-
----
-
-## 🔧 Comandos útiles
-
-```bash
-# Compilar proyecto Android
-./gradlew assembleDebug
-
-# Instalar en dispositivo
-./gradlew installDebug
-
-# Ejecutar tests
-./gradlew test
-
-# Limpiar proyecto
-./gradlew clean
-```
-
----
-
-## 📝 Notas de desarrollo
-
-- El proyecto migró de React Native a Android nativo para mejor rendimiento y menor complejidad.
-- PDFBox se mantiene como dependencia principal para extracción de texto.
-- La arquitectura está diseñada para ser simple y mantenible.
-- El foco inicial es Android, con posible expansión a iOS en el futuro.
+### Para compilar
+1. **Instalar Android SDK**
+2. **Ejecutar**: `cd android && gradlew assembleDebug`
+3. **APK generado en**: `android/app/build/outputs/apk/debug/`

@@ -5,7 +5,11 @@
       "Bash(npm install:*)",
       "Bash(cat:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cmd /c:*)",
+      "Bash(ls:*)",
+      "Bash(powershell:*)",
+      "Read(//c/Users/**)"
     ],
     "deny": [],
     "ask": []
