@@ -1,10 +1,8 @@
-package com.leandromg.readerchunks;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class SentenceSegmenter {
+public class SentenceSegmenterTest {
 
     private static final Pattern SENTENCE_PATTERN = Pattern.compile("[.!?]+");
 
@@ -18,8 +16,8 @@ public class SentenceSegmenter {
         // First split by double line breaks (empty lines that separate sections/paragraphs)
         String[] blocks = text.split("\\n\\s*\\n");
 
-        for (String block : blocks) {
-            String cleanBlock = block.trim();
+        for (int blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+            String cleanBlock = blocks[blockIndex].trim();
             if (cleanBlock.isEmpty()) {
                 continue;
             }
@@ -51,6 +49,11 @@ public class SentenceSegmenter {
                         sentences.add(cleanBlock + ".");
                     }
                 }
+            }
+
+            // Add paragraph break marker after each block (except the last one)
+            if (blockIndex < blocks.length - 1) {
+                sentences.add("[BREAK]");
             }
         }
 

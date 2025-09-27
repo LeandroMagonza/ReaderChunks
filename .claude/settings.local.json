@@ -9,7 +9,9 @@
       "Bash(cmd /c:*)",
       "Bash(ls:*)",
       "Bash(powershell:*)",
-      "Read(//c/Users/**)"
+      "Read(//c/Users/**)",
+      "Bash(java:*)",
+      "Bash(javac:*)"
     ],
     "deny": [],
     "ask": []

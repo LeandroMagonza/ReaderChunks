@@ -1,0 +1,5 @@
+=== SENTENCE SEGMENTATION RESULT ===
+Total sentences: 2
+
+1. Miguel de Cervantes  El ingenioso hidalgo don quijote de la Mancha          Parte I      Don Quijote de la Mancha                                                                            Parte I  Miguel de Cevantes   2            Tasa      Yo, Juan Gallo de Andrada, escribano de Cámara del Rey, nuestro señor, de los que residen en  su Consejo, certifico y doy fe que, habiendo visto por los señores dél un libro intitulado El  ingenioso hidalgo de la Mancha, compuesto por Miguel de Cervantes Saavedra, tasaron cada  pliego del dicho libro a tres maravedís y medio el cual tiene ochenta y tres pliegos, que al dicho  precio monta el dicho libro docientos y noventa maravedís y medio, en que se ha de vender en  papel; y dieron licencia para que a este precio se pueda vender, y mandaron que esta tasa se  ponga al principio del dicho libro, v no se pueda vender sin ella.
+2. Y para que dello conste, di la  presente en Valladolid, a veinte días del enes de deciembre de mil v seiscientos v cuatro años.

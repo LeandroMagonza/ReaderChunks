@@ -45,6 +45,8 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
   Procesamiento único por libro, almacenamiento en archivos de texto.
 - **Buffer inteligente**
   Carga por bloques con pre-carga anticipada para navegación fluida.
+- **Segmentación inteligente**
+  Respeta la estructura del documento (títulos, párrafos, secciones).
 
 ### Gestión de datos
 - **JSON** para metadata de libros (progreso, fechas, configuración).
@@ -55,6 +57,48 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 - Intents de Android para seleccionar archivos PDF desde el sistema.
 - RecyclerView y CardView para lista de libros.
 - FloatingActionButton para agregar nuevos libros.
+
+---
+
+## 📝 Sistema de Segmentación Inteligente
+
+### Algoritmo de dos niveles
+
+**1. Nivel archivo (persistente)**
+- Dividir por **dobles saltos de línea** (párrafos y secciones)
+- Preservar **títulos cortos** como oraciones independientes
+- Detectar **estructura del documento** (autor, capítulos, etc.)
+- Insertar marcadores `[BREAK]` entre párrafos para visualización
+
+**2. Nivel presentación (futuro)**
+- División dinámica de oraciones largas (>400 chars)
+- Adaptación según tamaño de pantalla y fuente
+- Corte inteligente en puntuación: `;`, `:`, `,`, espacios
+
+### Detección automática de estructura
+```
+PDF original:
+Miguel de Cervantes     <- Línea vacía debajo
+                        <- Línea vacía
+El ingenioso hidalgo... <- Línea vacía debajo
+                        <- Línea vacía
+Parte I                 <- Línea vacía debajo
+
+Resultado segmentado:
+1. Miguel de Cervantes El ingenioso hidalgo don quijote de la Mancha.
+2. [BREAK]
+3. Parte I.
+4. [BREAK]
+5. Tasa.
+6. [BREAK]
+7. Yo, Juan Gallo de Andrada... (párrafo completo)
+```
+
+### Ventajas del sistema
+- ✅ **Archivos portables**: La segmentación es consistente entre dispositivos
+- ✅ **Preserva estructura**: Títulos, autores y secciones se mantienen separados
+- ✅ **Visualización mejorada**: Indicadores visuales de cambio de párrafo
+- ✅ **Escalable**: Funciona con libros de cualquier tamaño y estructura
 
 ---
 
@@ -178,6 +222,9 @@ Libro de 10,000 oraciones:
 - [x] **Buffer inteligente** con pre-carga y limpieza automática
 - [x] **Identificación única** de PDFs por hash MD5
 - [x] **Manejo de errores** robusto en toda la aplicación
+- [x] **Segmentación inteligente** respetando estructura del documento
+- [x] **Detección automática** de títulos, secciones y párrafos
+- [x] **Marcadores [BREAK]** para preservar puntos y aparte
 
 ### ✅ Interfaz y UX
 - [x] **Biblioteca personal** con lista de libros procesados
@@ -185,6 +232,7 @@ Libro de 10,000 oraciones:
 - [x] **Material Design** moderno con RecyclerView
 - [x] **Navegación fluida** sin esperas de carga
 - [x] **Estados visuales** (vacío, cargando, lista)
+- [x] **Indicadores visuales** de cambio de párrafo
 
 ### ✅ Funcionalidades principales
 - [x] **Agregar libros** desde selector de archivos
@@ -200,6 +248,9 @@ Libro de 10,000 oraciones:
 4. **Agregar libro** → Seleccionar PDF → ¡Leer!
 
 ### 📈 Siguientes mejoras
+- [ ] **División dinámica de oraciones largas** según pantalla
+- [ ] **Configuración de longitud máxima** de visualización
+- [ ] **Navegación por sub-oraciones** en textos densos
 - [ ] **Botón eliminar libro** de la biblioteca
 - [ ] **Botón resetear progreso** de lectura
 - [ ] **Soporte TXT y EPUB** (formatos adicionales)

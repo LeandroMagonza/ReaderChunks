@@ -2,6 +2,7 @@ package com.leandromg.readerchunks;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnNext;
     private MaterialButton btnBack;
     private LinearProgressIndicator progressBar;
+    private View dividerParagraph;
 
     private BookCacheManager cacheManager;
     private BufferManager bufferManager;
@@ -49,6 +51,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnNext = findViewById(R.id.btnNext);
         btnBack = findViewById(R.id.btnBack);
         progressBar = findViewById(R.id.progressBar);
+        dividerParagraph = findViewById(R.id.dividerParagraph);
     }
 
     private void setupManagers() {
@@ -96,6 +99,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void previousSentence() {
         if (currentIndex > 0 && !isLoading) {
             currentIndex--;
+            // Skip [BREAK] markers when going backwards
+            if (isBreakMarker(currentIndex)) {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                }
+            }
             updateDisplay();
             saveProgressAsync();
         }
@@ -106,6 +115,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         if (currentIndex < currentBook.getTotalSentences() - 1) {
             currentIndex++;
+            // Skip [BREAK] markers when going forward
+            if (isBreakMarker(currentIndex) && currentIndex < currentBook.getTotalSentences() - 1) {
+                currentIndex++;
+            }
             updateDisplay();
             saveProgressAsync();
         } else {
@@ -119,6 +132,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         // Get sentence from buffer
         String sentence = bufferManager.getSentence(currentIndex);
         tvSentence.setText(sentence);
+
+        // Check if next sentence is a [BREAK] marker to show paragraph divider
+        boolean showDivider = false;
+        if (currentIndex + 1 < currentBook.getTotalSentences()) {
+            String nextSentence = bufferManager.getSentence(currentIndex + 1);
+            showDivider = "[BREAK]".equals(nextSentence);
+        }
+        dividerParagraph.setVisibility(showDivider ? View.VISIBLE : View.GONE);
 
         // Update progress text
         String progressText = getString(R.string.progress_format, currentIndex + 1, currentBook.getTotalSentences());
@@ -137,6 +158,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         } else {
             btnNext.setText(getString(R.string.next));
         }
+    }
+
+    private boolean isBreakMarker(int index) {
+        if (currentBook == null || index < 0 || index >= currentBook.getTotalSentences()) {
+            return false;
+        }
+        String sentence = bufferManager.getSentence(index);
+        return "[BREAK]".equals(sentence);
     }
 
     private void showCompletionDialog() {
