@@ -4,33 +4,37 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BookAdapter.OnBookClickListener {
 
-    private MaterialButton btnSelectPdf;
-    private MaterialButton btnStartReading;
+    private LinearLayout layoutLoading;
+    private LinearLayout layoutEmpty;
+    private RecyclerView recyclerBooks;
+    private ExtendedFloatingActionButton fabAddBook;
     private CircularProgressIndicator progressIndicator;
     private TextView tvStatus;
-    private TextView tvPdfInfo;
-    private MaterialCardView cardInfo;
 
     private ExecutorService executor;
-    private String selectedPdfPath;
-    private List<String> sentences;
+    private BookCacheManager cacheManager;
+    private BookAdapter bookAdapter;
+    private List<Book> books;
 
     private ActivityResultLauncher<String[]> pdfPickerLauncher;
 
@@ -41,21 +45,35 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
         setupExecutor();
+        setupCacheManager();
+        setupRecyclerView();
         setupPdfPicker();
         setupClickListeners();
+        loadBooks();
     }
 
     private void initViews() {
-        btnSelectPdf = findViewById(R.id.btnSelectPdf);
-        btnStartReading = findViewById(R.id.btnStartReading);
+        layoutLoading = findViewById(R.id.layoutLoading);
+        layoutEmpty = findViewById(R.id.layoutEmpty);
+        recyclerBooks = findViewById(R.id.recyclerBooks);
+        fabAddBook = findViewById(R.id.fabAddBook);
         progressIndicator = findViewById(R.id.progressIndicator);
         tvStatus = findViewById(R.id.tvStatus);
-        tvPdfInfo = findViewById(R.id.tvPdfInfo);
-        cardInfo = findViewById(R.id.cardInfo);
     }
 
     private void setupExecutor() {
         executor = Executors.newSingleThreadExecutor();
+    }
+
+    private void setupCacheManager() {
+        cacheManager = new BookCacheManager(this);
+    }
+
+    private void setupRecyclerView() {
+        books = new ArrayList<>();
+        bookAdapter = new BookAdapter(books, this);
+        recyclerBooks.setLayoutManager(new LinearLayoutManager(this));
+        recyclerBooks.setAdapter(bookAdapter);
     }
 
     private void setupPdfPicker() {
@@ -66,8 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnSelectPdf.setOnClickListener(v -> openPdfPicker());
-        btnStartReading.setOnClickListener(v -> startReading());
+        fabAddBook.setOnClickListener(v -> openPdfPicker());
     }
 
     private void openPdfPicker() {
@@ -76,23 +93,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void handlePdfSelection(Uri uri) {
         if (uri != null) {
-            selectedPdfPath = uri.toString();
-            processPdf(uri);
+            String fileName = getFileNameFromUri(uri);
+            processPdf(uri, fileName);
         }
     }
 
-    private void processPdf(Uri uri) {
+    private void processPdf(Uri uri, String fileName) {
         showLoading(true);
-        tvStatus.setText("Procesando PDF...");
+        tvStatus.setText("Procesando " + fileName + "...");
 
         executor.execute(() -> {
             try {
-                String text = PDFTextExtractor.extractTextFromUri(this, uri);
-                sentences = SentenceSegmenter.segmentIntoSentences(text);
+                Book book = cacheManager.processAndCacheBook(uri, fileName);
 
                 runOnUiThread(() -> {
                     showLoading(false);
-                    showPdfInfo(uri, sentences.size());
+                    books.add(0, book);
+                    bookAdapter.updateBooks(books);
+                    updateViewState();
+
+                    Toast.makeText(this, "Libro agregado: " + book.getDisplayTitle(), Toast.LENGTH_SHORT).show();
                 });
 
             } catch (Exception e) {
@@ -105,33 +125,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean show) {
-        progressIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
-        tvStatus.setVisibility(show ? View.VISIBLE : View.GONE);
-        btnSelectPdf.setEnabled(!show);
+        layoutLoading.setVisibility(show ? View.VISIBLE : View.GONE);
+        fabAddBook.setEnabled(!show);
+
+        if (!show) {
+            updateViewState();
+        }
     }
 
-    private void showPdfInfo(Uri uri, int sentenceCount) {
-        String fileName = getFileNameFromUri(uri);
-        String info = String.format(
-                "📄 Archivo: %s\n📝 Oraciones extraídas: %d\n\n¡Listo para comenzar la lectura!",
-                fileName, sentenceCount
-        );
+    private void loadBooks() {
+        showLoading(true);
+        tvStatus.setText("Cargando biblioteca...");
 
-        tvPdfInfo.setText(info);
-        cardInfo.setVisibility(View.VISIBLE);
+        executor.execute(() -> {
+            try {
+                List<Book> loadedBooks = cacheManager.getAllBooks();
+
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    books.clear();
+                    books.addAll(loadedBooks);
+                    bookAdapter.updateBooks(books);
+                    updateViewState();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    updateViewState();
+                });
+            }
+        });
     }
 
     private void showError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        cardInfo.setVisibility(View.GONE);
     }
 
-    private void startReading() {
-        if (sentences != null && !sentences.isEmpty()) {
-            Intent intent = new Intent(this, SentenceReaderActivity.class);
-            intent.putStringArrayListExtra("sentences", (java.util.ArrayList<String>) sentences);
-            startActivity(intent);
+    private void updateViewState() {
+        if (books.isEmpty()) {
+            layoutEmpty.setVisibility(View.VISIBLE);
+            recyclerBooks.setVisibility(View.GONE);
+        } else {
+            layoutEmpty.setVisibility(View.GONE);
+            recyclerBooks.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void onContinueReading(Book book) {
+        Intent intent = new Intent(this, SentenceReaderActivity.class);
+        intent.putExtra("book_id", book.getId());
+        startActivity(intent);
     }
 
     private String getFileNameFromUri(Uri uri) {

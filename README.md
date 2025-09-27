@@ -36,15 +36,25 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ### Base de la aplicación
 - **Java para Android**
-  UI nativa, navegación, estados, manejo de archivos y chunking de texto.
+  UI nativa con Material Design, RecyclerView, navegación entre Activities.
 
-### Extracción de texto de PDF
-- **PDFBox** (Java)
-  Permite abrir PDFs y extraer texto plano de manera **offline**.
+### Extracción y cache de texto
+- **PDFBox-Android** (Java)
+  Extracción de texto de PDFs de manera **offline**.
+- **Sistema de cache persistente**
+  Procesamiento único por libro, almacenamiento en archivos de texto.
+- **Buffer inteligente**
+  Carga por bloques con pre-carga anticipada para navegación fluida.
+
+### Gestión de datos
+- **JSON** para metadata de libros (progreso, fechas, configuración).
+- **Archivos de texto plano** para contenido (una oración por línea).
+- **MD5 hash** para identificación única de PDFs.
 
 ### Librerías auxiliares
 - Intents de Android para seleccionar archivos PDF desde el sistema.
-- Componentes nativos de Android para UI y navegación.
+- RecyclerView y CardView para lista de libros.
+- FloatingActionButton para agregar nuevos libros.
 
 ---
 
@@ -56,11 +66,17 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 - **Mejor integración** con el sistema de archivos y permisos de Android.
 - **Desarrollo enfocado** en una sola plataforma para el MVP.
 
-### ¿Por qué PDFBox para extracción?
-- **Librería madura y probada** para manipulación de PDFs.
-- **Funciona offline** sin necesidad de APIs externas.
-- **Rápida y precisa** para PDFs con texto real.
-- **Bien soportada** en el ecosistema Java/Android.
+### ¿Por qué sistema de cache persistente?
+- **Procesamiento único** - Cada PDF se procesa solo una vez.
+- **Acceso instantáneo** - Sin esperas al retomar lectura.
+- **Escalabilidad** - Funciona con libros de cualquier tamaño.
+- **Memoria eficiente** - Solo 50-100 oraciones en RAM simultáneamente.
+
+### ¿Por qué buffer inteligente?
+- **Pre-carga anticipada** - Carga siguiente bloque al 70% de progreso.
+- **Navegación fluida** - Usuario nunca espera por contenido.
+- **Retroceso rápido** - Buffer anterior disponible inmediatamente.
+- **Limpieza automática** - Libera memoria de contenido lejano.
 
 ---
 
@@ -68,68 +84,124 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ```
 ReaderChunks/
-├── PDFTextExtractor.java    # Extractor de texto de PDF (standalone)
-├── PDFTextExtractor.class   # Compilado del extractor
-├── example.pdf              # PDF de prueba
-└── README.md               # Este archivo
+├── android/                           # Proyecto Android completo
+│   ├── app/src/main/java/com/leandromg/readerchunks/
+│   │   ├── MainActivity.java          # Biblioteca de libros
+│   │   ├── SentenceReaderActivity.java # Lectura con buffer
+│   │   ├── Book.java                  # Modelo de libro
+│   │   ├── BookCacheManager.java      # Gestión de cache
+│   │   ├── BufferManager.java         # Buffer inteligente
+│   │   ├── BookAdapter.java           # Adaptador RecyclerView
+│   │   ├── PDFTextExtractor.java      # Extracción para Android
+│   │   └── SentenceSegmenter.java     # Segmentación de oraciones
+│   ├── app/src/main/res/
+│   │   ├── layout/                    # Layouts de Activities
+│   │   └── values/                    # Strings, colores, temas
+│   └── app/build.gradle               # Dependencias Android
+├── PDFTextExtractor.java              # Versión standalone (testing)
+├── example.pdf                        # PDF de prueba
+└── README.md                          # Este archivo
+```
+
+### Estructura de datos persistente:
+```
+/data/app/books/
+├── library.json                       # Lista de todos los libros
+├── {hash_libro_1}/
+│   ├── content.txt                    # Oraciones (una por línea)
+│   └── meta.json                      # Progreso, título, fechas
+└── {hash_libro_2}/
+    ├── content.txt
+    └── meta.json
 ```
 
 ---
 
-## 🚀 Testing en PC
+## 🧪 Testing
 
-### Prerrequisitos
-- **Java JDK 8+** instalado
-- **PDFBox JAR** descargado
-
-### Descargar PDFBox
+### Testing en PC (versión standalone)
 ```bash
-# Descargar PDFBox JAR
-wget https://archive.apache.org/dist/pdfbox/2.0.27/pdfbox-app-2.0.27.jar
-```
-
-### Compilar y probar
-```bash
-# Compilar el extractor
+# Compilar extractor standalone
 javac -cp pdfbox-app-2.0.27.jar PDFTextExtractor.java
 
-# Probar con el PDF de ejemplo
+# Probar extracción
 java -cp ".;pdfbox-app-2.0.27.jar" PDFTextExtractor example.pdf
 ```
 
+### Testing Android
+```bash
+# Compilar APK
+cd android && gradlew assembleDebug
+
+# Instalar en dispositivo
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Casos de prueba recomendados
+- **PDF pequeño** (< 50 páginas) - Funcionamiento básico
+- **PDF grande** (Don Quijote, +1000 páginas) - Sistema de buffer
+- **PDF con imágenes** - Extracción solo del texto
+- **PDF encriptado** - Manejo de errores
+- **Múltiples libros** - Gestión de biblioteca
+
 ---
 
-## 📱 Estructura Android (próxima fase)
+## 🏗️ Arquitectura del sistema
 
-Una vez validado el extractor, se creará:
+### Flujo de datos
 ```
-android/
-├── app/
-│   ├── src/main/java/com/leandromg/readerchunks/
-│   │   ├── MainActivity.java
-│   │   ├── PDFTextExtractor.java
-│   │   └── SentenceReader.java
-│   ├── src/main/res/
-│   └── build.gradle
-├── build.gradle
-└── settings.gradle
+PDF seleccionado → Hash MD5 → ¿Existe cache?
+                                 ↓ No
+                    PDFBox → Texto → Segmentación → Cache
+                                 ↓ Sí
+                    Cargar metadata → BufferManager → Lectura
+```
+
+### Gestión de memoria para libros grandes
+```
+Libro de 10,000 oraciones:
+├── En disco: 10,000 oraciones (archivo content.txt)
+├── En memoria: ~75 oraciones máximo
+│   ├── Buffer anterior: 25 oraciones
+│   ├── Ventana actual: 50 oraciones
+│   └── Buffer siguiente: 25 oraciones (pre-cargado)
+└── Carga bajo demanda según navegación del usuario
 ```
 
 ---
 
 ## 📋 Estado Actual
 
-- [x] **Extracción de texto de PDF** usando PDFBox
-- [x] **Validación de archivos** (existencia, formato, encriptación)
-- [x] **Manejo de errores** robusto con mensajes claros
-- [x] **Testing standalone** para verificar extracción
-- [x] **Proyecto Android completo** creado
-- [x] **MainActivity** con selector de archivos
-- [x] **SentenceReaderActivity** para navegación
-- [x] **Integración PDFBox-Android** funcional
-- [x] **UI completa** con Material Design
+### ✅ Sistema Core
+- [x] **Extracción de texto de PDF** usando PDFBox-Android
+- [x] **Sistema de cache persistente** con archivos JSON + TXT
+- [x] **Buffer inteligente** con pre-carga y limpieza automática
+- [x] **Identificación única** de PDFs por hash MD5
+- [x] **Manejo de errores** robusto en toda la aplicación
 
-### Para compilar
-1. **Instalar Android SDK**
-2. **Ejecutar**: `cd android && gradlew assembleDebug`
-3. **APK generado en**: `android/app/build/outputs/apk/debug/`
+### ✅ Interfaz y UX
+- [x] **Biblioteca personal** con lista de libros procesados
+- [x] **Progreso persistente** - retomar donde quedaste
+- [x] **Material Design** moderno con RecyclerView
+- [x] **Navegación fluida** sin esperas de carga
+- [x] **Estados visuales** (vacío, cargando, lista)
+
+### ✅ Funcionalidades principales
+- [x] **Agregar libros** desde selector de archivos
+- [x] **Procesamiento único** - cache automático
+- [x] **Lectura por oraciones** con navegación
+- [x] **Guardado automático** de progreso
+- [x] **Gestión de memoria** eficiente para libros grandes
+
+### 🚀 Para usar
+1. **Compilar**: `cd android && gradlew assembleDebug`
+2. **APK**: `android/app/build/outputs/apk/debug/app-debug.apk`
+3. **Instalar** en dispositivo Android
+4. **Agregar libro** → Seleccionar PDF → ¡Leer!
+
+### 📈 Siguientes mejoras
+- [ ] **Botón eliminar libro** de la biblioteca
+- [ ] **Botón resetear progreso** de lectura
+- [ ] **Soporte TXT y EPUB** (formatos adicionales)
+- [ ] **Configuración de tamaño de fuente**
+- [ ] **Modo oscuro** y temas personalizables
