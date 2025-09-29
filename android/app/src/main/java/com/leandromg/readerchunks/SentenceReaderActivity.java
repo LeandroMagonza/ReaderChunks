@@ -3,6 +3,7 @@ package com.leandromg.readerchunks;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,18 +14,22 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SentenceReaderActivity extends AppCompatActivity implements BufferManager.BufferLoadListener {
 
     private TextView tvSentence;
-    private TextView tvProgress;
+    private TextView tvParagraphProgress;
+    private TextView tvSentenceProgress;
     private MaterialButton btnPrevious;
     private MaterialButton btnNext;
     private MaterialButton btnBack;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
+    private ProgressBar progressCircle;
+    private TextView tvProgressPercentage;
 
     private BookCacheManager cacheManager;
     private BufferManager bufferManager;
@@ -50,12 +55,15 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     private void initViews() {
         tvSentence = findViewById(R.id.tvSentence);
-        tvProgress = findViewById(R.id.tvProgress);
+        tvParagraphProgress = findViewById(R.id.tvParagraphProgress);
+        tvSentenceProgress = findViewById(R.id.tvSentenceProgress);
         btnPrevious = findViewById(R.id.btnPrevious);
         btnNext = findViewById(R.id.btnNext);
         btnBack = findViewById(R.id.btnBack);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
+        progressCircle = findViewById(R.id.progressCircle);
+        tvProgressPercentage = findViewById(R.id.tvProgressPercentage);
     }
 
     private void setupManagers() {
@@ -81,7 +89,6 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 int savedCharPosition = currentBook.getCurrentCharPosition();
 
                 runOnUiThread(() -> {
-                    progressBar.setMax(currentBook.getTotalSentences());
                     // Initialize buffer with both paragraph and character position
                     bufferManager.initializeWithCharPosition(bookId, currentBook.getTotalSentences(),
                                                            currentParagraphIndex, savedCharPosition, this);
@@ -141,20 +148,38 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         currentParagraphIndex = bufferManager.getCurrentParagraphIndex();
         currentSentenceIndex = bufferManager.getCurrentSentenceIndex();
 
+        // Update book object for real-time percentage calculation
+        currentBook.setCurrentPosition(currentParagraphIndex);
+        currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
+
         // Show paragraph divider at end of paragraphs (last sentence of paragraph)
         boolean showDivider = (currentSentenceIndex == bufferManager.getCurrentParagraphSentenceCount() - 1) &&
                              (currentParagraphIndex < currentBook.getTotalSentences() - 1);
         dividerParagraph.setVisibility(showDivider ? View.VISIBLE : View.GONE);
 
-        // Update progress text with sentence info
-        String progressText = getString(R.string.progress_format, currentParagraphIndex + 1, currentBook.getTotalSentences());
-        if (bufferManager.getCurrentParagraphSentenceCount() > 1) {
-            progressText += " (" + (currentSentenceIndex + 1) + "/" + bufferManager.getCurrentParagraphSentenceCount() + ")";
-        }
-        tvProgress.setText(progressText);
+        // Update paragraph progress text
+        String paragraphText = getString(R.string.progress_format, currentParagraphIndex + 1, currentBook.getTotalSentences());
+        tvParagraphProgress.setText(paragraphText);
 
-        // Update progress bar
-        progressBar.setProgress(currentParagraphIndex + 1);
+        // Update sentence progress text
+        if (bufferManager.getCurrentParagraphSentenceCount() > 1) {
+            String sentenceText = "(" + (currentSentenceIndex + 1) + "/" + bufferManager.getCurrentParagraphSentenceCount() + ")";
+            tvSentenceProgress.setText(sentenceText);
+            tvSentenceProgress.setVisibility(View.VISIBLE);
+        } else {
+            tvSentenceProgress.setVisibility(View.GONE);
+        }
+
+        // Update circular progress with precise calculation
+        double bookProgress = currentBook.getPreciseProgressPercentage(cacheManager);
+        int progressValue = (int) Math.round(bookProgress);
+        progressCircle.setProgress(progressValue);
+        String percentageText = String.format(Locale.getDefault(), "%.1f%%", bookProgress);
+        tvProgressPercentage.setText(percentageText);
+
+        // Update progress bar - show sentence progress within current paragraph
+        progressBar.setMax(bufferManager.getCurrentParagraphSentenceCount());
+        progressBar.setProgress(currentSentenceIndex + 1);
 
         // Update button states
         boolean hasPrevious = !bufferManager.isAtBeginningOfBook();

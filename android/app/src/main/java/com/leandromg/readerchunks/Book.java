@@ -12,12 +12,14 @@ public class Book {
     private Date lastReadDate;      // Última fecha de lectura
     private long fileSizeBytes;     // Tamaño del archivo original
     private Date processedDate;     // Fecha de procesamiento
+    private long totalCharacters;   // Total de caracteres en el libro (para cálculo preciso)
 
     public Book() {
         this.currentPosition = 0;
         this.currentCharPosition = 0;
         this.lastReadDate = new Date();
         this.processedDate = new Date();
+        this.totalCharacters = 0;
     }
 
     public Book(String id, String title, String fileName, int totalSentences) {
@@ -38,6 +40,7 @@ public class Book {
     public Date getLastReadDate() { return lastReadDate; }
     public long getFileSizeBytes() { return fileSizeBytes; }
     public Date getProcessedDate() { return processedDate; }
+    public long getTotalCharacters() { return totalCharacters; }
 
     // Setters
     public void setId(String id) { this.id = id; }
@@ -49,11 +52,49 @@ public class Book {
     public void setLastReadDate(Date lastReadDate) { this.lastReadDate = lastReadDate; }
     public void setFileSizeBytes(long fileSizeBytes) { this.fileSizeBytes = fileSizeBytes; }
     public void setProcessedDate(Date processedDate) { this.processedDate = processedDate; }
+    public void setTotalCharacters(long totalCharacters) { this.totalCharacters = totalCharacters; }
 
     // Utility methods
     public double getProgressPercentage() {
         if (totalSentences == 0) return 0.0;
         return ((double) currentPosition / totalSentences) * 100.0;
+    }
+
+    /**
+     * Calculate precise progress percentage based on character position
+     * Formula: (currentPosition / totalSentences * 100) + (charPosition / paragraphLength) * (100 / totalSentences)
+     */
+    public double getPreciseProgressPercentage(BookCacheManager cacheManager) {
+        if (totalSentences == 0) {
+            return 0.0;
+        }
+
+        // Base percentage: completed paragraphs
+        double basePercentage = ((double) currentPosition / totalSentences) * 100.0;
+
+        // If no character position or cache manager, return base percentage
+        if (currentCharPosition <= 0 || cacheManager == null) {
+            return basePercentage;
+        }
+
+        // Get current paragraph text to calculate progress within it
+        try {
+            String currentParagraphText = cacheManager.getSentence(id, currentPosition);
+            if (currentParagraphText != null && currentParagraphText.length() > 0) {
+                // Progress within current paragraph (0.0 to 1.0)
+                double paragraphProgress = (double) currentCharPosition / currentParagraphText.length();
+
+                // Each paragraph is worth (100 / totalSentences) percent
+                double paragraphWeight = 100.0 / totalSentences;
+
+                // Add fractional progress within current paragraph
+                return basePercentage + (paragraphProgress * paragraphWeight);
+            }
+        } catch (Exception e) {
+            // Return base percentage if can't read paragraph
+        }
+
+        return basePercentage;
     }
 
     public boolean isCompleted() {

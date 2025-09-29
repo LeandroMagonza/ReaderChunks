@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void setupRecyclerView() {
         books = new ArrayList<>();
-        bookAdapter = new BookAdapter(books, this);
+        bookAdapter = new BookAdapter(books, this, cacheManager);
         recyclerBooks.setLayoutManager(new LinearLayoutManager(this));
         recyclerBooks.setAdapter(bookAdapter);
     }

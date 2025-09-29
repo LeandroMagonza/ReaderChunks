@@ -22,6 +22,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
     private List<Book> books;
     private OnBookClickListener listener;
+    private BookCacheManager cacheManager;
 
     public interface OnBookClickListener {
         void onContinueReading(Book book);
@@ -30,9 +31,10 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         void onDeleteBook(Book book);
     }
 
-    public BookAdapter(List<Book> books, OnBookClickListener listener) {
+    public BookAdapter(List<Book> books, OnBookClickListener listener, BookCacheManager cacheManager) {
         this.books = books;
         this.listener = listener;
+        this.cacheManager = cacheManager;
     }
 
     @NonNull
@@ -80,8 +82,8 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         public void bind(Book book) {
             tvBookTitle.setText(book.getDisplayTitle());
 
-            // Progress text
-            double progressPercent = book.getProgressPercentage();
+            // Progress text with precise calculation
+            double progressPercent = book.getPreciseProgressPercentage(cacheManager);
             String progressText = String.format(Locale.getDefault(),
                     "%.1f%% completado • %d / %d párrafos",
                     progressPercent,

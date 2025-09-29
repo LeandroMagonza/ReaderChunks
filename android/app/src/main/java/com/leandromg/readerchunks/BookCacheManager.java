@@ -122,6 +122,7 @@ public class BookCacheManager {
             json.put("lastReadDate", dateFormat.format(book.getLastReadDate()));
             json.put("fileSizeBytes", book.getFileSizeBytes());
             json.put("processedDate", dateFormat.format(book.getProcessedDate()));
+            json.put("totalCharacters", book.getTotalCharacters());
 
             BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile));
             writer.write(json.toString(2));
@@ -161,6 +162,8 @@ public class BookCacheManager {
             book.setLastReadDate(dateFormat.parse(json.getString("lastReadDate")));
             book.setFileSizeBytes(json.getLong("fileSizeBytes"));
             book.setProcessedDate(dateFormat.parse(json.getString("processedDate")));
+            // For backward compatibility, default to 0 if totalCharacters doesn't exist
+            book.setTotalCharacters(json.optLong("totalCharacters", 0));
 
             return book;
 

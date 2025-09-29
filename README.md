@@ -269,10 +269,24 @@ Libro de 10,000 oraciones:
 ### 🎯 Experiencia de Lectura Optimizada
 - [x] **Oraciones optimizadas** - máximo 150 caracteres para lectura cómoda
 - [x] **Navegación intuitiva** - botones anterior/siguiente con estados inteligentes
-- [x] **Indicadores de progreso** - párrafo actual y sub-oraciones
+- [x] **Indicadores de progreso avanzados** - sistema dual de progreso (ver detalles abajo)
 - [x] **Separación visual** - divisores entre párrafos
 - [x] **Lectura fluida** - sin esperas, cortes, o texto corrupto
 - [x] **Preservación exacta** - "!a Mancha" se mantiene como "!a Mancha"
+
+### 📊 Sistema de Progreso Dual (IMPLEMENTADO)
+- [x] **Progreso de párrafos** - "28 / 284" en línea superior del header
+- [x] **Progreso de oraciones** - "(1/18)" en línea inferior (solo si hay >1 oración)
+- [x] **Corona circular de progreso** - círculo que se llena con % total del libro (ej: "28.3%")
+- [x] **Consistencia de porcentajes** - mismo valor con 1 decimal en lista y modo lectura
+- [x] **Base de cálculo**: porcentaje basado en **párrafos completados**, no caracteres
+- [x] **Cálculo**: `(párrafo_actual / párrafos_totales) * 100`
+
+**Ventajas del sistema dual**:
+- ✅ **Progreso inmediato**: Ver avance dentro del párrafo actual
+- ✅ **Progreso general**: Corona circular muestra % total del libro
+- ✅ **Sin aumentar altura**: Mantiene dimensiones originales del header
+- ✅ **Información clara**: Párrafos y oraciones en líneas separadas
 
 ### 🚀 Para usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
@@ -289,27 +303,13 @@ Libro de 10,000 oraciones:
   - [ ] **Renombrar libro** (cambiar título con input de texto)
 - [ ] **Estadísticas de lectura** (tiempo, párrafos completados, progreso diario)
 
-#### 🎨 Mejoras en indicadores de progreso (Prioridad Alta)
-
-**Problema actual**: La barra de progreso muestra avance del libro completo, pero es más útil ver el progreso dentro del párrafo actual.
-
-**Solución propuesta**:
-- [ ] **Barra de progreso del párrafo actual** (reemplazar barra actual)
-  - [ ] Muestra progreso de oraciones dentro del párrafo actual (ej: oración 2 de 5)
+#### 🎨 Mejoras adicionales en progreso (Prioridad Media)
+- [ ] **Barra de progreso del párrafo actual** (opcional - reemplazar barra inferior)
+  - [ ] Muestra visualmente el progreso de oraciones dentro del párrafo actual
   - [ ] Se rellena completamente al terminar cada párrafo
-  - [ ] Proporciona satisfacción inmediata y mejor sensación de avance
-
-- [ ] **Círculo de progreso total** en esquina superior derecha
-  - [ ] Círculo que se va rellenando gradualmente con el % del libro completado
-  - [ ] Porcentaje numérico en el centro (ej: "23%")
-  - [ ] Se posiciona junto al indicador actual "párrafo X/Y"
-  - [ ] Proporciona contexto del progreso total sin dominar la interfaz
-
-**Beneficios**:
-- ✅ **Motivación inmediata**: Ver progreso del párrafo actual
-- ✅ **Contexto total**: Círculo muestra progreso general del libro
-- ✅ **Mejor UX**: Dos niveles de progreso (inmediato + general)
-- ✅ **Satisfacción**: Completar párrafos da sensación de logro
+  - [ ] Proporciona satisfacción inmediata al completar párrafos
+- [ ] **Animaciones suaves** en la corona circular al cambiar de párrafo
+- [ ] **Diferentes colores** para diferentes rangos de progreso (0-25%, 25-50%, etc.)
 
 #### 🎛️ Personalización
 - [ ] **Configuración de longitud máxima** de corte dinámico (150 chars por defecto)
