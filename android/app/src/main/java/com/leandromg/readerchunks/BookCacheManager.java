@@ -319,4 +319,100 @@ public class BookCacheManager {
 
         return title.toString().trim();
     }
+
+    /**
+     * Deletes a book completely from the cache, including all its files and updates the library
+     */
+    public boolean deleteBook(String bookId) throws IOException {
+        File bookDir = new File(booksDirectory, bookId);
+
+        if (!bookDir.exists()) {
+            return false; // Book doesn't exist
+        }
+
+        // Delete all files in the book directory
+        deleteDirectoryRecursively(bookDir);
+
+        // Remove from library.json
+        removeBookFromLibrary(bookId);
+
+        return true;
+    }
+
+    /**
+     * Resets a book's reading progress to the beginning
+     */
+    public void resetBookProgress(String bookId) throws IOException {
+        Book book = loadBookMeta(bookId);
+        book.setCurrentPosition(0);
+        book.setCurrentCharPosition(0);
+        book.setLastReadDate(new Date());
+        saveBookMeta(book);
+    }
+
+    /**
+     * Updates the title of a book
+     */
+    public void updateBookTitle(String bookId, String newTitle) throws IOException {
+        Book book = loadBookMeta(bookId);
+        book.setTitle(newTitle);
+        saveBookMeta(book);
+    }
+
+    private void deleteDirectoryRecursively(File dir) {
+        if (dir.isDirectory()) {
+            File[] children = dir.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteDirectoryRecursively(child);
+                }
+            }
+        }
+        dir.delete();
+    }
+
+    private void removeBookFromLibrary(String bookIdToRemove) throws IOException {
+        List<String> bookIds = new ArrayList<>();
+
+        try {
+            File libraryFile = new File(booksDirectory, LIBRARY_FILE);
+            if (libraryFile.exists()) {
+                BufferedReader reader = new BufferedReader(new FileReader(libraryFile));
+                StringBuilder content = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line);
+                }
+                reader.close();
+
+                JSONObject json = new JSONObject(content.toString());
+                JSONArray booksArray = json.getJSONArray("books");
+
+                for (int i = 0; i < booksArray.length(); i++) {
+                    String bookId = booksArray.getString(i);
+                    if (!bookId.equals(bookIdToRemove)) {
+                        bookIds.add(bookId);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            throw new IOException("Error reading library", e);
+        }
+
+        // Write updated library
+        try {
+            JSONObject json = new JSONObject();
+            JSONArray booksArray = new JSONArray(bookIds);
+            json.put("books", booksArray);
+            json.put("lastUpdated", dateFormat.format(new Date()));
+
+            File libraryFile = new File(booksDirectory, LIBRARY_FILE);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(libraryFile));
+            writer.write(json.toString(2));
+            writer.close();
+
+        } catch (JSONException e) {
+            throw new IOException("Error updating library", e);
+        }
+    }
 }

@@ -14,4 +14,34 @@
     <string name="back">Volver</string>
     <string name="finished_reading">¡Lectura completada!</string>
     <string name="congratulations">¡Felicitaciones! Has terminado de leer el documento.</string>
+
+    <!-- Book options menu -->
+    <string name="book_options">Opciones del libro</string>
+    <string name="rename_book">Renombrar</string>
+    <string name="reset_progress">Restablecer progreso</string>
+    <string name="delete_book">Eliminar libro</string>
+
+    <!-- Dialog titles and messages -->
+    <string name="rename_book_title">Renombrar libro</string>
+    <string name="reset_progress_title">Restablecer progreso</string>
+    <string name="delete_book_title">Eliminar libro</string>
+    <string name="reset_progress_message">¿Estás seguro de que deseas restablecer el progreso de \"%s\"? Volverás al inicio del libro.</string>
+    <string name="delete_book_message">¿Estás seguro de que deseas eliminar \"%s\"? Esta acción no se puede deshacer.</string>
+
+    <!-- Dialog buttons -->
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="reset">Restablecer</string>
+    <string name="delete">Eliminar</string>
+
+    <!-- Success messages -->
+    <string name="book_renamed_success">Libro renombrado correctamente</string>
+    <string name="progress_reset_success">Progreso restablecido correctamente</string>
+    <string name="book_deleted_success">Libro eliminado correctamente</string>
+
+    <!-- Error messages -->
+    <string name="error_rename_book">Error al renombrar el libro: %s</string>
+    <string name="error_reset_progress">Error al restablecer el progreso: %s</string>
+    <string name="error_delete_book">Error al eliminar el libro: %s</string>
+    <string name="error_could_not_delete">No se pudo eliminar el libro</string>
 </resources>

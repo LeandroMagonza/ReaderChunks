@@ -82,11 +82,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
                 runOnUiThread(() -> {
                     progressBar.setMax(currentBook.getTotalSentences());
-                    bufferManager.initialize(bookId, currentBook.getTotalSentences(), currentParagraphIndex, this);
-                    // Set character position after buffer is loaded
-                    if (savedCharPosition > 0) {
-                        bufferManager.setCharacterPosition(savedCharPosition);
-                    }
+                    // Initialize buffer with both paragraph and character position
+                    bufferManager.initializeWithCharPosition(bookId, currentBook.getTotalSentences(),
+                                                           currentParagraphIndex, savedCharPosition, this);
                     updateDisplay();
                 });
 

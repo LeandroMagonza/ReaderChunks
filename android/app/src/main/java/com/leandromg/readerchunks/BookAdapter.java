@@ -3,6 +3,7 @@ package com.leandromg.readerchunks;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
     public interface OnBookClickListener {
         void onContinueReading(Book book);
+        void onRenameBook(Book book);
+        void onResetProgress(Book book);
+        void onDeleteBook(Book book);
     }
 
     public BookAdapter(List<Book> books, OnBookClickListener listener) {
@@ -61,6 +65,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         private TextView tvLastRead;
         private LinearProgressIndicator progressBar;
         private MaterialButton btnContinue;
+        private MaterialButton btnBookOptions;
 
         public BookViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -69,6 +74,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             tvLastRead = itemView.findViewById(R.id.tvLastRead);
             progressBar = itemView.findViewById(R.id.progressBar);
             btnContinue = itemView.findViewById(R.id.btnContinue);
+            btnBookOptions = itemView.findViewById(R.id.btnBookOptions);
         }
 
         public void bind(Book book) {
@@ -77,7 +83,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             // Progress text
             double progressPercent = book.getProgressPercentage();
             String progressText = String.format(Locale.getDefault(),
-                    "%.1f%% completado • %d / %d oraciones",
+                    "%.1f%% completado • %d / %d párrafos",
                     progressPercent,
                     book.getCurrentPosition() + 1,
                     book.getTotalSentences());
@@ -99,12 +105,14 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                 btnContinue.setText("Comenzar");
             }
 
-            // Click listener
+            // Click listeners
             btnContinue.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onContinueReading(book);
                 }
             });
+
+            btnBookOptions.setOnClickListener(v -> showOptionsMenu(v, book));
         }
 
         private String formatLastReadTime(Date lastRead) {
@@ -131,6 +139,30 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                 return "El " + sdf.format(lastRead);
             }
+        }
+
+        private void showOptionsMenu(View view, Book book) {
+            PopupMenu popup = new PopupMenu(view.getContext(), view);
+            popup.getMenuInflater().inflate(R.menu.book_options_menu, popup.getMenu());
+
+            popup.setOnMenuItemClickListener(item -> {
+                if (listener == null) return false;
+
+                int itemId = item.getItemId();
+                if (itemId == R.id.action_rename) {
+                    listener.onRenameBook(book);
+                    return true;
+                } else if (itemId == R.id.action_reset_progress) {
+                    listener.onResetProgress(book);
+                    return true;
+                } else if (itemId == R.id.action_delete) {
+                    listener.onDeleteBook(book);
+                    return true;
+                }
+                return false;
+            });
+
+            popup.show();
         }
     }
 }

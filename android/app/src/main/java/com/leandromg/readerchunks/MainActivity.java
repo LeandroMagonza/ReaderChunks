@@ -3,13 +3,16 @@ package com.leandromg.readerchunks;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -179,6 +182,133 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         startActivity(intent);
     }
 
+    @Override
+    public void onRenameBook(Book book) {
+        showRenameDialog(book);
+    }
+
+    @Override
+    public void onResetProgress(Book book) {
+        showResetProgressDialog(book);
+    }
+
+    @Override
+    public void onDeleteBook(Book book) {
+        showDeleteBookDialog(book);
+    }
+
+    private void showRenameDialog(Book book) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Renombrar libro");
+
+        EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setText(book.getDisplayTitle());
+        input.setSelection(book.getDisplayTitle().length());
+        builder.setView(input);
+
+        builder.setPositiveButton("Guardar", (dialog, which) -> {
+            String newTitle = input.getText().toString().trim();
+            if (!newTitle.isEmpty() && !newTitle.equals(book.getDisplayTitle())) {
+                renameBook(book, newTitle);
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void showResetProgressDialog(Book book) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Restablecer progreso");
+        builder.setMessage("¿Estás seguro de que deseas restablecer el progreso de \"" +
+                          book.getDisplayTitle() + "\"? Volverás al inicio del libro.");
+
+        builder.setPositiveButton("Restablecer", (dialog, which) -> resetBookProgress(book));
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void showDeleteBookDialog(Book book) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Eliminar libro");
+        builder.setMessage("¿Estás seguro de que deseas eliminar \"" +
+                          book.getDisplayTitle() + "\"? Esta acción no se puede deshacer.");
+
+        builder.setPositiveButton("Eliminar", (dialog, which) -> deleteBook(book));
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void renameBook(Book book, String newTitle) {
+        executor.execute(() -> {
+            try {
+                cacheManager.updateBookTitle(book.getId(), newTitle);
+
+                // Update the book object and refresh the list
+                book.setTitle(newTitle);
+
+                runOnUiThread(() -> {
+                    bookAdapter.updateBooks(books);
+                    Toast.makeText(this, "Libro renombrado correctamente", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showError("Error al renombrar el libro: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    private void resetBookProgress(Book book) {
+        executor.execute(() -> {
+            try {
+                cacheManager.resetBookProgress(book.getId());
+
+                // Update the book object and refresh the list
+                book.setCurrentPosition(0);
+                book.setCurrentCharPosition(0);
+
+                runOnUiThread(() -> {
+                    bookAdapter.updateBooks(books);
+                    Toast.makeText(this, "Progreso restablecido correctamente", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showError("Error al restablecer el progreso: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    private void deleteBook(Book book) {
+        executor.execute(() -> {
+            try {
+                boolean deleted = cacheManager.deleteBook(book.getId());
+
+                if (deleted) {
+                    runOnUiThread(() -> {
+                        books.remove(book);
+                        bookAdapter.updateBooks(books);
+                        updateViewState();
+                        Toast.makeText(this, "Libro eliminado correctamente", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        showError("No se pudo eliminar el libro");
+                    });
+                }
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showError("Error al eliminar el libro: " + e.getMessage());
+                });
+            }
+        });
+    }
+
     private String getFileNameFromUri(Uri uri) {
         String path = uri.getPath();
         if (path != null) {
@@ -188,6 +318,33 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
             }
         }
         return "documento.pdf";
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh book progress when returning from reading
+        refreshBookProgress();
+    }
+
+    private void refreshBookProgress() {
+        if (books.isEmpty()) return;
+
+        executor.execute(() -> {
+            try {
+                // Simply reload the entire book list to get fresh data
+                List<Book> updatedBooks = cacheManager.getAllBooks();
+
+                runOnUiThread(() -> {
+                    books.clear();
+                    books.addAll(updatedBooks);
+                    bookAdapter.updateBooks(books);
+                });
+
+            } catch (Exception e) {
+                // Silently fail - not critical for user experience
+            }
+        });
     }
 
     @Override

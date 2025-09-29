@@ -60,6 +60,21 @@ public class BufferManager {
     }
 
     /**
+     * Initialize with specific paragraph and character position
+     */
+    public void initializeWithCharPosition(String bookId, int totalParagraphs, int paragraphIndex, int charPosition, BufferLoadListener listener) {
+        this.currentBookId = bookId;
+        this.totalParagraphs = totalParagraphs;
+        this.listener = listener;
+
+        // Clear existing buffers
+        clearBuffers();
+
+        // Load buffers for the starting paragraph and set character position
+        loadParagraphsAroundIndexWithCharPosition(paragraphIndex, charPosition);
+    }
+
+    /**
      * Get sentence from current paragraph
      */
     public String getCurrentSentence() {
@@ -243,6 +258,35 @@ public class BufferManager {
         executor.execute(() -> {
             try {
                 loadParagraphsAroundIndexSync(paragraphIndex);
+                if (listener != null) {
+                    listener.onBufferLoaded();
+                }
+            } catch (Exception e) {
+                if (listener != null) {
+                    listener.onBufferError("Error loading paragraphs: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void loadParagraphsAroundIndexWithCharPosition(int paragraphIndex, int charPosition) {
+        executor.execute(() -> {
+            try {
+                loadParagraphsAroundIndexSync(paragraphIndex);
+
+                // Set character position after paragraphs are loaded
+                if (charPosition > 0 && currentParagraph != null) {
+                    int sentenceIndex = currentParagraph.findSentenceIndexForPosition(charPosition);
+                    if (sentenceIndex >= 0) {
+                        currentSentenceIndex = sentenceIndex;
+                    } else {
+                        // Fallback to first sentence if character position is invalid
+                        currentSentenceIndex = 0;
+                    }
+                } else {
+                    currentSentenceIndex = 0;
+                }
+
                 if (listener != null) {
                     listener.onBufferLoaded();
                 }

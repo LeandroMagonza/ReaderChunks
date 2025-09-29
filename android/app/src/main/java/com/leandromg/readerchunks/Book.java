@@ -6,7 +6,7 @@ public class Book {
     private String id;              // Hash único del PDF
     private String title;           // Título del libro
     private String fileName;        // Nombre del archivo original
-    private int totalSentences;     // Total de párrafos
+    private int totalSentences;     // Total de párrafos (se mantiene el nombre por compatibilidad)
     private int currentPosition;    // Párrafo actual de lectura (índice)
     private int currentCharPosition; // Posición del carácter dentro del párrafo actual
     private Date lastReadDate;      // Última fecha de lectura
