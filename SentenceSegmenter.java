@@ -2,20 +2,17 @@ package com.leandromg.readerchunks;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class SentenceSegmenter {
 
-    private static final Pattern SENTENCE_PATTERN = Pattern.compile("[.!?]+");
-
     public static List<String> segmentIntoSentences(String text) {
-        List<String> sentences = new ArrayList<>();
+        List<String> paragraphs = new ArrayList<>();
 
         if (text == null || text.trim().isEmpty()) {
-            return sentences;
+            return paragraphs;
         }
 
-        // First split by double line breaks (empty lines that separate sections/paragraphs)
+        // Split by double line breaks only (paragraph breaks)
         String[] blocks = text.split("\\n\\s*\\n");
 
         for (String block : blocks) {
@@ -29,31 +26,10 @@ public class SentenceSegmenter {
             // Clean up multiple spaces
             cleanBlock = cleanBlock.replaceAll("\\s+", " ").trim();
 
-            // If it's a short block (likely a title, author, section header), treat as one sentence
-            if (cleanBlock.length() < 50 && !cleanBlock.matches(".*[.!?]\\s*$")) {
-                sentences.add(cleanBlock + ".");
-            } else {
-                // For longer blocks, split by sentence-ending punctuation
-                String[] parts = SENTENCE_PATTERN.split(cleanBlock);
-
-                for (String part : parts) {
-                    String trimmed = part.trim();
-                    if (!trimmed.isEmpty()) {
-                        // Add back the period for readability
-                        sentences.add(trimmed + ".");
-                    }
-                }
-
-                // If no sentences were found in this block (no punctuation), treat whole block as one sentence
-                if (parts.length == 1 && !cleanBlock.isEmpty()) {
-                    // Avoid duplicate if already added above
-                    if (sentences.isEmpty() || !sentences.get(sentences.size() - 1).equals(cleanBlock + ".")) {
-                        sentences.add(cleanBlock + ".");
-                    }
-                }
-            }
+            // Add the complete paragraph without modification
+            paragraphs.add(cleanBlock);
         }
 
-        return sentences;
+        return paragraphs;
     }
 }

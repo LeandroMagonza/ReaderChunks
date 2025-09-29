@@ -33,6 +33,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private int currentIndex = 0;
     private boolean isLoading = false;
 
+    // Current reading position (managed by BufferManager)
+    private int currentParagraphIndex = 0;
+    private int currentSentenceIndex = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,11 +77,16 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         executor.execute(() -> {
             try {
                 currentBook = cacheManager.loadBookMeta(bookId);
-                currentIndex = currentBook.getCurrentPosition();
+                currentParagraphIndex = currentBook.getCurrentPosition();
+                int savedCharPosition = currentBook.getCurrentCharPosition();
 
                 runOnUiThread(() -> {
                     progressBar.setMax(currentBook.getTotalSentences());
-                    bufferManager.initialize(bookId, currentBook.getTotalSentences(), currentIndex, this);
+                    bufferManager.initialize(bookId, currentBook.getTotalSentences(), currentParagraphIndex, this);
+                    // Set character position after buffer is loaded
+                    if (savedCharPosition > 0) {
+                        bufferManager.setCharacterPosition(savedCharPosition);
+                    }
                     updateDisplay();
                 });
 
@@ -97,14 +106,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     }
 
     private void previousSentence() {
-        if (currentIndex > 0 && !isLoading) {
-            currentIndex--;
-            // Skip [BREAK] markers when going backwards
-            if (isBreakMarker(currentIndex)) {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                }
-            }
+        if (isLoading) return;
+
+        if (bufferManager.moveToPreviousSentence()) {
             updateDisplay();
             saveProgressAsync();
         }
@@ -113,12 +117,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void nextSentence() {
         if (currentBook == null || isLoading) return;
 
-        if (currentIndex < currentBook.getTotalSentences() - 1) {
-            currentIndex++;
-            // Skip [BREAK] markers when going forward
-            if (isBreakMarker(currentIndex) && currentIndex < currentBook.getTotalSentences() - 1) {
-                currentIndex++;
-            }
+        if (bufferManager.moveToNextSentence()) {
             updateDisplay();
             saveProgressAsync();
         } else {
@@ -129,44 +128,51 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void updateDisplay() {
         if (currentBook == null) return;
 
-        // Get sentence from buffer
-        String sentence = bufferManager.getSentence(currentIndex);
-        tvSentence.setText(sentence);
-
-        // Check if next sentence is a [BREAK] marker to show paragraph divider
-        boolean showDivider = false;
-        if (currentIndex + 1 < currentBook.getTotalSentences()) {
-            String nextSentence = bufferManager.getSentence(currentIndex + 1);
-            showDivider = "[BREAK]".equals(nextSentence);
+        // Get current sentence from buffer manager
+        String currentSentence = bufferManager.getCurrentSentence();
+        if (currentSentence.startsWith("Error:")) {
+            // Handle error cases
+            tvSentence.setText("Cargando...");
+            return;
         }
+
+        // Display current sentence
+        tvSentence.setText(currentSentence);
+
+        // Update current positions from buffer manager
+        currentParagraphIndex = bufferManager.getCurrentParagraphIndex();
+        currentSentenceIndex = bufferManager.getCurrentSentenceIndex();
+
+        // Show paragraph divider at end of paragraphs (last sentence of paragraph)
+        boolean showDivider = (currentSentenceIndex == bufferManager.getCurrentParagraphSentenceCount() - 1) &&
+                             (currentParagraphIndex < currentBook.getTotalSentences() - 1);
         dividerParagraph.setVisibility(showDivider ? View.VISIBLE : View.GONE);
 
-        // Update progress text
-        String progressText = getString(R.string.progress_format, currentIndex + 1, currentBook.getTotalSentences());
+        // Update progress text with sentence info
+        String progressText = getString(R.string.progress_format, currentParagraphIndex + 1, currentBook.getTotalSentences());
+        if (bufferManager.getCurrentParagraphSentenceCount() > 1) {
+            progressText += " (" + (currentSentenceIndex + 1) + "/" + bufferManager.getCurrentParagraphSentenceCount() + ")";
+        }
         tvProgress.setText(progressText);
 
         // Update progress bar
-        progressBar.setProgress(currentIndex + 1);
+        progressBar.setProgress(currentParagraphIndex + 1);
 
         // Update button states
-        btnPrevious.setEnabled(currentIndex > 0 && !isLoading);
-        btnNext.setEnabled(currentIndex < currentBook.getTotalSentences() - 1 && !isLoading);
+        boolean hasPrevious = !bufferManager.isAtBeginningOfBook();
+        boolean hasNext = !bufferManager.isAtEndOfBook();
+
+        btnPrevious.setEnabled(hasPrevious && !isLoading);
+        btnNext.setEnabled(hasNext && !isLoading);
 
         // Change button text for last sentence
-        if (currentIndex == currentBook.getTotalSentences() - 1) {
+        if (bufferManager.isAtEndOfBook()) {
             btnNext.setText("Finalizar");
         } else {
             btnNext.setText(getString(R.string.next));
         }
     }
 
-    private boolean isBreakMarker(int index) {
-        if (currentBook == null || index < 0 || index >= currentBook.getTotalSentences()) {
-            return false;
-        }
-        String sentence = bufferManager.getSentence(index);
-        return "[BREAK]".equals(sentence);
-    }
 
     private void showCompletionDialog() {
         new AlertDialog.Builder(this)
@@ -176,8 +182,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                     finish();
                 })
                 .setNegativeButton("Leer otra vez", (dialog, which) -> {
-                    currentIndex = 0;
-                    bufferManager.jumpToPosition(0);
+                    bufferManager.jumpToPosition(0, 0);
                     saveProgressAsync();
                     updateDisplay();
                 })
@@ -190,7 +195,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         executor.execute(() -> {
             try {
-                currentBook.setCurrentPosition(currentIndex);
+                currentBook.setCurrentPosition(bufferManager.getCurrentParagraphIndex());
+                currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
                 currentBook.setLastReadDate(new Date());
                 cacheManager.saveBookMeta(currentBook);
             } catch (Exception e) {

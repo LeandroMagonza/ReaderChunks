@@ -6,14 +6,16 @@ public class Book {
     private String id;              // Hash único del PDF
     private String title;           // Título del libro
     private String fileName;        // Nombre del archivo original
-    private int totalSentences;     // Total de oraciones
-    private int currentPosition;    // Posición actual de lectura
+    private int totalSentences;     // Total de párrafos
+    private int currentPosition;    // Párrafo actual de lectura (índice)
+    private int currentCharPosition; // Posición del carácter dentro del párrafo actual
     private Date lastReadDate;      // Última fecha de lectura
     private long fileSizeBytes;     // Tamaño del archivo original
     private Date processedDate;     // Fecha de procesamiento
 
     public Book() {
         this.currentPosition = 0;
+        this.currentCharPosition = 0;
         this.lastReadDate = new Date();
         this.processedDate = new Date();
     }
@@ -32,6 +34,7 @@ public class Book {
     public String getFileName() { return fileName; }
     public int getTotalSentences() { return totalSentences; }
     public int getCurrentPosition() { return currentPosition; }
+    public int getCurrentCharPosition() { return currentCharPosition; }
     public Date getLastReadDate() { return lastReadDate; }
     public long getFileSizeBytes() { return fileSizeBytes; }
     public Date getProcessedDate() { return processedDate; }
@@ -42,6 +45,7 @@ public class Book {
     public void setFileName(String fileName) { this.fileName = fileName; }
     public void setTotalSentences(int totalSentences) { this.totalSentences = totalSentences; }
     public void setCurrentPosition(int currentPosition) { this.currentPosition = currentPosition; }
+    public void setCurrentCharPosition(int currentCharPosition) { this.currentCharPosition = currentCharPosition; }
     public void setLastReadDate(Date lastReadDate) { this.lastReadDate = lastReadDate; }
     public void setFileSizeBytes(long fileSizeBytes) { this.fileSizeBytes = fileSizeBytes; }
     public void setProcessedDate(Date processedDate) { this.processedDate = processedDate; }
@@ -57,7 +61,7 @@ public class Book {
     }
 
     public boolean isStarted() {
-        return currentPosition > 0;
+        return currentPosition > 0 || currentCharPosition > 0;
     }
 
     public String getDisplayTitle() {

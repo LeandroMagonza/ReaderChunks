@@ -11,7 +11,9 @@
       "Bash(powershell:*)",
       "Read(//c/Users/**)",
       "Bash(java:*)",
-      "Bash(javac:*)"
+      "Bash(javac:*)",
+      "Bash(gradlew:*)",
+      "Bash(./gradlew:*)"
     ],
     "deny": [],
     "ask": []

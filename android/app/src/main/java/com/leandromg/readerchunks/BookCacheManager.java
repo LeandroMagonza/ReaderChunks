@@ -118,6 +118,7 @@ public class BookCacheManager {
             json.put("fileName", book.getFileName());
             json.put("totalSentences", book.getTotalSentences());
             json.put("currentPosition", book.getCurrentPosition());
+            json.put("currentCharPosition", book.getCurrentCharPosition());
             json.put("lastReadDate", dateFormat.format(book.getLastReadDate()));
             json.put("fileSizeBytes", book.getFileSizeBytes());
             json.put("processedDate", dateFormat.format(book.getProcessedDate()));
@@ -155,6 +156,8 @@ public class BookCacheManager {
             book.setFileName(json.getString("fileName"));
             book.setTotalSentences(json.getInt("totalSentences"));
             book.setCurrentPosition(json.getInt("currentPosition"));
+            // For backward compatibility, default to 0 if currentCharPosition doesn't exist
+            book.setCurrentCharPosition(json.optInt("currentCharPosition", 0));
             book.setLastReadDate(dateFormat.parse(json.getString("lastReadDate")));
             book.setFileSizeBytes(json.getLong("fileSizeBytes"));
             book.setProcessedDate(dateFormat.parse(json.getString("processedDate")));

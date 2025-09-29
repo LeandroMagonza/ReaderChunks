@@ -22,13 +22,13 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ---
 
-## 🚀 Roadmap (futuras mejoras)
+## 🚀 Roadmap (próximas mejoras)
 
 - **OCR integrado** (para PDFs escaneados con imágenes).
-- **Persistencia de progreso** por documento.
 - **Animaciones de gamificación** (confetti, logros, misiones diarias).
-- **Modo offline total**: lectura sin depender de internet.
-- **Biblioteca de documentos** y rachas de lectura.
+- **Rachas de lectura** y estadísticas detalladas.
+- **Menú de opciones por libro** (eliminar, renombrar, restablecer progreso).
+- **Mejoras en indicadores de progreso** (barra de párrafo + círculo de progreso total).
 
 ---
 
@@ -47,6 +47,8 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
   Carga por bloques con pre-carga anticipada para navegación fluida.
 - **Segmentación inteligente**
   Respeta la estructura del documento (títulos, párrafos, secciones).
+- **División dinámica en tiempo real**
+  Oraciones largas se dividen automáticamente para mejor lectura.
 
 ### Gestión de datos
 - **JSON** para metadata de libros (progreso, fechas, configuración).
@@ -70,12 +72,13 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 - Detectar **estructura del documento** (autor, capítulos, etc.)
 - Insertar marcadores `[BREAK]` entre párrafos para visualización
 
-**2. Nivel presentación (futuro)**
-- División dinámica de oraciones largas (>400 chars)
-- Adaptación según tamaño de pantalla y fuente
+**2. Nivel presentación (implementado)**
+- División dinámica de oraciones largas (>150 chars)
 - Corte inteligente en puntuación: `;`, `:`, `,`, espacios
+- Navegación por sub-oraciones con indicador visual
+- Adaptación automática sin reprocesar archivos
 
-### Detección automática de estructura
+### Funcionamiento completo del sistema
 ```
 PDF original:
 Miguel de Cervantes     <- Línea vacía debajo
@@ -84,20 +87,29 @@ El ingenioso hidalgo... <- Línea vacía debajo
                         <- Línea vacía
 Parte I                 <- Línea vacía debajo
 
-Resultado segmentado:
+Archivo procesado:
 1. Miguel de Cervantes El ingenioso hidalgo don quijote de la Mancha.
 2. [BREAK]
 3. Parte I.
 4. [BREAK]
 5. Tasa.
 6. [BREAK]
-7. Yo, Juan Gallo de Andrada... (párrafo completo)
+7. Yo, Juan Gallo de Andrada... (627 caracteres)
+
+Visualización dinámica:
+Oración 7.1 (128 chars): Yo, Juan Gallo de Andrada, escribano de Cámara del Rey...
+Oración 7.2 (133 chars): habiendo visto por los señores dél un libro intitulado...
+Oración 7.3 (98 chars): tasaron cada pliego del dicho libro...
+[navegación por sub-oraciones con indicador (2/6)]
 ```
 
 ### Ventajas del sistema
 - ✅ **Archivos portables**: La segmentación es consistente entre dispositivos
 - ✅ **Preserva estructura**: Títulos, autores y secciones se mantienen separados
 - ✅ **Visualización mejorada**: Indicadores visuales de cambio de párrafo
+- ✅ **División inteligente**: Oraciones largas se dividen automáticamente
+- ✅ **Navegación fluida**: Sub-oraciones con indicador de progreso (2/6)
+- ✅ **Sin reprocesamiento**: Archivos cache no cambian, solo la presentación
 - ✅ **Escalable**: Funciona con libros de cualquier tamaño y estructura
 
 ---
@@ -122,6 +134,13 @@ Resultado segmentado:
 - **Retroceso rápido** - Buffer anterior disponible inmediatamente.
 - **Limpieza automática** - Libera memoria de contenido lejano.
 
+### ¿Por qué división dinámica?
+- **Lectura mejorada** - Oraciones de máximo 150 caracteres.
+- **Corte inteligente** - División por puntuación: `;`, `:`, `,`, espacios.
+- **Sin reprocesamiento** - Los archivos cache no cambian.
+- **Navegación por partes** - Indicador visual de sub-oraciones.
+- **Adaptable** - Longitud configurable según preferencias futuras.
+
 ---
 
 ## 📱 Estructura del Proyecto
@@ -131,13 +150,14 @@ ReaderChunks/
 ├── android/                           # Proyecto Android completo
 │   ├── app/src/main/java/com/leandromg/readerchunks/
 │   │   ├── MainActivity.java          # Biblioteca de libros
-│   │   ├── SentenceReaderActivity.java # Lectura con buffer
+│   │   ├── SentenceReaderActivity.java # Lectura con navegación inteligente
 │   │   ├── Book.java                  # Modelo de libro
 │   │   ├── BookCacheManager.java      # Gestión de cache
 │   │   ├── BufferManager.java         # Buffer inteligente
 │   │   ├── BookAdapter.java           # Adaptador RecyclerView
 │   │   ├── PDFTextExtractor.java      # Extracción para Android
-│   │   └── SentenceSegmenter.java     # Segmentación de oraciones
+│   │   ├── SentenceSegmenter.java     # Segmentación de oraciones
+│   │   └── DynamicSentenceSplitter.java # División dinámica en tiempo real
 │   ├── app/src/main/res/
 │   │   ├── layout/                    # Layouts de Activities
 │   │   └── values/                    # Strings, colores, temas
@@ -216,30 +236,43 @@ Libro de 10,000 oraciones:
 
 ## 📋 Estado Actual
 
-### ✅ Sistema Core
+### ✅ Sistema Core Completo
 - [x] **Extracción de texto de PDF** usando PDFBox-Android
 - [x] **Sistema de cache persistente** con archivos JSON + TXT
-- [x] **Buffer inteligente** con pre-carga y limpieza automática
+- [x] **Buffer inteligente 3-párrafos** con pre-carga asíncrona
 - [x] **Identificación única** de PDFs por hash MD5
 - [x] **Manejo de errores** robusto en toda la aplicación
-- [x] **Segmentación inteligente** respetando estructura del documento
-- [x] **Detección automática** de títulos, secciones y párrafos
-- [x] **Marcadores [BREAK]** para preservar puntos y aparte
+- [x] **Segmentación por párrafos** preservando texto original exacto
+- [x] **División dinámica en tiempo real** con posiciones pre-calculadas
+- [x] **Validación inteligente de cortes** (evita cortar en URLs, IPs, abreviaciones)
+- [x] **Algoritmo resiliente** - posiciones por carácter, no por algoritmo
 
-### ✅ Interfaz y UX
+### ✅ Interfaz y UX Completa
 - [x] **Biblioteca personal** con lista de libros procesados
-- [x] **Progreso persistente** - retomar donde quedaste
+- [x] **Persistencia de progreso completa** - retomar exacto donde quedaste
+- [x] **Modo completamente offline** - sin necesidad de internet
 - [x] **Material Design** moderno con RecyclerView
 - [x] **Navegación fluida** sin esperas de carga
-- [x] **Estados visuales** (vacío, cargando, lista)
+- [x] **Estados visuales** (vacío, cargando, lista, error)
 - [x] **Indicadores visuales** de cambio de párrafo
+- [x] **Controles táctiles** responsivos (botones anterior/siguiente)
 
-### ✅ Funcionalidades principales
-- [x] **Agregar libros** desde selector de archivos
-- [x] **Procesamiento único** - cache automático
-- [x] **Lectura por oraciones** con navegación
-- [x] **Guardado automático** de progreso
-- [x] **Gestión de memoria** eficiente para libros grandes
+### ✅ Algoritmo de Lectura Avanzado
+- [x] **División inteligente por prioridades**: `:` > `;` > `,` > espacio
+- [x] **Preservación de texto original** - cero modificaciones al contenido
+- [x] **Validación de caracteres de corte** - solo si seguidos de espacio
+- [x] **Navegación por oraciones** dentro de párrafos
+- [x] **Tracking por posición de carácter** para resistencia a cambios de algoritmo
+- [x] **Buffer de 3 párrafos** (anterior, actual, siguiente)
+- [x] **Carga asíncrona** sin bloquear la UI
+
+### 🎯 Experiencia de Lectura Optimizada
+- [x] **Oraciones optimizadas** - máximo 150 caracteres para lectura cómoda
+- [x] **Navegación intuitiva** - botones anterior/siguiente con estados inteligentes
+- [x] **Indicadores de progreso** - párrafo actual y sub-oraciones
+- [x] **Separación visual** - divisores entre párrafos
+- [x] **Lectura fluida** - sin esperas, cortes, o texto corrupto
+- [x] **Preservación exacta** - "!a Mancha" se mantiene como "!a Mancha"
 
 ### 🚀 Para usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
@@ -247,12 +280,52 @@ Libro de 10,000 oraciones:
 3. **Instalar** en dispositivo Android
 4. **Agregar libro** → Seleccionar PDF → ¡Leer!
 
-### 📈 Siguientes mejoras
-- [ ] **División dinámica de oraciones largas** según pantalla
-- [ ] **Configuración de longitud máxima** de visualización
-- [ ] **Navegación por sub-oraciones** en textos densos
-- [ ] **Botón eliminar libro** de la biblioteca
-- [ ] **Botón resetear progreso** de lectura
+### 📈 Próximas mejoras
+
+#### 🎯 Gestión de libros (Prioridad Alta)
+- [ ] **Menú de opciones por libro** con:
+  - [ ] **Eliminar libro** (con confirmación y limpieza de archivos)
+  - [ ] **Restablecer progreso** (volver al inicio con confirmación)
+  - [ ] **Renombrar libro** (cambiar título con input de texto)
+- [ ] **Estadísticas de lectura** (tiempo, párrafos completados, progreso diario)
+
+#### 🎨 Mejoras en indicadores de progreso (Prioridad Alta)
+
+**Problema actual**: La barra de progreso muestra avance del libro completo, pero es más útil ver el progreso dentro del párrafo actual.
+
+**Solución propuesta**:
+- [ ] **Barra de progreso del párrafo actual** (reemplazar barra actual)
+  - [ ] Muestra progreso de oraciones dentro del párrafo actual (ej: oración 2 de 5)
+  - [ ] Se rellena completamente al terminar cada párrafo
+  - [ ] Proporciona satisfacción inmediata y mejor sensación de avance
+
+- [ ] **Círculo de progreso total** en esquina superior derecha
+  - [ ] Círculo que se va rellenando gradualmente con el % del libro completado
+  - [ ] Porcentaje numérico en el centro (ej: "23%")
+  - [ ] Se posiciona junto al indicador actual "párrafo X/Y"
+  - [ ] Proporciona contexto del progreso total sin dominar la interfaz
+
+**Beneficios**:
+- ✅ **Motivación inmediata**: Ver progreso del párrafo actual
+- ✅ **Contexto total**: Círculo muestra progreso general del libro
+- ✅ **Mejor UX**: Dos niveles de progreso (inmediato + general)
+- ✅ **Satisfacción**: Completar párrafos da sensación de logro
+
+#### 🎛️ Personalización
+- [ ] **Configuración de longitud máxima** de corte dinámico (150 chars por defecto)
+- [ ] **Configuración de tamaño de fuente** (pequeña, mediana, grande, extra grande)
+- [ ] **Tema oscuro** (fondo negro, texto blanco) y personalización de colores
+- [ ] **Velocidad de lectura** y métricas de progreso
+
+#### 👆 Navegación y gestos
+- [ ] **Navegación por swipe**:
+  - [ ] **Swipe izquierda** → Siguiente oración/sub-oración
+  - [ ] **Swipe derecha** → Oración/sub-oración anterior
+  - [ ] **Combinación** con botones existentes para máxima flexibilidad
+- [ ] **Gestos adicionales** para navegación rápida entre párrafos
+
+#### 📚 Formatos y funcionalidades avanzadas
 - [ ] **Soporte TXT y EPUB** (formatos adicionales)
-- [ ] **Configuración de tamaño de fuente**
-- [ ] **Modo oscuro** y temas personalizables
+- [ ] **Marcadores y favoritos** en posiciones específicas
+- [ ] **Búsqueda de texto** dentro de libros
+- [ ] **Exportar progreso** y sincronización entre dispositivos

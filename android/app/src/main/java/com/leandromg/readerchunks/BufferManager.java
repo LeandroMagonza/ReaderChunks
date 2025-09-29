@@ -1,30 +1,23 @@
 package com.leandromg.readerchunks;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BufferManager {
-    private static final int WINDOW_SIZE = 50;          // Ventana principal
-    private static final int BUFFER_SIZE = 25;          // Buffer anterior/siguiente
-    private static final double PRELOAD_THRESHOLD = 0.7; // Cargar al 70%
-
     private BookCacheManager cacheManager;
     private ExecutorService executor;
     private String currentBookId;
-    private int totalSentences;
+    private int totalParagraphs;
 
-    // Buffers en memoria
-    private List<String> previousBuffer;    // [pos-25, pos-1]
-    private List<String> currentWindow;     // [pos, pos+49]
-    private List<String> nextBuffer;        // [pos+50, pos+74]
+    // 3-paragraph buffer with sentence positions
+    private ParagraphSentences previousParagraph = null;
+    private ParagraphSentences currentParagraph = null;
+    private ParagraphSentences nextParagraph = null;
 
-    // Posiciones de los buffers
-    private int previousBufferStart = -1;
-    private int currentWindowStart = -1;
-    private int nextBufferStart = -1;
+    // Current position tracking
+    private int currentParagraphIndex = -1;
+    private int currentSentenceIndex = 0;
 
     private BufferLoadListener listener;
 
@@ -36,240 +29,297 @@ public class BufferManager {
     public BufferManager(BookCacheManager cacheManager) {
         this.cacheManager = cacheManager;
         this.executor = Executors.newSingleThreadExecutor();
-        this.previousBuffer = new ArrayList<>();
-        this.currentWindow = new ArrayList<>();
-        this.nextBuffer = new ArrayList<>();
     }
 
-    public void initialize(String bookId, int totalSentences, int startPosition, BufferLoadListener listener) {
+    public void initialize(String bookId, int totalParagraphs, int startParagraphIndex, BufferLoadListener listener) {
         this.currentBookId = bookId;
-        this.totalSentences = totalSentences;
+        this.totalParagraphs = totalParagraphs;
         this.listener = listener;
 
-        // Limpiar buffers existentes
+        // Clear existing buffers
         clearBuffers();
 
-        // Cargar buffers iniciales
-        loadBuffersForPosition(startPosition);
+        // Load buffers for the starting paragraph
+        loadParagraphsAroundIndex(startParagraphIndex);
     }
 
-    public String getSentence(int position) {
-        // Verificar en ventana actual
-        if (isInCurrentWindow(position)) {
-            int index = position - currentWindowStart;
-            if (index >= 0 && index < currentWindow.size()) {
-                checkPreloadTrigger(position);
-                return currentWindow.get(index);
-            }
-        }
+    /**
+     * Initialize with specific paragraph and sentence position
+     */
+    public void initialize(String bookId, int totalParagraphs, int paragraphIndex, int sentenceIndex, BufferLoadListener listener) {
+        this.currentBookId = bookId;
+        this.totalParagraphs = totalParagraphs;
+        this.listener = listener;
+        this.currentSentenceIndex = sentenceIndex;
 
-        // Verificar en buffer anterior
-        if (isInPreviousBuffer(position)) {
-            int index = position - previousBufferStart;
-            if (index >= 0 && index < previousBuffer.size()) {
-                return previousBuffer.get(index);
-            }
-        }
-
-        // Verificar en buffer siguiente
-        if (isInNextBuffer(position)) {
-            int index = position - nextBufferStart;
-            if (index >= 0 && index < nextBuffer.size()) {
-                return nextBuffer.get(index);
-            }
-        }
-
-        // No está en buffers - cargar síncronamente
-        try {
-            loadBuffersForPosition(position);
-            if (isInCurrentWindow(position)) {
-                int index = position - currentWindowStart;
-                return currentWindow.get(index);
-            }
-        } catch (Exception e) {
-            return "Error cargando oración: " + e.getMessage();
-        }
-
-        return "Oración no disponible";
-    }
-
-    private void checkPreloadTrigger(int currentPosition) {
-        if (currentWindowStart == -1) return;
-
-        int relativePosition = currentPosition - currentWindowStart;
-        double threshold = WINDOW_SIZE * PRELOAD_THRESHOLD;
-
-        // Trigger para cargar siguiente
-        if (relativePosition >= threshold && needsNextBuffer(currentPosition)) {
-            preloadNext(currentPosition);
-        }
-
-        // Trigger para cargar anterior
-        if (relativePosition <= (WINDOW_SIZE * (1 - PRELOAD_THRESHOLD)) && needsPreviousBuffer(currentPosition)) {
-            preloadPrevious(currentPosition);
-        }
-    }
-
-    private boolean needsNextBuffer(int position) {
-        int expectedNextStart = currentWindowStart + WINDOW_SIZE;
-        return nextBufferStart != expectedNextStart && expectedNextStart < totalSentences;
-    }
-
-    private boolean needsPreviousBuffer(int position) {
-        int expectedPrevStart = Math.max(0, currentWindowStart - BUFFER_SIZE);
-        return previousBufferStart != expectedPrevStart && currentWindowStart > 0;
-    }
-
-    private void preloadNext(int currentPosition) {
-        executor.execute(() -> {
-            try {
-                int newNextStart = currentWindowStart + WINDOW_SIZE;
-                if (newNextStart < totalSentences) {
-                    List<String> newNextBuffer = cacheManager.getSentences(
-                        currentBookId, newNextStart, BUFFER_SIZE);
-
-                    synchronized(this) {
-                        nextBuffer = newNextBuffer;
-                        nextBufferStart = newNextStart;
-                    }
-
-                    // Limpiar buffer anterior si está muy atrás
-                    cleanOldBuffers(currentPosition);
-                }
-            } catch (IOException e) {
-                if (listener != null) {
-                    listener.onBufferError("Error precargando: " + e.getMessage());
-                }
-            }
-        });
-    }
-
-    private void preloadPrevious(int currentPosition) {
-        executor.execute(() -> {
-            try {
-                int newPrevStart = Math.max(0, currentWindowStart - BUFFER_SIZE);
-                if (newPrevStart < currentWindowStart) {
-                    List<String> newPrevBuffer = cacheManager.getSentences(
-                        currentBookId, newPrevStart, BUFFER_SIZE);
-
-                    synchronized(this) {
-                        previousBuffer = newPrevBuffer;
-                        previousBufferStart = newPrevStart;
-                    }
-                }
-            } catch (IOException e) {
-                if (listener != null) {
-                    listener.onBufferError("Error precargando anterior: " + e.getMessage());
-                }
-            }
-        });
-    }
-
-    private void cleanOldBuffers(int currentPosition) {
-        // Limpiar buffer anterior si el usuario avanzó mucho
-        if (previousBufferStart != -1 && currentPosition > previousBufferStart + BUFFER_SIZE + WINDOW_SIZE) {
-            synchronized(this) {
-                previousBuffer.clear();
-                previousBufferStart = -1;
-            }
-        }
-    }
-
-    public void jumpToPosition(int position) {
-        // Para saltos grandes, recargar todos los buffers
+        // Clear existing buffers
         clearBuffers();
-        loadBuffersForPosition(position);
+
+        // Load buffers for the starting paragraph
+        loadParagraphsAroundIndex(paragraphIndex);
     }
 
-    private void loadBuffersForPosition(int position) {
-        executor.execute(() -> {
-            try {
-                // Calcular posiciones óptimas
-                int windowStart = Math.max(0, position);
-                int prevStart = Math.max(0, windowStart - BUFFER_SIZE);
-                int nextStart = windowStart + WINDOW_SIZE;
+    /**
+     * Get sentence from current paragraph
+     */
+    public String getCurrentSentence() {
+        if (currentParagraph == null) {
+            return "Error: No hay párrafo cargado";
+        }
 
-                // Cargar ventana actual (prioritario)
-                List<String> window = cacheManager.getSentences(currentBookId, windowStart, WINDOW_SIZE);
+        String sentence = currentParagraph.getSentence(currentSentenceIndex);
+        return sentence != null ? sentence : "Error: Oración no disponible";
+    }
 
-                // Cargar buffer anterior si es posible
-                List<String> prev = new ArrayList<>();
-                if (prevStart < windowStart) {
-                    prev = cacheManager.getSentences(currentBookId, prevStart,
-                                                   Math.min(BUFFER_SIZE, windowStart - prevStart));
-                }
+    /**
+     * Move to next sentence (within paragraph or to next paragraph)
+     */
+    public boolean moveToNextSentence() {
+        if (currentParagraph == null) {
+            return false;
+        }
 
-                // Cargar buffer siguiente si es posible
-                List<String> next = new ArrayList<>();
-                if (nextStart < totalSentences) {
-                    next = cacheManager.getSentences(currentBookId, nextStart,
-                                                   Math.min(BUFFER_SIZE, totalSentences - nextStart));
-                }
+        // Try to move to next sentence within current paragraph
+        if (currentSentenceIndex < currentParagraph.getSentenceCount() - 1) {
+            currentSentenceIndex++;
+            return true;
+        }
 
-                // Actualizar buffers de forma atómica
-                synchronized(this) {
-                    currentWindow = window;
-                    currentWindowStart = windowStart;
+        // Move to next paragraph's first sentence
+        if (moveToNextParagraph()) {
+            currentSentenceIndex = 0;
+            return true;
+        }
 
-                    previousBuffer = prev;
-                    previousBufferStart = prevStart;
+        return false; // End of book
+    }
 
-                    nextBuffer = next;
-                    nextBufferStart = nextStart;
-                }
+    /**
+     * Move to previous sentence (within paragraph or to previous paragraph)
+     */
+    public boolean moveToPreviousSentence() {
+        if (currentParagraph == null) {
+            return false;
+        }
 
-                if (listener != null) {
-                    listener.onBufferLoaded();
-                }
+        // Try to move to previous sentence within current paragraph
+        if (currentSentenceIndex > 0) {
+            currentSentenceIndex--;
+            return true;
+        }
 
-            } catch (IOException e) {
-                if (listener != null) {
-                    listener.onBufferError("Error cargando buffers: " + e.getMessage());
-                }
+        // Move to previous paragraph's last sentence
+        if (moveToPreviousParagraph()) {
+            currentSentenceIndex = currentParagraph.getSentenceCount() - 1;
+            return true;
+        }
+
+        return false; // Beginning of book
+    }
+
+    /**
+     * Move to next paragraph
+     */
+    public boolean moveToNextParagraph() {
+        if (currentParagraphIndex >= totalParagraphs - 1) {
+            return false; // Already at last paragraph
+        }
+
+        // Shift buffers: current becomes previous, next becomes current
+        previousParagraph = currentParagraph;
+        currentParagraph = nextParagraph;
+        currentParagraphIndex++;
+
+        // Load new next paragraph asynchronously
+        loadNextParagraphAsync();
+
+        return true;
+    }
+
+    /**
+     * Move to previous paragraph
+     */
+    public boolean moveToPreviousParagraph() {
+        if (currentParagraphIndex <= 0) {
+            return false; // Already at first paragraph
+        }
+
+        // Shift buffers: current becomes next, previous becomes current
+        nextParagraph = currentParagraph;
+        currentParagraph = previousParagraph;
+        currentParagraphIndex--;
+
+        // Load new previous paragraph asynchronously
+        loadPreviousParagraphAsync();
+
+        return true;
+    }
+
+    /**
+     * Jump to specific paragraph and sentence
+     */
+    public void jumpToPosition(int paragraphIndex, int sentenceIndex) {
+        if (paragraphIndex >= 0 && paragraphIndex < totalParagraphs) {
+            this.currentSentenceIndex = Math.max(0, sentenceIndex);
+            loadParagraphsAroundIndex(paragraphIndex);
+        }
+    }
+
+    /**
+     * Jump to specific paragraph (sentence 0)
+     */
+    public void jumpToPosition(int paragraphIndex) {
+        jumpToPosition(paragraphIndex, 0);
+    }
+
+    /**
+     * Get current paragraph index
+     */
+    public int getCurrentParagraphIndex() {
+        return currentParagraphIndex;
+    }
+
+    /**
+     * Get current sentence index within paragraph
+     */
+    public int getCurrentSentenceIndex() {
+        return currentSentenceIndex;
+    }
+
+    /**
+     * Get current character position for saving progress
+     */
+    public int getCurrentCharPosition() {
+        if (currentParagraph == null) {
+            return 0;
+        }
+
+        return currentParagraph.getSentenceStart(currentSentenceIndex);
+    }
+
+    /**
+     * Set position by character offset within current paragraph
+     */
+    public void setCharacterPosition(int charPosition) {
+        if (currentParagraph != null) {
+            int sentenceIndex = currentParagraph.findSentenceIndexForPosition(charPosition);
+            if (sentenceIndex >= 0) {
+                currentSentenceIndex = sentenceIndex;
             }
-        });
+        }
     }
 
-    private boolean isInCurrentWindow(int position) {
-        return currentWindowStart != -1 &&
-               position >= currentWindowStart &&
-               position < currentWindowStart + currentWindow.size();
+    /**
+     * Get total sentences in current paragraph
+     */
+    public int getCurrentParagraphSentenceCount() {
+        return currentParagraph != null ? currentParagraph.getSentenceCount() : 0;
     }
 
-    private boolean isInPreviousBuffer(int position) {
-        return previousBufferStart != -1 &&
-               position >= previousBufferStart &&
-               position < previousBufferStart + previousBuffer.size();
+    /**
+     * Check if at end of book
+     */
+    public boolean isAtEndOfBook() {
+        return currentParagraphIndex >= totalParagraphs - 1 &&
+               currentSentenceIndex >= getCurrentParagraphSentenceCount() - 1;
     }
 
-    private boolean isInNextBuffer(int position) {
-        return nextBufferStart != -1 &&
-               position >= nextBufferStart &&
-               position < nextBufferStart + nextBuffer.size();
+    /**
+     * Check if at beginning of book
+     */
+    public boolean isAtBeginningOfBook() {
+        return currentParagraphIndex <= 0 && currentSentenceIndex <= 0;
     }
 
     private void clearBuffers() {
-        synchronized(this) {
-            previousBuffer.clear();
-            currentWindow.clear();
-            nextBuffer.clear();
-            previousBufferStart = -1;
-            currentWindowStart = -1;
-            nextBufferStart = -1;
+        previousParagraph = null;
+        currentParagraph = null;
+        nextParagraph = null;
+        currentParagraphIndex = -1;
+        currentSentenceIndex = 0;
+    }
+
+    private void loadParagraphsAroundIndex(int paragraphIndex) {
+        executor.execute(() -> {
+            try {
+                loadParagraphsAroundIndexSync(paragraphIndex);
+                if (listener != null) {
+                    listener.onBufferLoaded();
+                }
+            } catch (Exception e) {
+                if (listener != null) {
+                    listener.onBufferError("Error loading paragraphs: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void loadParagraphsAroundIndexSync(int paragraphIndex) throws IOException {
+        currentParagraphIndex = paragraphIndex;
+
+        // Load current paragraph
+        String currentText = cacheManager.getSentence(currentBookId, paragraphIndex);
+        currentParagraph = new ParagraphSentences(currentText, paragraphIndex);
+
+        // Load previous paragraph if exists
+        if (paragraphIndex > 0) {
+            String prevText = cacheManager.getSentence(currentBookId, paragraphIndex - 1);
+            previousParagraph = new ParagraphSentences(prevText, paragraphIndex - 1);
+        } else {
+            previousParagraph = null;
+        }
+
+        // Load next paragraph if exists
+        if (paragraphIndex < totalParagraphs - 1) {
+            String nextText = cacheManager.getSentence(currentBookId, paragraphIndex + 1);
+            nextParagraph = new ParagraphSentences(nextText, paragraphIndex + 1);
+        } else {
+            nextParagraph = null;
+        }
+
+        // Ensure sentence index is valid for the loaded paragraph
+        if (currentParagraph != null && currentSentenceIndex >= currentParagraph.getSentenceCount()) {
+            currentSentenceIndex = Math.max(0, currentParagraph.getSentenceCount() - 1);
+        }
+    }
+
+    private void loadNextParagraphAsync() {
+        int nextIndex = currentParagraphIndex + 1;
+        if (nextIndex < totalParagraphs) {
+            executor.execute(() -> {
+                try {
+                    String nextText = cacheManager.getSentence(currentBookId, nextIndex);
+                    nextParagraph = new ParagraphSentences(nextText, nextIndex);
+                } catch (IOException e) {
+                    // Silent fail for async preload
+                    nextParagraph = null;
+                }
+            });
+        } else {
+            nextParagraph = null;
+        }
+    }
+
+    private void loadPreviousParagraphAsync() {
+        int prevIndex = currentParagraphIndex - 1;
+        if (prevIndex >= 0) {
+            executor.execute(() -> {
+                try {
+                    String prevText = cacheManager.getSentence(currentBookId, prevIndex);
+                    previousParagraph = new ParagraphSentences(prevText, prevIndex);
+                } catch (IOException e) {
+                    // Silent fail for async preload
+                    previousParagraph = null;
+                }
+            });
+        } else {
+            previousParagraph = null;
         }
     }
 
     public void shutdown() {
-        if (executor != null) {
+        if (executor != null && !executor.isShutdown()) {
             executor.shutdown();
         }
-    }
-
-    // Debug methods
-    public String getBufferStatus() {
-        return String.format("Buffers: Prev[%d-%d] Current[%d-%d] Next[%d-%d]",
-                           previousBufferStart, previousBufferStart + previousBuffer.size() - 1,
-                           currentWindowStart, currentWindowStart + currentWindow.size() - 1,
-                           nextBufferStart, nextBufferStart + nextBuffer.size() - 1);
     }
 }
