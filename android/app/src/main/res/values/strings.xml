@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ReaderChunks</string>
-    <string name="select_pdf">Elegir PDF</string>
+    <string name="select_document">Elegir Documento</string>
     <string name="processing">Procesando...</string>
     <string name="error_title">Error</string>
-    <string name="error_pdf_not_found">PDF no encontrado</string>
-    <string name="error_pdf_encrypted">PDF encriptado, no se puede procesar</string>
-    <string name="error_pdf_processing">Error procesando PDF</string>
+    <string name="error_document_not_found">Documento no encontrado</string>
+    <string name="error_document_encrypted">Documento encriptado, no se puede procesar</string>
+    <string name="error_document_processing">Error procesando documento</string>
+    <string name="error_format_not_supported">Formato no soportado. Formatos válidos: PDF, TXT, MD, EPUB</string>
     <string name="sentences_extracted">Oraciones extraídas: %d</string>
     <string name="progress_format" formatted="false">%d / %d</string>
     <string name="next">Siguiente</string>

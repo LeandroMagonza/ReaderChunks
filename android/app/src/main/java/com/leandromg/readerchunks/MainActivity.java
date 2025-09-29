@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private List<Book> books;
     private ThemeManager themeManager;
 
-    private ActivityResultLauncher<String[]> pdfPickerLauncher;
+    private ActivityResultLauncher<String[]> documentPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +61,12 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         setupExecutor();
         setupCacheManager();
         setupRecyclerView();
-        setupPdfPicker();
+        setupDocumentPicker();
         setupClickListeners();
         loadBooks();
+
+        // Handle external file opening intent
+        handleExternalFileIntent();
     }
 
     private void initViews() {
@@ -95,29 +98,44 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         recyclerBooks.setAdapter(bookAdapter);
     }
 
-    private void setupPdfPicker() {
-        pdfPickerLauncher = registerForActivityResult(
+    private void setupDocumentPicker() {
+        documentPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
-                this::handlePdfSelection
+                this::handleDocumentSelection
         );
     }
 
     private void setupClickListeners() {
-        fabAddBook.setOnClickListener(v -> openPdfPicker());
+        fabAddBook.setOnClickListener(v -> openDocumentPicker());
     }
 
-    private void openPdfPicker() {
-        pdfPickerLauncher.launch(new String[]{"application/pdf"});
+    private void openDocumentPicker() {
+        // Get all supported MIME types from the TextExtractorFactory
+        String[] supportedMimeTypes = TextExtractorFactory.getAllSupportedMimeTypes();
+        documentPickerLauncher.launch(supportedMimeTypes);
     }
 
-    private void handlePdfSelection(Uri uri) {
+    private void handleDocumentSelection(Uri uri) {
         if (uri != null) {
             String fileName = getFileNameFromUri(uri);
-            processPdf(uri, fileName);
+            processDocument(uri, fileName);
         }
     }
 
-    private void processPdf(Uri uri, String fileName) {
+    private void processDocument(Uri uri, String fileName) {
+        // Check if file format is supported
+        String extension = TextExtractorFactory.getFileExtension(fileName);
+        if (extension == null) {
+            showError("❌ No se pudo determinar el tipo de archivo: " + fileName);
+            return;
+        }
+
+        if (!TextExtractorFactory.isExtensionSupported(extension)) {
+            showError("❌ Formato no soportado: ." + extension +
+                     "\nFormatos válidos: " + TextExtractorFactory.getSupportedFormatsDescription());
+            return;
+        }
+
         showLoading(true);
         tvStatus.setText("Extrayendo texto del archivo...");
 
@@ -125,6 +143,11 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
             try {
                 // Update status during processing
                 runOnUiThread(() -> tvStatus.setText("Analizando contenido..."));
+
+                // Debug information
+                android.util.Log.d("MainActivity", "Processing file: " + fileName);
+                android.util.Log.d("MainActivity", "URI: " + uri.toString());
+                android.util.Log.d("MainActivity", "Extension: " + extension);
 
                 Book book = cacheManager.processAndCacheBook(uri, fileName);
 
@@ -141,13 +164,15 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                     bookAdapter.updateBooks(books);
                     updateViewState();
 
-                    Toast.makeText(this, "✅ Libro agregado: " + book.getDisplayTitle(), Toast.LENGTH_LONG).show();
+                    String fileType = extension.toUpperCase();
+                    Toast.makeText(this, "✅ " + fileType + " agregado: " + book.getDisplayTitle(), Toast.LENGTH_LONG).show();
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     showLoading(false);
-                    showError("❌ Error procesando PDF: " + e.getMessage());
+                    String fileType = extension != null ? extension.toUpperCase() : "archivo";
+                    showError("❌ Error procesando " + fileType + ": " + e.getMessage());
                 });
             }
         });
@@ -337,14 +362,38 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     }
 
     private String getFileNameFromUri(Uri uri) {
-        String path = uri.getPath();
-        if (path != null) {
-            int index = path.lastIndexOf('/');
-            if (index != -1) {
-                return path.substring(index + 1);
+        String fileName = "documento";
+
+        // Try to get filename from content resolver first (for content:// URIs)
+        if ("content".equals(uri.getScheme())) {
+            try (android.database.Cursor cursor = getContentResolver().query(
+                    uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex >= 0) {
+                        String name = cursor.getString(nameIndex);
+                        if (name != null && !name.trim().isEmpty()) {
+                            fileName = name;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Fall back to path extraction
             }
         }
-        return "documento.pdf";
+
+        // Fall back to extracting from path for file:// URIs or if content resolver failed
+        if ("documento".equals(fileName)) {
+            String path = uri.getPath();
+            if (path != null) {
+                int index = path.lastIndexOf('/');
+                if (index != -1 && index < path.length() - 1) {
+                    fileName = path.substring(index + 1);
+                }
+            }
+        }
+
+        return fileName;
     }
 
     @Override
@@ -372,6 +421,46 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 // Silently fail - not critical for user experience
             }
         });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        // Update the intent and handle the new file
+        setIntent(intent);
+        handleExternalFileIntent();
+    }
+
+    /**
+     * Handle when the app is opened via an external file intent
+     */
+    private void handleExternalFileIntent() {
+        Intent intent = getIntent();
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+            Uri fileUri = intent.getData();
+            if (fileUri != null) {
+                // For content:// URIs, try to get persistent access permission
+                if ("content".equals(fileUri.getScheme())) {
+                    try {
+                        getContentResolver().takePersistableUriPermission(fileUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } catch (SecurityException e) {
+                        // Permission not available, but we can still try to process the file
+                        android.util.Log.w("MainActivity", "Could not get persistent permission for: " + fileUri);
+                    }
+                }
+
+                String fileName = getFileNameFromUri(fileUri);
+                android.util.Log.d("MainActivity", "External file intent - File: " + fileName + ", URI: " + fileUri);
+
+                // Show a toast to indicate the file is being processed
+                Toast.makeText(this, "Abriendo " + fileName + "...", Toast.LENGTH_SHORT).show();
+
+                // Process the external file directly
+                processDocument(fileUri, fileName);
+            }
+        }
     }
 
     @Override

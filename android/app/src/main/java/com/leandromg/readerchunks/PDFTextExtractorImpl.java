@@ -10,9 +10,13 @@ import com.tom_roush.pdfbox.text.PDFTextStripper;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class PDFTextExtractor {
+/**
+ * PDF text extractor implementation using PDFBox
+ */
+public class PDFTextExtractorImpl implements TextExtractor {
 
-    public static String extractTextFromUri(Context context, Uri uri) throws IOException {
+    @Override
+    public String extractTextFromUri(Context context, Uri uri) throws IOException {
         PDFBoxResourceLoader.init(context);
 
         InputStream inputStream = null;
@@ -55,5 +59,15 @@ public class PDFTextExtractor {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean supportsExtension(String extension) {
+        return "pdf".equalsIgnoreCase(extension);
+    }
+
+    @Override
+    public String[] getSupportedMimeTypes() {
+        return new String[]{"application/pdf"};
     }
 }

@@ -1,0 +1,19 @@
+Sample Document
+[BREAK]
+This is a sample Markdown document to test our extraction capabilities.
+[BREAK]
+## Features
+[BREAK]
+Our reader supports:
+[BREAK]
+- PDF files using PDFBox - Plain text files with UTF-8 encoding - Markdown files with formatting removal - EPUB files with HTML content extraction
+[BREAK]
+## Code Example
+[BREAK]
+Here's a simple Java example:
+[BREAK]
+## Conclusion
+[BREAK]
+This demonstrates our multi-format support. Visit our website for more information.
+[BREAK]
+> "The best way to learn programming is by practicing." - Anonymous

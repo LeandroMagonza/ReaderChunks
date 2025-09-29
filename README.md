@@ -7,28 +7,34 @@ El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y 
 
 ---
 
-## ✨ Funcionalidades (MVP)
+## ✨ Funcionalidades Implementadas
 
-- **Carga de PDF**: el usuario selecciona un archivo desde su dispositivo.
-- **Validación**: si el PDF no contiene texto extraíble (ej. escaneo), se muestra un error.
-- **Extracción de texto**: se procesa el PDF y se obtiene el contenido completo en texto plano usando PDFBox.
-- **Segmentación**: el texto se divide en **oraciones** (posteriormente, se podrá extender a párrafos o chunks configurables).
-- **Lectura progresiva**:
-  - Se muestra **una oración por pantalla**.
-  - Botón flotante para pasar a la siguiente oración.
-  - Tap lateral para retroceder.
-- **Progreso visual**: barra inferior que refleja el avance respecto al total de oraciones.
-- **Mensajes de error claros**: cuando el documento no contiene texto o no puede abrirse.
+### 📄 Gestión de Documentos
+- **Carga de PDF**: selección desde el dispositivo con validación completa
+- **Soporte múltiple**: PDF (implementado), TXT, MD, EPUB (próximamente)
+- **Identificación única**: hash MD5 para evitar duplicados
+- **Sistema de cache**: procesamiento único por documento
+
+### 📚 Modos de Lectura
+- **Modo bite-size**: una oración por pantalla (máximo 150 caracteres)
+- **Modo párrafo completo**: párrafo completo con scroll
+- **Toggle intuitivo**: botón |—| / |☰| para cambiar entre modos
+- **Persistencia individual**: cada libro recuerda su modo de lectura preferido
+
+### 🎮 Navegación Inteligente
+- **Navegación por botones**: anterior/siguiente con estados inteligentes
+- **Gestos swipe**: deslizar izquierda/derecha para navegar
+- **División dinámica**: oraciones largas se dividen automáticamente
+- **Indicadores visuales**: separadores entre párrafos
+
+### 📊 Sistema de Progreso Avanzado
+- **Progreso dual**: párrafos (28/284) y oraciones (1/18) por separado
+- **Corona circular**: porcentaje preciso del libro completado
+- **Persistencia completa**: retomar exactamente donde se quedó
+- **Cálculo preciso**: basado en posición de carácter, no estimaciones
 
 ---
 
-## 🚀 Roadmap (próximas mejoras)
-
-- **OCR integrado** (para PDFs escaneados con imágenes).
-- **Animaciones de gamificación** (confetti, logros, misiones diarias).
-- **Rachas de lectura** y estadísticas detalladas.
-- **Menú de opciones por libro** (eliminar, renombrar, restablecer progreso).
-- **Mejoras en indicadores de progreso** (barra de párrafo + círculo de progreso total).
 
 ---
 
@@ -150,17 +156,18 @@ ReaderChunks/
 ├── android/                           # Proyecto Android completo
 │   ├── app/src/main/java/com/leandromg/readerchunks/
 │   │   ├── MainActivity.java          # Biblioteca de libros
-│   │   ├── SentenceReaderActivity.java # Lectura con navegación inteligente
-│   │   ├── Book.java                  # Modelo de libro
-│   │   ├── BookCacheManager.java      # Gestión de cache
-│   │   ├── BufferManager.java         # Buffer inteligente
+│   │   ├── SentenceReaderActivity.java # Lectura dual: bite-size ↔ párrafo
+│   │   ├── Book.java                  # Modelo con persistencia de modo
+│   │   ├── BookCacheManager.java      # Cache + persistencia de preferencias
+│   │   ├── BufferManager.java         # Buffer con soporte dual
 │   │   ├── BookAdapter.java           # Adaptador RecyclerView
-│   │   ├── PDFTextExtractor.java      # Extracción para Android
+│   │   ├── PDFTextExtractor.java      # Extracción PDF (PDFBox)
 │   │   ├── SentenceSegmenter.java     # Segmentación de oraciones
-│   │   └── DynamicSentenceSplitter.java # División dinámica en tiempo real
+│   │   ├── DynamicSentenceSplitter.java # División dinámica en tiempo real
+│   │   └── ThemeManager.java          # Gestión de temas (modo oscuro/claro)
 │   ├── app/src/main/res/
-│   │   ├── layout/                    # Layouts de Activities
-│   │   └── values/                    # Strings, colores, temas
+│   │   ├── layout/                    # Layouts con ScrollView y toggle
+│   │   └── values/                    # Strings con iconografía |—| |☰|
 │   └── app/build.gradle               # Dependencias Android
 ├── PDFTextExtractor.java              # Versión standalone (testing)
 ├── example.pdf                        # PDF de prueba
@@ -236,96 +243,118 @@ Libro de 10,000 oraciones:
 
 ## 📋 Estado Actual
 
+## 📋 Estado Actual - Funcionalidades Implementadas
+
 ### ✅ Sistema Core Completo
-- [x] **Extracción de texto de PDF** usando PDFBox-Android
+- [x] **Extracción de texto PDF** usando PDFBox-Android
 - [x] **Sistema de cache persistente** con archivos JSON + TXT
 - [x] **Buffer inteligente 3-párrafos** con pre-carga asíncrona
-- [x] **Identificación única** de PDFs por hash MD5
-- [x] **Manejo de errores** robusto en toda la aplicación
+- [x] **Identificación única** por hash MD5
+- [x] **Manejo de errores robusto** en toda la aplicación
 - [x] **Segmentación por párrafos** preservando texto original exacto
 - [x] **División dinámica en tiempo real** con posiciones pre-calculadas
-- [x] **Validación inteligente de cortes** (evita cortar en URLs, IPs, abreviaciones)
+- [x] **Validación inteligente de cortes** (evita cortar URLs, IPs, abreviaciones)
 - [x] **Algoritmo resiliente** - posiciones por carácter, no por algoritmo
 
 ### ✅ Interfaz y UX Completa
 - [x] **Biblioteca personal** con lista de libros procesados
-- [x] **Persistencia de progreso completa** - retomar exacto donde quedaste
+- [x] **Persistencia de progreso completa** - retomar exactamente donde se quedó
 - [x] **Modo completamente offline** - sin necesidad de internet
-- [x] **Material Design** moderno con RecyclerView
+- [x] **Material Design moderno** con RecyclerView
 - [x] **Navegación fluida** sin esperas de carga
 - [x] **Estados visuales** (vacío, cargando, lista, error)
 - [x] **Indicadores visuales** de cambio de párrafo
-- [x] **Controles táctiles** responsivos (botones anterior/siguiente)
+- [x] **Controles táctiles responsivos** (botones anterior/siguiente)
+
+### ✅ Sistema de Lectura Dual (NUEVO)
+- [x] **Toggle de modos**: |—| (bite-size) ↔ |☰| (párrafo completo)
+- [x] **Modo bite-size**: una oración por pantalla (máx 150 chars)
+- [x] **Modo párrafo**: párrafo completo con scroll vertical
+- [x] **Persistencia por libro**: cada libro recuerda su modo preferido
+- [x] **Iconografía intuitiva**: símbolos que muestran el modo actual
+- [x] **Navegación por gestos**: swipe izquierda/derecha compatible con ambos modos
+- [x] **Transiciones fluidas**: cambio de modo sin pérdida de posición
 
 ### ✅ Algoritmo de Lectura Avanzado
 - [x] **División inteligente por prioridades**: `:` > `;` > `,` > espacio
 - [x] **Preservación de texto original** - cero modificaciones al contenido
 - [x] **Validación de caracteres de corte** - solo si seguidos de espacio
 - [x] **Navegación por oraciones** dentro de párrafos
-- [x] **Tracking por posición de carácter** para resistencia a cambios de algoritmo
+- [x] **Tracking por posición de carácter** para resistencia a cambios
 - [x] **Buffer de 3 párrafos** (anterior, actual, siguiente)
 - [x] **Carga asíncrona** sin bloquear la UI
 
-### 🎯 Experiencia de Lectura Optimizada
-- [x] **Oraciones optimizadas** - máximo 150 caracteres para lectura cómoda
-- [x] **Navegación intuitiva** - botones anterior/siguiente con estados inteligentes
-- [x] **Indicadores de progreso avanzados** - sistema dual de progreso (ver detalles abajo)
+### ✅ Sistema de Progreso Dual
+- [x] **Progreso de párrafos**: "28 / 284" en header
+- [x] **Progreso de oraciones**: "(1/18)" solo en modo bite-size
+- [x] **Corona circular**: porcentaje preciso del libro (ej: "28.3%")
+- [x] **Consistencia**: mismo porcentaje en biblioteca y modo lectura
+- [x] **Cálculo preciso**: basado en párrafos completados + posición de carácter
+- [x] **Adaptación por modo**: UI se adapta según modo de lectura activo
+
+### ✅ Experiencia de Lectura Optimizada
+- [x] **Oraciones optimizadas** - máximo 150 caracteres
+- [x] **Navegación intuitiva** - botones con estados inteligentes
 - [x] **Separación visual** - divisores entre párrafos
 - [x] **Lectura fluida** - sin esperas, cortes, o texto corrupto
-- [x] **Preservación exacta** - "!a Mancha" se mantiene como "!a Mancha"
+- [x] **Preservación exacta** del contenido original
+- [x] **Scroll suave** en modo párrafo para textos largos
 
-### 📊 Sistema de Progreso Dual (IMPLEMENTADO)
-- [x] **Progreso de párrafos** - "28 / 284" en línea superior del header
-- [x] **Progreso de oraciones** - "(1/18)" en línea inferior (solo si hay >1 oración)
-- [x] **Corona circular de progreso** - círculo que se llena con % total del libro (ej: "28.3%")
-- [x] **Consistencia de porcentajes** - mismo valor con 1 decimal en lista y modo lectura
-- [x] **Base de cálculo**: porcentaje basado en **párrafos completados**, no caracteres
-- [x] **Cálculo**: `(párrafo_actual / párrafos_totales) * 100`
-
-**Ventajas del sistema dual**:
-- ✅ **Progreso inmediato**: Ver avance dentro del párrafo actual
-- ✅ **Progreso general**: Corona circular muestra % total del libro
-- ✅ **Sin aumentar altura**: Mantiene dimensiones originales del header
-- ✅ **Información clara**: Párrafos y oraciones en líneas separadas
-
-### 🚀 Para usar
+### 🚀 Cómo Usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
 2. **APK**: `android/app/build/outputs/apk/debug/app-debug.apk`
 3. **Instalar** en dispositivo Android
 4. **Agregar libro** → Seleccionar PDF → ¡Leer!
+5. **Toggle de modo** → Usar botón |—| / |☰| para cambiar entre bite-size y párrafo completo
+6. **Navegación** → Botones o swipe izquierda/derecha para avanzar/retroceder
 
-### 📈 Próximas mejoras
+## 🚀 Roadmap - Próximas Mejoras
 
-#### 🎯 Gestión de libros (Prioridad Alta)
-- [ ] **Menú de opciones por libro** con:
-  - [ ] **Eliminar libro** (con confirmación y limpieza de archivos)
-  - [ ] **Restablecer progreso** (volver al inicio con confirmación)
-  - [ ] **Renombrar libro** (cambiar título con input de texto)
-- [ ] **Estadísticas de lectura** (tiempo, párrafos completados, progreso diario)
+### 📚 Formatos de Archivo (En Desarrollo)
+- [ ] **TXT**: Soporte para archivos de texto plano
+- [ ] **Markdown**: Archivos .md con formato básico
+- [ ] **EPUB**: Libros electrónicos estándar
+- [ ] **Detección automática**: Identificar formato por extensión
 
-#### 🎨 Mejoras adicionales en progreso (Prioridad Media)
-- [ ] **Barra de progreso del párrafo actual** (opcional - reemplazar barra inferior)
-  - [ ] Muestra visualmente el progreso de oraciones dentro del párrafo actual
-  - [ ] Se rellena completamente al terminar cada párrafo
-  - [ ] Proporciona satisfacción inmediata al completar párrafos
-- [ ] **Animaciones suaves** en la corona circular al cambiar de párrafo
-- [ ] **Diferentes colores** para diferentes rangos de progreso (0-25%, 25-50%, etc.)
+### 🎯 Gestión de Libros (Prioridad Alta)
+- [ ] **Menú de opciones por libro**:
+  - [ ] Eliminar libro (con confirmación y limpieza)
+  - [ ] Restablecer progreso (volver al inicio)
+  - [ ] Renombrar libro (cambiar título)
+- [ ] **Estadísticas de lectura** (tiempo, párrafos, progreso diario)
+- [ ] **Ordenación de biblioteca** (por fecha, progreso, título)
 
-#### 🎛️ Personalización
-- [ ] **Configuración de longitud máxima** de corte dinámico (150 chars por defecto)
-- [ ] **Configuración de tamaño de fuente** (pequeña, mediana, grande, extra grande)
-- [ ] **Tema oscuro** (fondo negro, texto blanco) y personalización de colores
-- [ ] **Velocidad de lectura** y métricas de progreso
+### 🎨 Experiencia de Usuario
+- [ ] **Temas y personalización**:
+  - [ ] Modo oscuro/claro
+  - [ ] Tamaños de fuente configurables
+  - [ ] Colores personalizables
+- [ ] **Animaciones y feedback**:
+  - [ ] Transiciones suaves en cambio de modo
+  - [ ] Animaciones de progreso
+  - [ ] Feedback háptico en navegación
 
-#### 👆 Navegación y gestos
-- [ ] **Navegación por swipe**:
-  - [ ] **Swipe izquierda** → Siguiente oración/sub-oración
-  - [ ] **Swipe derecha** → Oración/sub-oración anterior
-  - [ ] **Combinación** con botones existentes para máxima flexibilidad
-- [ ] **Gestos adicionales** para navegación rápida entre párrafos
+### 🎛️ Configuración Avanzada
+- [ ] **Parámetros de lectura**:
+  - [ ] Longitud máxima de división (150 chars por defecto)
+  - [ ] Velocidad de auto-avance
+  - [ ] Configuración de gestos
+- [ ] **Métricas y objetivos**:
+  - [ ] Metas diarias de lectura
+  - [ ] Estadísticas detalladas
+  - [ ] Rachas de lectura
 
-#### 📚 Formatos y funcionalidades avanzadas
-- [ ] **Soporte TXT y EPUB** (formatos adicionales)
-- [ ] **Marcadores y favoritos** en posiciones específicas
-- [ ] **Búsqueda de texto** dentro de libros
-- [ ] **Exportar progreso** y sincronización entre dispositivos
+### 📈 Funcionalidades Avanzadas
+- [ ] **Búsqueda y navegación**:
+  - [ ] Búsqueda de texto dentro de libros
+  - [ ] Marcadores y favoritos
+  - [ ] Salto rápido a posiciones
+- [ ] **Sincronización y respaldo**:
+  - [ ] Exportar/importar progreso
+  - [ ] Respaldo en la nube
+  - [ ] Sincronización entre dispositivos
+
+### 🔧 Mejoras Técnicas
+- [ ] **OCR integrado** para PDFs escaneados
+- [ ] **Optimización de memoria** para libros muy grandes
+- [ ] **Formato de cache mejorado** con compresión

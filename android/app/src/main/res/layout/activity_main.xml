@@ -44,7 +44,7 @@
                 android:id="@+id/tvSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lectura por oraciones"
+                android:text="PDF, TXT, Markdown, EPUB"
                 android:textSize="16sp"
                 android:textColor="@color/text_secondary" />
 
@@ -80,7 +80,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Procesando libro..."
+                android:text="Procesando documento..."
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -118,7 +118,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No tienes libros aún"
+                android:text="No tienes documentos aún"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -127,7 +127,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Agrega tu primer libro para comenzar"
+                android:text="Agrega tu primer documento para comenzar"
                 android:textSize="16sp"
                 android:textColor="@color/text_secondary"
                 android:gravity="center" />
@@ -152,7 +152,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="Agregar Libro"
+        android:text="Agregar Documento"
         android:textAllCaps="false"
         app:icon="@android:drawable/ic_input_add" />
 

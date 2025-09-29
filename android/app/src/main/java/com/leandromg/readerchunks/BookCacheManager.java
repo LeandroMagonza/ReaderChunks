@@ -77,7 +77,19 @@ public class BookCacheManager {
             return loadBookMeta(bookId);
         }
 
-        String text = PDFTextExtractor.extractTextFromUri(context, uri);
+        // Get appropriate text extractor using filename instead of URI
+        String extension = TextExtractorFactory.getFileExtension(fileName);
+        android.util.Log.d("BookCacheManager", "Processing file: " + fileName + " with extension: " + extension);
+
+        TextExtractor extractor = TextExtractorFactory.getExtractorForExtension(extension);
+        if (extractor == null) {
+            android.util.Log.e("BookCacheManager", "No extractor found for extension: " + extension);
+            throw new IOException("Formato de archivo no soportado: " + extension);
+        }
+
+        android.util.Log.d("BookCacheManager", "Using extractor: " + extractor.getClass().getSimpleName());
+
+        String text = extractor.extractTextFromUri(context, uri);
         List<String> sentences = SentenceSegmenter.segmentIntoSentences(text);
 
         String title = extractTitleFromFileName(fileName);
