@@ -232,6 +232,18 @@ public class BufferManager {
     }
 
     /**
+     * Get the full text of the current paragraph (for paragraph mode)
+     */
+    public String getCurrentParagraphText() {
+        if (currentParagraph == null) {
+            return "Error: No hay párrafo cargado";
+        }
+
+        String paragraph = currentParagraph.getParagraph();
+        return paragraph != null ? paragraph : "Error: Párrafo no disponible";
+    }
+
+    /**
      * Check if at end of book
      */
     public boolean isAtEndOfBook() {

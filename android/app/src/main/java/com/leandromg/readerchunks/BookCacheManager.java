@@ -123,6 +123,7 @@ public class BookCacheManager {
             json.put("fileSizeBytes", book.getFileSizeBytes());
             json.put("processedDate", dateFormat.format(book.getProcessedDate()));
             json.put("totalCharacters", book.getTotalCharacters());
+            json.put("isFullParagraphMode", book.isFullParagraphMode());
 
             BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile));
             writer.write(json.toString(2));
@@ -164,6 +165,8 @@ public class BookCacheManager {
             book.setProcessedDate(dateFormat.parse(json.getString("processedDate")));
             // For backward compatibility, default to 0 if totalCharacters doesn't exist
             book.setTotalCharacters(json.optLong("totalCharacters", 0));
+            // For backward compatibility, default to false (sentence mode) if isFullParagraphMode doesn't exist
+            book.setFullParagraphMode(json.optBoolean("isFullParagraphMode", false));
 
             return book;
 

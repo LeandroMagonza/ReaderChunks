@@ -12,6 +12,8 @@
     <string name="next">Siguiente</string>
     <string name="previous">Anterior</string>
     <string name="back">Volver</string>
+    <string name="mode_paragraph_icon">|☰|</string>
+    <string name="mode_sentence_icon">|—|</string>
     <string name="finished_reading">¡Lectura completada!</string>
     <string name="congratulations">¡Felicitaciones! Has terminado de leer el documento.</string>
 

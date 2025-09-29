@@ -24,6 +24,17 @@
             android:text="@string/back"
             android:textAllCaps="false" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToggleMode"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mode_sentence_icon"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp" />
+
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
@@ -93,15 +104,25 @@
         android:gravity="center"
         android:padding="32dp">
 
-        <TextView
-            android:id="@+id/tvSentence"
+        <ScrollView
+            android:id="@+id/scrollView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:lineHeight="36dp"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:gravity="center" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvSentence"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:lineHeight="36dp"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:gravity="center"
+                android:layout_gravity="center" />
+
+        </ScrollView>
 
         <!-- Paragraph break divider -->
         <View

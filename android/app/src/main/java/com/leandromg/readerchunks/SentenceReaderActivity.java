@@ -6,6 +6,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,10 +29,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnPrevious;
     private MaterialButton btnNext;
     private MaterialButton btnBack;
+    private MaterialButton btnToggleMode;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
     private ProgressBar progressCircle;
     private TextView tvProgressPercentage;
+    private ScrollView scrollView;
 
     private BookCacheManager cacheManager;
     private BufferManager bufferManager;
@@ -45,6 +48,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     // Current reading position (managed by BufferManager)
     private int currentParagraphIndex = 0;
     private int currentSentenceIndex = 0;
+
+    // Reading mode toggle
+    private boolean isFullParagraphMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,10 +75,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnPrevious = findViewById(R.id.btnPrevious);
         btnNext = findViewById(R.id.btnNext);
         btnBack = findViewById(R.id.btnBack);
+        btnToggleMode = findViewById(R.id.btnToggleMode);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
         progressCircle = findViewById(R.id.progressCircle);
         tvProgressPercentage = findViewById(R.id.tvProgressPercentage);
+        scrollView = findViewById(R.id.scrollView);
     }
 
     private void setupManagers() {
@@ -98,6 +106,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 int savedCharPosition = currentBook.getCurrentCharPosition();
 
                 runOnUiThread(() -> {
+                    // Load saved reading mode
+                    isFullParagraphMode = currentBook.isFullParagraphMode();
+
                     // Initialize buffer with both paragraph and character position
                     bufferManager.initializeWithCharPosition(bookId, currentBook.getTotalSentences(),
                                                            currentParagraphIndex, savedCharPosition, this);
@@ -117,6 +128,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnPrevious.setOnClickListener(v -> previousSentence());
         btnNext.setOnClickListener(v -> nextSentence());
         btnBack.setOnClickListener(v -> finish());
+        btnToggleMode.setOnClickListener(v -> toggleReadingMode());
     }
 
     private void setupGestureDetector() {
@@ -136,15 +148,28 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            // Right swipe - previous sentence
+                            // Right swipe - previous sentence/paragraph
                             previousSentence();
                         } else {
-                            // Left swipe - next sentence
+                            // Left swipe - next sentence/paragraph
                             nextSentence();
                         }
                         return true;
                     }
                 }
+                return false;
+            }
+        });
+
+        // Set up touch listener for ScrollView to handle gestures
+        scrollView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // Let gesture detector handle the event first
+                if (gestureDetector.onTouchEvent(event)) {
+                    return true;
+                }
+                // If not a swipe gesture, let ScrollView handle it normally
                 return false;
             }
         });
@@ -161,36 +186,64 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void previousSentence() {
         if (isLoading) return;
 
-        if (bufferManager.moveToPreviousSentence()) {
-            updateDisplay();
-            saveProgressAsync();
+        if (isFullParagraphMode) {
+            // In paragraph mode, navigate to previous paragraph
+            if (bufferManager.moveToPreviousParagraph()) {
+                updateDisplay();
+                saveProgressAsync();
+            }
+        } else {
+            // In sentence mode, navigate to previous sentence
+            if (bufferManager.moveToPreviousSentence()) {
+                updateDisplay();
+                saveProgressAsync();
+            }
         }
     }
 
     private void nextSentence() {
         if (currentBook == null || isLoading) return;
 
-        if (bufferManager.moveToNextSentence()) {
-            updateDisplay();
-            saveProgressAsync();
+        if (isFullParagraphMode) {
+            // In paragraph mode, navigate to next paragraph
+            if (bufferManager.moveToNextParagraph()) {
+                updateDisplay();
+                saveProgressAsync();
+            } else {
+                showCompletionDialog();
+            }
         } else {
-            showCompletionDialog();
+            // In sentence mode, navigate to next sentence
+            if (bufferManager.moveToNextSentence()) {
+                updateDisplay();
+                saveProgressAsync();
+            } else {
+                showCompletionDialog();
+            }
         }
     }
 
     private void updateDisplay() {
         if (currentBook == null) return;
 
-        // Get current sentence from buffer manager
-        String currentSentence = bufferManager.getCurrentSentence();
-        if (currentSentence.startsWith("Error:")) {
-            // Handle error cases
-            tvSentence.setText("Cargando...");
-            return;
+        if (isFullParagraphMode) {
+            // Display full paragraph
+            String currentParagraph = bufferManager.getCurrentParagraphText();
+            if (currentParagraph == null || currentParagraph.startsWith("Error:")) {
+                tvSentence.setText("Cargando...");
+                return;
+            }
+            tvSentence.setText(currentParagraph);
+        } else {
+            // Display current sentence (bite-size mode)
+            String currentSentence = bufferManager.getCurrentSentence();
+            if (currentSentence.startsWith("Error:")) {
+                // Handle error cases
+                tvSentence.setText("Cargando...");
+                return;
+            }
+            tvSentence.setText(currentSentence);
         }
-
-        // Display current sentence
-        tvSentence.setText(currentSentence);
 
         // Update current positions from buffer manager
         currentParagraphIndex = bufferManager.getCurrentParagraphIndex();
@@ -200,22 +253,30 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         currentBook.setCurrentPosition(currentParagraphIndex);
         currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
 
-        // Show paragraph divider at end of paragraphs (last sentence of paragraph)
-        boolean showDivider = (currentSentenceIndex == bufferManager.getCurrentParagraphSentenceCount() - 1) &&
-                             (currentParagraphIndex < currentBook.getTotalSentences() - 1);
-        dividerParagraph.setVisibility(showDivider ? View.VISIBLE : View.GONE);
+        // Show paragraph divider only in sentence mode at end of paragraphs
+        if (isFullParagraphMode) {
+            dividerParagraph.setVisibility(View.GONE);
+        } else {
+            boolean showDivider = (currentSentenceIndex == bufferManager.getCurrentParagraphSentenceCount() - 1) &&
+                                 (currentParagraphIndex < currentBook.getTotalSentences() - 1);
+            dividerParagraph.setVisibility(showDivider ? View.VISIBLE : View.GONE);
+        }
 
         // Update paragraph progress text
         String paragraphText = getString(R.string.progress_format, currentParagraphIndex + 1, currentBook.getTotalSentences());
         tvParagraphProgress.setText(paragraphText);
 
-        // Update sentence progress text
-        if (bufferManager.getCurrentParagraphSentenceCount() > 1) {
-            String sentenceText = "(" + (currentSentenceIndex + 1) + "/" + bufferManager.getCurrentParagraphSentenceCount() + ")";
-            tvSentenceProgress.setText(sentenceText);
-            tvSentenceProgress.setVisibility(View.VISIBLE);
-        } else {
+        // Update sentence progress text (only in sentence mode)
+        if (isFullParagraphMode) {
             tvSentenceProgress.setVisibility(View.GONE);
+        } else {
+            if (bufferManager.getCurrentParagraphSentenceCount() > 1) {
+                String sentenceText = "(" + (currentSentenceIndex + 1) + "/" + bufferManager.getCurrentParagraphSentenceCount() + ")";
+                tvSentenceProgress.setText(sentenceText);
+                tvSentenceProgress.setVisibility(View.VISIBLE);
+            } else {
+                tvSentenceProgress.setVisibility(View.GONE);
+            }
         }
 
         // Update circular progress with precise calculation
@@ -225,9 +286,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         String percentageText = String.format(Locale.getDefault(), "%.1f%%", bookProgress);
         tvProgressPercentage.setText(percentageText);
 
-        // Update progress bar - show sentence progress within current paragraph
-        progressBar.setMax(bufferManager.getCurrentParagraphSentenceCount());
-        progressBar.setProgress(currentSentenceIndex + 1);
+        // Update progress bar - only show in sentence mode
+        if (isFullParagraphMode) {
+            progressBar.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setMax(bufferManager.getCurrentParagraphSentenceCount());
+            progressBar.setProgress(currentSentenceIndex + 1);
+        }
 
         // Update button states
         boolean hasPrevious = !bufferManager.isAtBeginningOfBook();
@@ -236,14 +302,48 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnPrevious.setEnabled(hasPrevious && !isLoading);
         btnNext.setEnabled(hasNext && !isLoading);
 
-        // Change button text for last sentence
+        // Change button text for last sentence/paragraph
         if (bufferManager.isAtEndOfBook()) {
             btnNext.setText("Finalizar");
         } else {
             btnNext.setText(getString(R.string.next));
         }
+
+        // Update toggle button icon - show CURRENT mode
+        if (isFullParagraphMode) {
+            btnToggleMode.setText(getString(R.string.mode_paragraph_icon)); // |☰|
+        } else {
+            btnToggleMode.setText(getString(R.string.mode_sentence_icon)); // |-|
+        }
     }
 
+    private void toggleReadingMode() {
+        isFullParagraphMode = !isFullParagraphMode;
+
+        if (isFullParagraphMode) {
+            // When switching to paragraph mode, reset to beginning of current paragraph
+            currentSentenceIndex = 0;
+        } else {
+            // When switching from paragraph to sentence mode, force reload the current paragraph
+            // This ensures the paragraph is properly processed for sentence splitting
+            int currentParagraphIndex = bufferManager.getCurrentParagraphIndex();
+
+            // Set loading state to prevent interaction during reload
+            isLoading = true;
+
+            // Force reload - this will trigger onBufferLoaded when complete
+            bufferManager.jumpToPosition(currentParagraphIndex, 0);
+
+            // Update display immediately to show loading state and correct button
+            updateDisplay();
+            return; // Don't call updateDisplay again
+        }
+
+        updateDisplay();
+
+        // Save the reading mode preference immediately
+        saveProgressAsync();
+    }
 
     private void showCompletionDialog() {
         new AlertDialog.Builder(this)
@@ -269,6 +369,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 currentBook.setCurrentPosition(bufferManager.getCurrentParagraphIndex());
                 currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
                 currentBook.setLastReadDate(new Date());
+                currentBook.setFullParagraphMode(isFullParagraphMode); // Guardar modo de lectura
                 cacheManager.saveBookMeta(currentBook);
             } catch (Exception e) {
                 // Log error but don't interrupt reading

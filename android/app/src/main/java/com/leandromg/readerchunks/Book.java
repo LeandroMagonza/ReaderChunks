@@ -13,6 +13,7 @@ public class Book {
     private long fileSizeBytes;     // Tamaño del archivo original
     private Date processedDate;     // Fecha de procesamiento
     private long totalCharacters;   // Total de caracteres en el libro (para cálculo preciso)
+    private boolean isFullParagraphMode; // Modo de lectura: false = oraciones, true = párrafos
 
     public Book() {
         this.currentPosition = 0;
@@ -20,6 +21,7 @@ public class Book {
         this.lastReadDate = new Date();
         this.processedDate = new Date();
         this.totalCharacters = 0;
+        this.isFullParagraphMode = false; // Por defecto modo oraciones
     }
 
     public Book(String id, String title, String fileName, int totalSentences) {
@@ -41,6 +43,7 @@ public class Book {
     public long getFileSizeBytes() { return fileSizeBytes; }
     public Date getProcessedDate() { return processedDate; }
     public long getTotalCharacters() { return totalCharacters; }
+    public boolean isFullParagraphMode() { return isFullParagraphMode; }
 
     // Setters
     public void setId(String id) { this.id = id; }
@@ -53,6 +56,7 @@ public class Book {
     public void setFileSizeBytes(long fileSizeBytes) { this.fileSizeBytes = fileSizeBytes; }
     public void setProcessedDate(Date processedDate) { this.processedDate = processedDate; }
     public void setTotalCharacters(long totalCharacters) { this.totalCharacters = totalCharacters; }
+    public void setFullParagraphMode(boolean isFullParagraphMode) { this.isFullParagraphMode = isFullParagraphMode; }
 
     // Utility methods
     public double getProgressPercentage() {
