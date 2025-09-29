@@ -2,6 +2,8 @@ package com.leandromg.readerchunks;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -37,6 +39,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private Book currentBook;
     private int currentIndex = 0;
     private boolean isLoading = false;
+    private GestureDetector gestureDetector;
+    private ThemeManager themeManager;
 
     // Current reading position (managed by BufferManager)
     private int currentParagraphIndex = 0;
@@ -44,6 +48,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Initialize theme before setting content view
+        themeManager = new ThemeManager(this);
+        themeManager.applyTheme();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sentence_reader);
 
@@ -51,6 +59,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         setupManagers();
         loadBook();
         setupClickListeners();
+        setupGestureDetector();
     }
 
     private void initViews() {
@@ -108,6 +117,45 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnPrevious.setOnClickListener(v -> previousSentence());
         btnNext.setOnClickListener(v -> nextSentence());
         btnBack.setOnClickListener(v -> finish());
+    }
+
+    private void setupGestureDetector() {
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            private static final int SWIPE_THRESHOLD = 100;
+            private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) {
+                    return false;
+                }
+
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            // Right swipe - previous sentence
+                            previousSentence();
+                        } else {
+                            // Left swipe - next sentence
+                            nextSentence();
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (gestureDetector.onTouchEvent(event)) {
+            return true;
+        }
+        return super.onTouchEvent(event);
     }
 
     private void previousSentence() {

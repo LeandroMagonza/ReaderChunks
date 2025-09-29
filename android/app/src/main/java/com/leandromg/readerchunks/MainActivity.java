@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -17,6 +19,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 
@@ -33,20 +37,27 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private ExtendedFloatingActionButton fabAddBook;
     private CircularProgressIndicator progressIndicator;
     private TextView tvStatus;
+    private MaterialToolbar toolbar;
 
     private ExecutorService executor;
     private BookCacheManager cacheManager;
     private BookAdapter bookAdapter;
     private List<Book> books;
+    private ThemeManager themeManager;
 
     private ActivityResultLauncher<String[]> pdfPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Initialize theme before setting content view
+        themeManager = new ThemeManager(this);
+        themeManager.applyTheme();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         initViews();
+        setupToolbar();
         setupExecutor();
         setupCacheManager();
         setupRecyclerView();
@@ -62,6 +73,11 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         fabAddBook = findViewById(R.id.fabAddBook);
         progressIndicator = findViewById(R.id.progressIndicator);
         tvStatus = findViewById(R.id.tvStatus);
+        toolbar = findViewById(R.id.toolbar);
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
     }
 
     private void setupExecutor() {
@@ -103,11 +119,21 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void processPdf(Uri uri, String fileName) {
         showLoading(true);
-        tvStatus.setText("Procesando " + fileName + "...");
+        tvStatus.setText("Extrayendo texto del archivo...");
 
         executor.execute(() -> {
             try {
+                // Update status during processing
+                runOnUiThread(() -> tvStatus.setText("Analizando contenido..."));
+
                 Book book = cacheManager.processAndCacheBook(uri, fileName);
+
+                runOnUiThread(() -> {
+                    tvStatus.setText("Guardando en biblioteca...");
+                });
+
+                // Small delay to show the final status
+                Thread.sleep(500);
 
                 runOnUiThread(() -> {
                     showLoading(false);
@@ -115,13 +141,13 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                     bookAdapter.updateBooks(books);
                     updateViewState();
 
-                    Toast.makeText(this, "Libro agregado: " + book.getDisplayTitle(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "✅ Libro agregado: " + book.getDisplayTitle(), Toast.LENGTH_LONG).show();
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     showLoading(false);
-                    showError("Error procesando PDF: " + e.getMessage());
+                    showError("❌ Error procesando PDF: " + e.getMessage());
                 });
             }
         });
@@ -138,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void loadBooks() {
         showLoading(true);
-        tvStatus.setText("Cargando biblioteca...");
+        tvStatus.setText("Cargando tu biblioteca...");
 
         executor.execute(() -> {
             try {
@@ -156,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 runOnUiThread(() -> {
                     showLoading(false);
                     updateViewState();
+                    showError("Error cargando biblioteca");
                 });
             }
         });
@@ -346,6 +373,43 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
             }
         });
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem themeItem = menu.findItem(R.id.action_theme_toggle);
+        if (themeItem != null) {
+            if (themeManager.isDarkMode()) {
+                // Dark mode - show moon icon (current mode)
+                themeItem.setIcon(R.drawable.ic_moon);
+            } else {
+                // Light mode - show sun icon (current mode)
+                themeItem.setIcon(R.drawable.ic_sun);
+            }
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_theme_toggle) {
+            toggleTheme();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleTheme() {
+        themeManager.toggleTheme();
+        // Recreate activity to apply theme changes
+        recreate();
+    }
+
 
     @Override
     protected void onDestroy() {

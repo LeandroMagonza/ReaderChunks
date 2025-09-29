@@ -1,5 +1,6 @@
 package com.leandromg.readerchunks;
 
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -144,7 +145,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         }
 
         private void showOptionsMenu(View view, Book book) {
-            PopupMenu popup = new PopupMenu(view.getContext(), view);
+            // Create PopupMenu with custom theme for better text visibility
+            ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(view.getContext(), R.style.CustomPopupMenu);
+            PopupMenu popup = new PopupMenu(contextThemeWrapper, view);
             popup.getMenuInflater().inflate(R.menu.book_options_menu, popup.getMenu());
 
             popup.setOnMenuItemClickListener(item -> {

@@ -13,7 +13,9 @@
       "Bash(java:*)",
       "Bash(javac:*)",
       "Bash(gradlew:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(dir)",
+      "Bash(gradlew.bat assembleDebug:*)"
     ],
     "deny": [],
     "ask": []

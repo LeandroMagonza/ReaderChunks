@@ -10,6 +10,17 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <!-- App Bar -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="ReaderChunks"
+            app:titleTextColor="@color/white"
+            app:menu="@menu/main_menu"
+            android:elevation="4dp" />
+
         <!-- Header -->
         <LinearLayout
             android:id="@+id/layoutHeader"
@@ -43,17 +54,37 @@
         <LinearLayout
             android:id="@+id/layoutLoading"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="32dp"
+            android:padding="48dp"
             android:visibility="gone">
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/progressIndicator"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="24dp"
+                app:indicatorColor="@color/primary"
+                app:indicatorSize="64dp"
+                app:trackThickness="6dp" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="📚"
+                android:textSize="48sp"
                 android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Procesando libro..."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:id="@+id/tvStatus"
@@ -61,7 +92,9 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:textColor="@color/text_secondary"
-                android:gravity="center" />
+                android:gravity="center"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
         </LinearLayout>
 
