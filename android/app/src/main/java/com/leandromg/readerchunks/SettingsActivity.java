@@ -7,6 +7,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.button.MaterialButton;
+import android.widget.RadioGroup;
+import android.widget.RadioButton;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -23,6 +25,10 @@ public class SettingsActivity extends AppCompatActivity {
     // Padding controls
     private ImageButton btnDecreasePadding, btnIncreasePadding;
     private TextView tvPadding;
+
+    // Bionic Reading
+    private RadioGroup radioGroupBionicReading;
+    private RadioButton radioBionicOff, radioBionicClassic, radioBionicModern;
 
     // Preview
     private TextView tvPreview;
@@ -58,6 +64,12 @@ public class SettingsActivity extends AppCompatActivity {
         btnDecreasePadding = findViewById(R.id.btnDecreasePadding);
         btnIncreasePadding = findViewById(R.id.btnIncreasePadding);
         tvPadding = findViewById(R.id.tvPadding);
+
+        // Bionic Reading
+        radioGroupBionicReading = findViewById(R.id.radioGroupBionicReading);
+        radioBionicOff = findViewById(R.id.radioBionicOff);
+        radioBionicClassic = findViewById(R.id.radioBionicClassic);
+        radioBionicModern = findViewById(R.id.radioBionicModern);
 
         // Preview
         tvPreview = findViewById(R.id.tvPreview);
@@ -111,6 +123,20 @@ public class SettingsActivity extends AppCompatActivity {
             updateUI();
         });
 
+        // Bionic Reading
+        radioGroupBionicReading.setOnCheckedChangeListener((group, checkedId) -> {
+            BionicTextProcessor.BionicMode mode;
+            if (checkedId == R.id.radioBionicClassic) {
+                mode = BionicTextProcessor.BionicMode.CLASSIC;
+            } else if (checkedId == R.id.radioBionicModern) {
+                mode = BionicTextProcessor.BionicMode.MODERN;
+            } else {
+                mode = BionicTextProcessor.BionicMode.OFF;
+            }
+            settingsManager.setBionicReadingMode(mode);
+            updateUI();
+        });
+
         // Reset
         btnReset.setOnClickListener(v -> {
             settingsManager.resetToDefaults();
@@ -122,11 +148,25 @@ public class SettingsActivity extends AppCompatActivity {
         int fontSize = settingsManager.getFontSize();
         int lineSpacing = settingsManager.getLineSpacing();
         int padding = settingsManager.getPaddingHorizontal();
+        BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
 
         // Update text displays
         tvFontSize.setText(fontSize + " sp");
         tvLineSpacing.setText(lineSpacing + " sp");
         tvPadding.setText(padding + " dp");
+
+        // Update bionic reading radio buttons
+        switch (bionicMode) {
+            case CLASSIC:
+                radioBionicClassic.setChecked(true);
+                break;
+            case MODERN:
+                radioBionicModern.setChecked(true);
+                break;
+            default:
+                radioBionicOff.setChecked(true);
+                break;
+        }
 
         // Update button states
         btnDecreaseFontSize.setEnabled(settingsManager.canDecreaseFontSize());
@@ -139,10 +179,10 @@ public class SettingsActivity extends AppCompatActivity {
         btnIncreasePadding.setEnabled(settingsManager.canIncreasePadding());
 
         // Update preview
-        updatePreview(fontSize, lineSpacing, padding);
+        updatePreview(fontSize, lineSpacing, padding, bionicMode);
     }
 
-    private void updatePreview(int fontSize, int lineSpacing, int padding) {
+    private void updatePreview(int fontSize, int lineSpacing, int padding, BionicTextProcessor.BionicMode bionicMode) {
         // Update preview text properties
         tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
         tvPreview.setLineSpacing(lineSpacing, 1.0f); // lineSpacingExtra, lineSpacingMultiplier
@@ -155,6 +195,14 @@ public class SettingsActivity extends AppCompatActivity {
         );
         previewContainer.setPadding(paddingPx, previewContainer.getPaddingTop(),
                                   paddingPx, previewContainer.getPaddingBottom());
+
+        // Apply bionic reading based on mode
+        String previewText = "Esta es una vista previa del texto con la configuración actual. Aquí puedes ver cómo se verá el texto en la aplicación con el tamaño de letra, espaciado y márgenes seleccionados.";
+        if (bionicMode != BionicTextProcessor.BionicMode.OFF) {
+            tvPreview.setText(BionicTextProcessor.process(previewText, bionicMode), TextView.BufferType.SPANNABLE);
+        } else {
+            tvPreview.setText(previewText);
+        }
     }
 
     @Override

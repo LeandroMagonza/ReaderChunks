@@ -362,6 +362,52 @@ Libro de 10,000 oraciones:
   - [ ] Respaldo en la nube
   - [ ] Sincronización entre dispositivos
 
+### 🖼️ Soporte de Imágenes en Libros
+- [ ] **Extracción y almacenamiento**:
+  - [ ] Extraer imágenes de PDFs usando PDFBox (PDImageXObject)
+  - [ ] Extraer imágenes de EPUBs (archivos JPG/PNG del ZIP)
+  - [ ] Almacenar en carpeta `/images/` dentro del directorio del libro
+  - [ ] Generar hash único para cada imagen
+  - [ ] Comprimir imágenes grandes (máximo 1024x1024, JPEG 85%)
+
+- [ ] **Sistema de marcadores en texto**:
+  - [ ] Formato de marcador: `[IMG:hash_único:descripción_alt]`
+  - [ ] Insertar marcadores en posición correcta durante extracción
+  - [ ] Preservar texto alternativo (alt text) de HTML en EPUBs
+  - [ ] Mapear referencias `<img src="">` a marcadores en texto
+  - [ ] Mantener orden correcto imagen-texto en el flujo de lectura
+
+- [ ] **Visualización en la aplicación**:
+  - [ ] Detectar marcadores `[IMG:...]` al renderizar contenido
+  - [ ] En modo bite-size: mostrar imagen como "oración" completa
+  - [ ] En modo párrafo: insertar ImageView en posición del marcador
+  - [ ] Implementar zoom con pellizco (pinch-to-zoom)
+  - [ ] Escalado adaptativo según ancho de pantalla
+  - [ ] Lazy loading de imágenes según navegación
+  - [ ] Cache de imágenes decodificadas en memoria
+
+- [ ] **Estructura de almacenamiento**:
+  ```
+  /data/app/books/{hash_libro}/
+  ├── content.txt           # Texto con marcadores [IMG:...]
+  ├── meta.json            # Metadata del libro
+  └── images/              # Nueva carpeta para imágenes
+      ├── img_001.jpg
+      ├── img_002.png
+      └── manifest.json  # Mapeo de IDs a archivos y metadata
+  ```
+
+- [ ] **Detalles técnicos de implementación**:
+  - [ ] PDFBox ya incluido soporta extracción con `PDPage.getResources()`
+  - [ ] EPUB: las imágenes están en `/images/` o `/OEBPS/images/` del ZIP
+  - [ ] Modificar `PDFTextExtractorImpl.java` para extraer imágenes
+  - [ ] Modificar `EPUBTextExtractorImpl.java` para procesar `<img>` tags
+  - [ ] Crear `ImageExtractor.java` como clase helper
+  - [ ] Actualizar `BookCacheManager.java` para gestionar carpeta images
+  - [ ] Modificar `SentenceReaderActivity.java` para renderizar imágenes
+  - [ ] Añadir ImageView dinámico en `activity_sentence_reader.xml`
+  - [ ] Opcional: usar Glide/Picasso para mejor manejo de imágenes
+
 ### 🔧 Mejoras Técnicas
 - [ ] **OCR integrado** para PDFs escaneados
 - [ ] **Optimización de memoria** para libros muy grandes

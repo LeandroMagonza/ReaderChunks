@@ -11,12 +11,14 @@ public class SettingsManager {
     private static final String KEY_FONT_SIZE = "font_size";
     private static final String KEY_LINE_SPACING = "line_spacing";
     private static final String KEY_PADDING_HORIZONTAL = "padding_horizontal";
+    private static final String KEY_BIONIC_READING_MODE = "bionic_reading_mode";
 
     // Default values
     private static final boolean DEFAULT_DARK_MODE = false;
     private static final int DEFAULT_FONT_SIZE = 24; // sp
     private static final int DEFAULT_LINE_SPACING = 4; // sp
     private static final int DEFAULT_PADDING_HORIZONTAL = 16; // dp
+    private static final int DEFAULT_BIONIC_READING_MODE = 0; // 0=OFF, 1=CLASSIC, 2=MODERN
 
     // Ranges
     public static final int MIN_FONT_SIZE = 12;
@@ -119,6 +121,36 @@ public class SettingsManager {
         return getPaddingHorizontal() > MIN_PADDING;
     }
 
+    // Bionic Reading
+    public BionicTextProcessor.BionicMode getBionicReadingMode() {
+        int mode = prefs.getInt(KEY_BIONIC_READING_MODE, DEFAULT_BIONIC_READING_MODE);
+        switch (mode) {
+            case 1: return BionicTextProcessor.BionicMode.CLASSIC;
+            case 2: return BionicTextProcessor.BionicMode.MODERN;
+            default: return BionicTextProcessor.BionicMode.OFF;
+        }
+    }
+
+    public void setBionicReadingMode(BionicTextProcessor.BionicMode mode) {
+        int modeInt;
+        switch (mode) {
+            case CLASSIC: modeInt = 1; break;
+            case MODERN: modeInt = 2; break;
+            default: modeInt = 0; break; // OFF
+        }
+        prefs.edit().putInt(KEY_BIONIC_READING_MODE, modeInt).apply();
+    }
+
+    // Legacy method for backward compatibility
+    public boolean isBionicReading() {
+        return getBionicReadingMode() != BionicTextProcessor.BionicMode.OFF;
+    }
+
+    // Legacy method for backward compatibility
+    public void setBionicReading(boolean bionicReading) {
+        setBionicReadingMode(bionicReading ? BionicTextProcessor.BionicMode.CLASSIC : BionicTextProcessor.BionicMode.OFF);
+    }
+
     // Reset to defaults
     public void resetToDefaults() {
         prefs.edit()
@@ -126,6 +158,7 @@ public class SettingsManager {
             .putInt(KEY_FONT_SIZE, DEFAULT_FONT_SIZE)
             .putInt(KEY_LINE_SPACING, DEFAULT_LINE_SPACING)
             .putInt(KEY_PADDING_HORIZONTAL, DEFAULT_PADDING_HORIZONTAL)
+            .putInt(KEY_BIONIC_READING_MODE, DEFAULT_BIONIC_READING_MODE)
             .apply();
     }
 }

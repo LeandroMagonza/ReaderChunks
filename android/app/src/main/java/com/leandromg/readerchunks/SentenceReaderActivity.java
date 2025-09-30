@@ -403,7 +403,17 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 tvSentence.setText("Cargando...");
                 return;
             }
-            tvSentence.setText(currentParagraph);
+            // Apply bionic reading based on mode
+            if (settingsManager != null) {
+                BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
+                if (bionicMode != BionicTextProcessor.BionicMode.OFF) {
+                    tvSentence.setText(BionicTextProcessor.process(currentParagraph, bionicMode), TextView.BufferType.SPANNABLE);
+                } else {
+                    tvSentence.setText(currentParagraph);
+                }
+            } else {
+                tvSentence.setText(currentParagraph);
+            }
 
             // Restore scroll position based on character position
             restoreScrollPosition();
@@ -415,7 +425,17 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 tvSentence.setText("Cargando...");
                 return;
             }
-            tvSentence.setText(currentSentence);
+            // Apply bionic reading based on mode
+            if (settingsManager != null) {
+                BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
+                if (bionicMode != BionicTextProcessor.BionicMode.OFF) {
+                    tvSentence.setText(BionicTextProcessor.process(currentSentence, bionicMode), TextView.BufferType.SPANNABLE);
+                } else {
+                    tvSentence.setText(currentSentence);
+                }
+            } else {
+                tvSentence.setText(currentSentence);
+            }
         }
 
         // Update current positions from buffer manager
@@ -680,6 +700,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             container.setPadding(paddingHorizontal, container.getPaddingTop(),
                                paddingHorizontal, container.getPaddingBottom());
         }
+
+        // Refresh text display with current content to apply bionic reading if needed
+        updateDisplay();
     }
 
     @Override

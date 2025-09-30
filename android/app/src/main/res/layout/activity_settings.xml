@@ -171,6 +171,57 @@
 
             </LinearLayout>
 
+            <!-- Bionic Reading Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lectura Biónica"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Resalta las primeras letras de cada palabra para mejorar la velocidad de lectura"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="16dp" />
+
+            <RadioGroup
+                android:id="@+id/radioGroupBionicReading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="32dp">
+
+                <RadioButton
+                    android:id="@+id/radioBionicOff"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Desactivado"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp"
+                    android:checked="true" />
+
+                <RadioButton
+                    android:id="@+id/radioBionicClassic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clásico (todas las palabras)"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <RadioButton
+                    android:id="@+id/radioBionicModern"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Moderno (palabras largas)"
+                    android:textColor="@color/text_primary" />
+
+            </RadioGroup>
+
             <!-- Preview Section -->
             <TextView
                 android:layout_width="match_parent"
