@@ -329,45 +329,64 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         try {
             // Get current scroll position
             int scrollY = scrollView.getScrollY();
+            int maxScrollY = Math.max(1, tvSentence.getHeight() - scrollView.getHeight());
 
-            // Get text properties
+            // Calculate scroll percentage
+            float scrollPercent = Math.min(1.0f, (float)scrollY / maxScrollY);
+
+            // Get paragraph text
             String paragraphText = bufferManager.getCurrentParagraphText();
             if (paragraphText == null || paragraphText.isEmpty()) {
                 return bufferManager.getCurrentCharPosition();
             }
 
-            // Get text view properties
-            float textSize = tvSentence.getTextSize();
-            float lineHeight = tvSentence.getLineHeight();
-            int textViewWidth = tvSentence.getWidth() - tvSentence.getPaddingLeft() - tvSentence.getPaddingRight();
+            // Calculate target character based on scroll percentage
+            int targetChar = (int)(paragraphText.length() * scrollPercent);
 
-            if (lineHeight <= 0 || textViewWidth <= 0) {
-                return bufferManager.getCurrentCharPosition();
-            }
-
-            // Calculate approximate lines scrolled
-            float linesScrolled = Math.max(0, scrollY / lineHeight);
-
-            // Estimate characters per line (rough approximation)
-            float avgCharWidth = textSize * 0.6f; // Rough estimate
-            int charsPerLine = Math.max(1, (int) (textViewWidth / avgCharWidth));
-
-            // Calculate estimated character position with safety margin
-            int estimatedCharPosition = (int) (linesScrolled * charsPerLine);
-
-            // Use fixed 80 character safety margin to go back
-            int safetyMargin = 80;
-            estimatedCharPosition = Math.max(0, estimatedCharPosition - safetyMargin);
-
-            // Make sure we don't exceed the paragraph length
-            estimatedCharPosition = Math.min(estimatedCharPosition, paragraphText.length() - 1);
-
-            // Return relative position within the paragraph
-            return estimatedCharPosition;
+            // Return the character position (no buffer needed)
+            return Math.min(targetChar, paragraphText.length() - 1);
 
         } catch (Exception e) {
             // If calculation fails, return current position
             return bufferManager.getCurrentCharPosition();
+        }
+    }
+
+    private int getFirstVisibleSentenceIndex() {
+        if (scrollView == null || tvSentence == null || !isFullParagraphMode) {
+            return bufferManager.getCurrentSentenceIndex();
+        }
+
+        try {
+            // Get current scroll position
+            int scrollY = scrollView.getScrollY();
+            int maxScrollY = Math.max(1, tvSentence.getHeight() - scrollView.getHeight());
+
+            // Calculate scroll percentage
+            float scrollPercent = Math.min(1.0f, (float)scrollY / maxScrollY);
+
+            // Special case: if we're near the end, show one of the last sentences
+            String paragraphText = bufferManager.getCurrentParagraphText();
+            if (paragraphText == null) return bufferManager.getCurrentSentenceIndex();
+
+            // Get total number of sentences in this paragraph
+            int totalSentences = bufferManager.getCurrentParagraphSentenceCount();
+
+            if (scrollPercent >= 0.95f && totalSentences > 3) {
+                // Near the end - show 3rd to last sentence so there's content visible
+                return totalSentences - 3;
+            }
+
+            // Calculate target character based on scroll percentage
+            int targetChar = (int)(paragraphText.length() * scrollPercent);
+
+            // Find which sentence contains this character
+            int sentenceIndex = bufferManager.findSentenceIndexForCharPosition(targetChar);
+
+            return Math.max(0, sentenceIndex);
+
+        } catch (Exception e) {
+            return bufferManager.getCurrentSentenceIndex();
         }
     }
 
@@ -471,24 +490,40 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void toggleReadingMode() {
         if (isFullParagraphMode) {
             // Currently in paragraph mode, switching to sentence mode
-            // Calculate character position based on scroll percentage
-            int scrollBasedCharPosition = calculateScrollBasedCharPosition();
-            currentBook.setCurrentCharPosition(scrollBasedCharPosition);
+            // Find the first visible sentence based on scroll position
+            int visibleSentenceIndex = getFirstVisibleSentenceIndex();
 
-            // Find which sentence contains this character position
-            setSentenceFromCharPosition(scrollBasedCharPosition);
+            // Set the BufferManager to that sentence
+            bufferManager.setCurrentSentenceIndex(visibleSentenceIndex);
 
-            Toast.makeText(this, "Párrafo→Oración: char " + scrollBasedCharPosition, Toast.LENGTH_SHORT).show();
+            // Get the character position of that sentence for saving
+            int sentenceCharPosition = bufferManager.getCurrentCharPosition();
+            currentBook.setCurrentCharPosition(sentenceCharPosition);
+
+            Toast.makeText(this, "Párrafo→Oración: oración " + (visibleSentenceIndex + 1) + " (char " + sentenceCharPosition + ")", Toast.LENGTH_SHORT).show();
         } else {
             // Currently in sentence mode, switching to paragraph mode
-            // Get current character position and calculate scroll percentage
-            int currentCharPosition = bufferManager.getCurrentCharPosition();
-            currentBook.setCurrentCharPosition(currentCharPosition);
+            // Get current sentence and calculate its middle position for better centering
+            int currentSentenceIndex = bufferManager.getCurrentSentenceIndex();
 
-            // Calculate scroll position from character position
-            scrollToCharPosition(currentCharPosition);
+            ParagraphSentences sentences = bufferManager.getCurrentParagraphSentences();
+            if (sentences != null) {
+                int sentenceStart = sentences.getSentenceStart(currentSentenceIndex);
+                int sentenceEnd = sentences.getSentenceEnd(currentSentenceIndex);
+                int sentenceMiddle = (sentenceStart + sentenceEnd) / 2;
 
-            Toast.makeText(this, "Oración→Párrafo: char " + currentCharPosition, Toast.LENGTH_SHORT).show();
+                currentBook.setCurrentCharPosition(sentenceMiddle);
+                scrollToCharPosition(sentenceMiddle);
+
+                Toast.makeText(this, "Oración→Párrafo: oración " + (currentSentenceIndex + 1) + " (char " + sentenceMiddle + ")", Toast.LENGTH_SHORT).show();
+            } else {
+                // Fallback to current position
+                int currentCharPosition = bufferManager.getCurrentCharPosition();
+                currentBook.setCurrentCharPosition(currentCharPosition);
+                scrollToCharPosition(currentCharPosition);
+
+                Toast.makeText(this, "Oración→Párrafo: char " + currentCharPosition, Toast.LENGTH_SHORT).show();
+            }
         }
 
         // Switch the mode
@@ -521,11 +556,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                     String paragraphText = bufferManager.getCurrentParagraphText();
                     if (paragraphText == null || paragraphText.isEmpty()) return;
 
-                    // Add buffer to character position (like your suggestion of +85)
-                    int adjustedCharPosition = charPosition + 85;
-
-                    // Calculate scroll percentage: adjustedChar * 100 / totalChars
-                    float scrollPercent = Math.min(100f, (adjustedCharPosition * 100f) / paragraphText.length());
+                    // Calculate scroll percentage directly from character position
+                    // Use exact percentage - no adjustment to avoid bias
+                    float scrollPercent = Math.min(100f, (charPosition * 100f) / paragraphText.length());
 
                     // Calculate scroll position after layout is complete
                     int maxScrollY = Math.max(0, tvSentence.getHeight() - scrollView.getHeight());

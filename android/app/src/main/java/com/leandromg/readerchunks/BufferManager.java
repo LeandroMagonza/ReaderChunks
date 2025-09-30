@@ -234,6 +234,23 @@ public class BufferManager {
     }
 
     /**
+     * Find which sentence contains the given character position
+     */
+    public int findSentenceIndexForCharPosition(int charPosition) {
+        if (currentParagraph != null) {
+            return currentParagraph.findSentenceIndexForPosition(charPosition);
+        }
+        return -1;
+    }
+
+    /**
+     * Get the current paragraph sentences object for detailed sentence operations
+     */
+    public ParagraphSentences getCurrentParagraphSentences() {
+        return currentParagraph;
+    }
+
+    /**
      * Get total sentences in current paragraph
      */
     public int getCurrentParagraphSentenceCount() {
