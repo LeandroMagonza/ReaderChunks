@@ -299,6 +299,10 @@ Libro de 10,000 oraciones:
 - [x] **Lectura fluida** - sin esperas, cortes, o texto corrupto
 - [x] **Preservación exacta** del contenido original
 - [x] **Scroll suave** en modo párrafo para textos largos
+- [x] **Transiciones de modo sin pérdida** - cambio bite-size ↔ párrafo mantiene posición exacta
+- [x] **Tracking de posición por carácter** - persistencia precisa entre modos de lectura
+- [x] **UI optimizada** - FAB reubicado, botón [+] en header y estado vacío
+- [x] **Buffer inteligente sin sesgo** - eliminación de drift acumulativo en navegación
 
 ### 🚀 Cómo Usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
@@ -310,29 +314,33 @@ Libro de 10,000 oraciones:
 
 ## 🚀 Roadmap - Próximas Mejoras
 
-### 📚 Formatos de Archivo (En Desarrollo)
-- [ ] **TXT**: Soporte para archivos de texto plano
-- [ ] **Markdown**: Archivos .md con formato básico
-- [ ] **EPUB**: Libros electrónicos estándar
-- [ ] **Detección automática**: Identificar formato por extensión
+### ✅ Formatos de Archivo
+- [x] **TXT**: Soporte para archivos de texto plano
+- [x] **Markdown**: Archivos .md con formato básico
+- [x] **EPUB**: Libros electrónicos estándar
+- [x] **Detección automática**: Identificar formato por extensión
 
-### 🎯 Gestión de Libros (Prioridad Alta)
-- [ ] **Menú de opciones por libro**:
-  - [ ] Eliminar libro (con confirmación y limpieza)
-  - [ ] Restablecer progreso (volver al inicio)
-  - [ ] Renombrar libro (cambiar título)
-- [ ] **Estadísticas de lectura** (tiempo, párrafos, progreso diario)
-- [ ] **Ordenación de biblioteca** (por fecha, progreso, título)
+### ✅ Gestión de Libros
+- [x] **Menú de opciones por libro**:
+  - [x] Eliminar libro (con confirmación y limpieza)
+  - [x] Restablecer progreso (volver al inicio)
+  - [x] Renombrar libro (cambiar título)
+- [x] **Estadísticas de lectura** (progreso % mostrado en biblioteca)
+- [ ] **Ordenación de biblioteca** (por fecha de última lectura)
 
 ### 🎨 Experiencia de Usuario
-- [ ] **Temas y personalización**:
-  - [ ] Modo oscuro/claro
+- [x] **Temas y personalización**:
+  - [x] Modo oscuro/claro
   - [ ] Tamaños de fuente configurables
   - [ ] Colores personalizables
-- [ ] **Animaciones y feedback**:
-  - [ ] Transiciones suaves en cambio de modo
-  - [ ] Animaciones de progreso
+- [x] **Animaciones y feedback**:
+  - [x] Transiciones suaves en cambio de modo
+  - [x] Animaciones de progreso
   - [ ] Feedback háptico en navegación
+- [ ] **Pantalla de configuración**:
+  - [ ] Selección de idioma
+  - [ ] Métodos de navegación (botones/swipe/tocar bordes)
+  - [ ] Configuración de fuentes y márgenes
 
 ### 🎛️ Configuración Avanzada
 - [ ] **Parámetros de lectura**:

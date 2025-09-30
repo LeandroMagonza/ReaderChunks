@@ -113,6 +113,13 @@ public class Book {
         return title != null && !title.trim().isEmpty() ? title : fileName;
     }
 
+    public Date getMostRecentDate() {
+        if (lastReadDate == null && processedDate == null) return null;
+        if (lastReadDate == null) return processedDate;
+        if (processedDate == null) return lastReadDate;
+        return lastReadDate.after(processedDate) ? lastReadDate : processedDate;
+    }
+
     @Override
     public String toString() {
         return String.format("Book{id='%s', title='%s', progress=%.1f%%}",

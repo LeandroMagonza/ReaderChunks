@@ -45,6 +45,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private boolean isLoading = false;
     private GestureDetector gestureDetector;
     private ThemeManager themeManager;
+    private SettingsManager settingsManager;
 
     // Current reading position (managed by BufferManager)
     private int currentParagraphIndex = 0;
@@ -55,14 +56,16 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Initialize theme before setting content view
+        // Initialize theme and settings before setting content view
         themeManager = new ThemeManager(this);
         themeManager.applyTheme();
+        settingsManager = new SettingsManager(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sentence_reader);
 
         initViews();
+        applySettings();
         setupManagers();
         loadBook();
         setupClickListeners();
@@ -653,6 +656,37 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     protected void onPause() {
         super.onPause();
         saveProgressAsync();
+    }
+
+    private void applySettings() {
+        if (settingsManager == null || tvSentence == null) return;
+
+        // Apply font size
+        float fontSize = settingsManager.getFontSize();
+        tvSentence.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, fontSize);
+
+        // Apply line spacing (lineSpacingExtra)
+        float lineSpacing = settingsManager.getLineSpacing();
+        tvSentence.setLineSpacing(lineSpacing, 1.0f);
+
+        // Apply horizontal padding to the container
+        View container = findViewById(R.id.sentenceContainer);
+        if (container != null) {
+            int paddingHorizontal = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP,
+                settingsManager.getPaddingHorizontal(),
+                getResources().getDisplayMetrics()
+            );
+            container.setPadding(paddingHorizontal, container.getPaddingTop(),
+                               paddingHorizontal, container.getPaddingBottom());
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reapply settings when returning from settings screen
+        applySettings();
     }
 
     @Override

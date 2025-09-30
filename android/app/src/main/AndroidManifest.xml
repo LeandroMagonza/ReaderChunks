@@ -109,6 +109,12 @@
             android:exported="false"
             android:theme="@style/Theme.ReaderChunks" />
 
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ReaderChunks"
+            android:parentActivityName=".MainActivity" />
+
     </application>
 
 </manifest>

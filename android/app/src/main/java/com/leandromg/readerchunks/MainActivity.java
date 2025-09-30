@@ -24,6 +24,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -202,6 +203,17 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                     showLoading(false);
                     books.clear();
                     books.addAll(loadedBooks);
+
+                    // Sort by most recent date (read or creation) - newest first
+                    books.sort((book1, book2) -> {
+                        Date date1 = book1.getMostRecentDate();
+                        Date date2 = book2.getMostRecentDate();
+                        if (date1 == null && date2 == null) return 0;
+                        if (date1 == null) return 1;  // books without dates go to end
+                        if (date2 == null) return -1;
+                        return date2.compareTo(date1); // newer dates first
+                    });
+
                     bookAdapter.updateBooks(books);
                     updateViewState();
                 });
@@ -491,6 +503,9 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_theme_toggle) {
             toggleTheme();
+            return true;
+        } else if (item.getItemId() == R.id.action_settings) {
+            startActivity(new android.content.Intent(this, SettingsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);

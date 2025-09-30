@@ -97,12 +97,13 @@
 
     <!-- Sentence display area -->
     <LinearLayout
+        android:id="@+id/sentenceContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingHorizontal="32dp"
+        android:paddingHorizontal="16dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp">
 
@@ -128,7 +129,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="24sp"
-                    android:lineHeight="36dp"
                     android:textAlignment="center"
                     android:textColor="@color/text_primary"
                     android:gravity="center"
