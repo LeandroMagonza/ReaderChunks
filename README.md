@@ -1,7 +1,20 @@
-# 📱 ReaderChunks - Android App
+# 📱 BookBits - Android App
+
+## 📖 Lectura Segmentada
+
+La Lectura Segmentada es un enfoque de lectura que consiste en dividir un texto en fragmentos breves y manejables —ya sean oraciones o párrafos— y presentarlos de forma secuencial.
+
+Este método busca:
+
+- Reducir la sobrecarga cognitiva, al enfocar la atención en una unidad pequeña de información.
+- Favorecer la concentración sostenida, evitando distracciones propias de bloques largos de texto.
+- Generar motivación intrínseca, al permitir micro-avances medibles y celebrados (gamificación).
+- Adaptarse a contextos móviles, donde leer en "bocados" es más natural que abordar páginas enteras.
+
+En el caso de BookBits, la Lectura Segmentada se implementa mostrando una oración por vez, con navegación simple y un indicador de progreso que convierte el acto de leer en una experiencia más dinámica y gratificante.
 
 ## 📌 Objetivo
-**ReaderChunks** es una aplicación Android que transforma la lectura de PDFs en una experiencia más digerible y gamificada.
+**BookBits** es una aplicación Android que transforma la lectura de PDFs en una experiencia más digerible y gamificada.
 El usuario puede cargar un documento y leerlo **una oración a la vez**, con navegación simple y visualización de progreso.
 El foco está en **mejorar la concentración**, ofrecer "lectura por bocados" y fomentar el hábito con pequeños logros diarios.
 
@@ -152,9 +165,9 @@ Oración 7.3 (98 chars): tasaron cada pliego del dicho libro...
 ## 📱 Estructura del Proyecto
 
 ```
-ReaderChunks/
+BookBits/
 ├── android/                           # Proyecto Android completo
-│   ├── app/src/main/java/com/leandromg/readerchunks/
+│   ├── app/src/main/java/com/leandromg/bookbits/
 │   │   ├── MainActivity.java          # Biblioteca de libros
 │   │   ├── SentenceReaderActivity.java # Lectura dual: bite-size ↔ párrafo
 │   │   ├── Book.java                  # Modelo con persistencia de modo
@@ -407,6 +420,27 @@ Libro de 10,000 oraciones:
   - [ ] Modificar `SentenceReaderActivity.java` para renderizar imágenes
   - [ ] Añadir ImageView dinámico en `activity_sentence_reader.xml`
   - [ ] Opcional: usar Glide/Picasso para mejor manejo de imágenes
+
+### 🌐 Configuración de Idiomas (Futura Funcionalidad)
+- [ ] **Interfaz multiidioma**:
+  - [ ] Español (por defecto)
+  - [ ] Inglés
+  - [ ] Portugués
+  - [ ] Francés
+  - [ ] Alemán
+- [ ] **Selector en configuración**:
+  - [ ] RadioGroup para elegir idioma
+  - [ ] Persistencia en SharedPreferences
+  - [ ] Aplicación inmediata al cambiar
+- [ ] **Estructura de archivos**:
+  - [ ] values-en/strings.xml (Inglés)
+  - [ ] values-pt/strings.xml (Portugués)
+  - [ ] values-fr/strings.xml (Francés)
+  - [ ] values-de/strings.xml (Alemán)
+- [ ] **LanguageManager.java**:
+  - [ ] Clase helper para cambio programático
+  - [ ] Métodos: setLocale(), getStoredLanguage(), saveLanguage()
+  - [ ] Aplicar configuración al iniciar actividades
 
 ### 🔧 Mejoras Técnicas
 - [ ] **OCR integrado** para PDFs escaneados

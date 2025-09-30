@@ -1,6 +1,6 @@
 # 🔗 Soporte para Apertura de Archivos Externos
 
-Esta documentación explica cómo se ha implementado la funcionalidad para que Android ofrezca ReaderChunks como opción para abrir archivos PDF, TXT, Markdown y EPUB directamente desde otras aplicaciones.
+Esta documentación explica cómo se ha implementado la funcionalidad para que Android ofrezca BookBits como opción para abrir archivos PDF, TXT, Markdown y EPUB directamente desde otras aplicaciones.
 
 ## ⚙️ Configuración Implementada
 
@@ -63,7 +63,7 @@ Se han agregado Intent Filters que permiten a Android reconocer nuestra app como
     android:name=".MainActivity"
     android:exported="true"
     android:launchMode="singleTop"
-    android:theme="@style/Theme.ReaderChunks">
+    android:theme="@style/Theme.BookBits">
 ```
 
 - `android:exported="true"`: Permite que otras apps lancen nuestra actividad
@@ -151,13 +151,13 @@ private String getFileNameFromUri(Uri uri) {
    - Google Drive
    - Cualquier app que permita abrir documentos
 
-2. **Android muestra opciones** incluyendo "ReaderChunks"
+2. **Android muestra opciones** incluyendo "BookBits"
 
-3. **Usuario selecciona ReaderChunks**:
+3. **Usuario selecciona BookBits**:
    - Si la app no está abierta: Se lanza MainActivity
    - Si la app ya está abierta: Se activa onNewIntent()
 
-4. **ReaderChunks procesa el archivo**:
+4. **BookBits procesa el archivo**:
    - Muestra toast "Abriendo [nombre_archivo]..."
    - Detecta el formato automáticamente
    - Extrae el texto usando el extractor apropiado
@@ -182,7 +182,7 @@ private String getFileNameFromUri(Uri uri) {
 
 ## 🚀 Ventajas de Esta Implementación
 
-1. **Integración Nativa**: ReaderChunks aparece naturalmente en el menú "Abrir con..."
+1. **Integración Nativa**: BookBits aparece naturalmente en el menú "Abrir con..."
 2. **Experiencia Fluida**: No es necesario abrir la app primero
 3. **Compatibilidad Universal**: Funciona con cualquier app que comparta documentos
 4. **Detección Automática**: El usuario no necesita especificar el tipo de archivo
@@ -204,13 +204,13 @@ private String getFileNameFromUri(Uri uri) {
    - Copia un archivo PDF/TXT/MD/EPUB al dispositivo
    - Abre el explorador de archivos
    - Toca el archivo
-   - Selecciona "ReaderChunks"
+   - Selecciona "BookBits"
 
 2. **Método 2 - Compartir desde otra App**:
    - Abre Gmail, WhatsApp, Drive, etc.
    - Busca un documento adjunto
    - Toca "Abrir con..."
-   - Selecciona "ReaderChunks"
+   - Selecciona "BookBits"
 
 3. **Método 3 - ADB (Desarrollo)**:
    ```bash
@@ -219,12 +219,12 @@ private String getFileNameFromUri(Uri uri) {
 
 ## 🛠️ Troubleshooting
 
-### Si no aparece ReaderChunks en "Abrir con..."
+### Si no aparece BookBits en "Abrir con..."
 
 1. **Verificar instalación**: Asegurar que la app esté instalada correctamente
 2. **Verificar permisos**: Android puede necesitar permisos explícitos para algunos archivos
 3. **Limpiar defaults**: En Configuración > Apps > [App que abre el archivo] > Abrir por defecto > Borrar valores predeterminados
-4. **Reinstalar**: Como último recurso, desinstalar y reinstalar ReaderChunks
+4. **Reinstalar**: Como último recurso, desinstalar y reinstalar BookBits
 
 ### Limitaciones Conocidas
 

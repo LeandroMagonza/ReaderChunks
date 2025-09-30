@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme with DayNight support -->
-    <style name="Base.Theme.ReaderChunks" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.BookBits" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/white</item>
@@ -17,7 +17,7 @@
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
 
-    <style name="Theme.ReaderChunks" parent="Base.Theme.ReaderChunks" />
+    <style name="Theme.BookBits" parent="Base.Theme.BookBits" />
 
     <!-- Custom PopupMenu style with proper text colors -->
     <style name="CustomPopupMenu" parent="Theme.Material3.DayNight">

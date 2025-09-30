@@ -1,4 +1,4 @@
-name: Build ReaderChunks
+name: Build BookBits
 
 on:
   push:

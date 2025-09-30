@@ -2,11 +2,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
-public class ReaderChunksConsole {
+public class BookBitsConsole {
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Usage: java ReaderChunksConsole <path-to-pdf>");
+            System.out.println("Usage: java BookBitsConsole <path-to-pdf>");
             System.exit(1);
         }
 

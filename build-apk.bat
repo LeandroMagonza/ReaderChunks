@@ -1,6 +1,6 @@
 @echo off
 echo ================================
-echo   Building ReaderChunks APK
+echo   Building BookBits APK
 echo ================================
 echo.
 

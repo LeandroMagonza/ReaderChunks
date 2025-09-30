@@ -56,7 +56,7 @@ adb logcat -s MainActivity BookCacheManager TextExtractorFactory
 ### Paso 3: Test de Archivo Simple
 1. Crear archivo test.txt con contenido simple
 2. Copiarlo al dispositivo
-3. Intentar abrirlo con ReaderChunks
+3. Intentar abrirlo con BookBits
 4. Observar logs
 
 ### Paso 4: Verificar Errores Específicos
@@ -71,10 +71,10 @@ adb logcat -s MainActivity BookCacheManager TextExtractorFactory
 ### Test 1: Archivo Local Directo
 1. Crear archivo `test.txt` en `/storage/emulated/0/Download/`
 2. Usar explorador de archivos
-3. Tocar archivo → Abrir con ReaderChunks
+3. Tocar archivo → Abrir con BookBits
 
 ### Test 2: Desde App Internal
-1. Abrir ReaderChunks
+1. Abrir BookBits
 2. Tocar FAB "Agregar Documento"
 3. Seleccionar archivo conocido
 

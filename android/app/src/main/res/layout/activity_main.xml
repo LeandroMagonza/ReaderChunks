@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/primary"
-            app:title="ReaderChunks"
+            app:title="BookBits"
             app:titleTextColor="@color/white"
             app:menu="@menu/main_menu"
             android:elevation="4dp" />

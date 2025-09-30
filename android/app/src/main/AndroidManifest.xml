@@ -10,13 +10,13 @@
         android:icon="@android:drawable/ic_dialog_info"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ReaderChunks">
+        android:theme="@style/Theme.BookBits">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ReaderChunks">
+            android:theme="@style/Theme.BookBits">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -107,12 +107,12 @@
         <activity
             android:name=".SentenceReaderActivity"
             android:exported="false"
-            android:theme="@style/Theme.ReaderChunks" />
+            android:theme="@style/Theme.BookBits" />
 
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
-            android:theme="@style/Theme.ReaderChunks"
+            android:theme="@style/Theme.BookBits"
             android:parentActivityName=".MainActivity" />
 
     </application>

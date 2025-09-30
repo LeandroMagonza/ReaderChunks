@@ -1,6 +1,6 @@
 @echo off
 echo ================================
-echo     ReaderChunks Android Build
+echo     BookBits Android Build
 echo ================================
 
 echo.

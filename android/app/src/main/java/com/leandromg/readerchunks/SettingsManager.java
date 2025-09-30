@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class SettingsManager {
-    private static final String PREFS_NAME = "ReaderChunksSettings";
+    private static final String PREFS_NAME = "BookBitsSettings";
 
     // Keys
     private static final String KEY_DARK_MODE = "dark_mode";

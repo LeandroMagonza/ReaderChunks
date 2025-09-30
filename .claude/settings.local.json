@@ -17,7 +17,8 @@
       "Bash(dir)",
       "Bash(gradlew.bat assembleDebug:*)",
       "Bash(del:*)",
-      "Bash(./gradlew.bat:*)"
+      "Bash(./gradlew.bat:*)",
+      "Bash(move:*)"
     ],
     "deny": [],
     "ask": []

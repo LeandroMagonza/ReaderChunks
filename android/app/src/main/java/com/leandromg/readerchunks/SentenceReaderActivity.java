@@ -523,7 +523,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             int sentenceCharPosition = bufferManager.getCurrentCharPosition();
             currentBook.setCurrentCharPosition(sentenceCharPosition);
 
-            Toast.makeText(this, "Párrafo→Oración: oración " + (visibleSentenceIndex + 1) + " (char " + sentenceCharPosition + ")", Toast.LENGTH_SHORT).show();
+            // Toast.makeText(this, "Párrafo→Oración: oración " + (visibleSentenceIndex + 1) + " (char " + sentenceCharPosition + ")", Toast.LENGTH_SHORT).show();
         } else {
             // Currently in sentence mode, switching to paragraph mode
             // Get current sentence and calculate its middle position for better centering
@@ -538,14 +538,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 currentBook.setCurrentCharPosition(sentenceMiddle);
                 scrollToCharPosition(sentenceMiddle);
 
-                Toast.makeText(this, "Oración→Párrafo: oración " + (currentSentenceIndex + 1) + " (char " + sentenceMiddle + ")", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Oración→Párrafo: oración " + (currentSentenceIndex + 1) + " (char " + sentenceMiddle + ")", Toast.LENGTH_SHORT).show();
             } else {
                 // Fallback to current position
                 int currentCharPosition = bufferManager.getCurrentCharPosition();
                 currentBook.setCurrentCharPosition(currentCharPosition);
                 scrollToCharPosition(currentCharPosition);
 
-                Toast.makeText(this, "Oración→Párrafo: char " + currentCharPosition, Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Oración→Párrafo: char " + currentCharPosition, Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -590,7 +590,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                     // Post again to ensure layout is fully settled
                     scrollView.post(() -> {
                         scrollView.smoothScrollTo(0, scrollY);
-                        Toast.makeText(SentenceReaderActivity.this, "Scroll: " + (int)scrollPercent + "% → " + scrollY + "px (max:" + maxScrollY + ")", Toast.LENGTH_SHORT).show();
+                        // Toast.makeText(SentenceReaderActivity.this, "Scroll: " + (int)scrollPercent + "% → " + scrollY + "px (max:" + maxScrollY + ")", Toast.LENGTH_SHORT).show();
                     });
 
                 } catch (Exception e) {
