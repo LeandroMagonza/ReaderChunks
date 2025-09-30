@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 import java.util.ArrayList;
@@ -34,7 +33,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private LinearLayout layoutLoading;
     private LinearLayout layoutEmpty;
     private RecyclerView recyclerBooks;
-    private ExtendedFloatingActionButton fabAddBook;
+    private MaterialButton btnAddDocument;
+    private MaterialButton btnAddDocumentEmpty;
     private CircularProgressIndicator progressIndicator;
     private TextView tvStatus;
     private MaterialToolbar toolbar;
@@ -73,7 +73,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         layoutLoading = findViewById(R.id.layoutLoading);
         layoutEmpty = findViewById(R.id.layoutEmpty);
         recyclerBooks = findViewById(R.id.recyclerBooks);
-        fabAddBook = findViewById(R.id.fabAddBook);
+        btnAddDocument = findViewById(R.id.btnAddDocument);
+        btnAddDocumentEmpty = findViewById(R.id.btnAddDocumentEmpty);
         progressIndicator = findViewById(R.id.progressIndicator);
         tvStatus = findViewById(R.id.tvStatus);
         toolbar = findViewById(R.id.toolbar);
@@ -106,7 +107,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     }
 
     private void setupClickListeners() {
-        fabAddBook.setOnClickListener(v -> openDocumentPicker());
+        btnAddDocument.setOnClickListener(v -> openDocumentPicker());
+        btnAddDocumentEmpty.setOnClickListener(v -> openDocumentPicker());
     }
 
     private void openDocumentPicker() {
@@ -180,7 +182,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void showLoading(boolean show) {
         layoutLoading.setVisibility(show ? View.VISIBLE : View.GONE);
-        fabAddBook.setEnabled(!show);
+        btnAddDocument.setEnabled(!show);
+        btnAddDocumentEmpty.setEnabled(!show);
 
         if (!show) {
             updateViewState();

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -173,6 +174,23 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 return false;
             }
         });
+
+        // Set up scroll listener to save progress based on scroll position in paragraph mode
+        scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            private long lastScrollTime = 0;
+
+            @Override
+            public void onScrollChanged() {
+                if (isFullParagraphMode) {
+                    // Debounce scroll events - only save every 500ms
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastScrollTime > 500) {
+                        lastScrollTime = currentTime;
+                        saveProgressAsync();
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -190,6 +208,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // In paragraph mode, navigate to previous paragraph
             if (bufferManager.moveToPreviousParagraph()) {
                 updateDisplay();
+                resetScrollPosition();
                 saveProgressAsync();
             }
         } else {
@@ -208,6 +227,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // In paragraph mode, navigate to next paragraph
             if (bufferManager.moveToNextParagraph()) {
                 updateDisplay();
+                resetScrollPosition();
                 saveProgressAsync();
             } else {
                 showCompletionDialog();
@@ -223,6 +243,134 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         }
     }
 
+    private void resetScrollPosition() {
+        if (scrollView != null) {
+            scrollView.scrollTo(0, 0);
+        }
+    }
+
+    private void restoreScrollPosition() {
+        if (scrollView == null || tvSentence == null || !isFullParagraphMode) {
+            return;
+        }
+
+        // Wait for layout to be complete before restoring scroll
+        tvSentence.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                tvSentence.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                try {
+                    // Get saved character position (relative to paragraph)
+                    int savedCharPosition = currentBook.getCurrentCharPosition();
+
+                    // Get paragraph text to validate position
+                    String paragraphText = bufferManager.getCurrentParagraphText();
+                    if (paragraphText == null) return;
+
+                    // Ensure saved position is within paragraph bounds
+                    int relativeCharPosition = Math.max(0, Math.min(savedCharPosition, paragraphText.length() - 1));
+
+                    if (relativeCharPosition <= 5) { // Avoid tiny scrolls
+                        scrollView.scrollTo(0, 0);
+                        return;
+                    }
+
+                    // Use same logic as scrollToCharPosition but without the +85 buffer
+                    float scrollPercent = Math.min(100f, (relativeCharPosition * 100f) / paragraphText.length());
+
+                    // Calculate scroll position after layout is complete
+                    int maxScrollY = Math.max(0, tvSentence.getHeight() - scrollView.getHeight());
+                    int scrollY = (int) (maxScrollY * scrollPercent / 100f);
+
+                    // Post again to ensure layout is fully settled
+                    scrollView.post(() -> {
+                        scrollView.smoothScrollTo(0, scrollY);
+                    });
+
+                } catch (Exception e) {
+                    // If restoration fails, stay at top
+                    scrollView.scrollTo(0, 0);
+                }
+            }
+        });
+    }
+
+    private int estimateCharactersBeforeCurrentSentence(String paragraphText) {
+        try {
+            int currentSentenceIndex = bufferManager.getCurrentSentenceIndex();
+            if (currentSentenceIndex <= 0) {
+                return 0;
+            }
+
+            // Simple estimation: split by sentence and count characters
+            // This is a rough approximation
+            String[] sentences = paragraphText.split("[.!?]+\\s*");
+            int charCount = 0;
+
+            for (int i = 0; i < currentSentenceIndex && i < sentences.length; i++) {
+                charCount += sentences[i].length();
+                if (i < sentences.length - 1) {
+                    charCount += 2; // Approximate for punctuation and space
+                }
+            }
+
+            return charCount;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private int calculateScrollBasedCharPosition() {
+        if (scrollView == null || tvSentence == null || !isFullParagraphMode) {
+            return bufferManager.getCurrentCharPosition();
+        }
+
+        try {
+            // Get current scroll position
+            int scrollY = scrollView.getScrollY();
+
+            // Get text properties
+            String paragraphText = bufferManager.getCurrentParagraphText();
+            if (paragraphText == null || paragraphText.isEmpty()) {
+                return bufferManager.getCurrentCharPosition();
+            }
+
+            // Get text view properties
+            float textSize = tvSentence.getTextSize();
+            float lineHeight = tvSentence.getLineHeight();
+            int textViewWidth = tvSentence.getWidth() - tvSentence.getPaddingLeft() - tvSentence.getPaddingRight();
+
+            if (lineHeight <= 0 || textViewWidth <= 0) {
+                return bufferManager.getCurrentCharPosition();
+            }
+
+            // Calculate approximate lines scrolled
+            float linesScrolled = Math.max(0, scrollY / lineHeight);
+
+            // Estimate characters per line (rough approximation)
+            float avgCharWidth = textSize * 0.6f; // Rough estimate
+            int charsPerLine = Math.max(1, (int) (textViewWidth / avgCharWidth));
+
+            // Calculate estimated character position with safety margin
+            int estimatedCharPosition = (int) (linesScrolled * charsPerLine);
+
+            // Use fixed 80 character safety margin to go back
+            int safetyMargin = 80;
+            estimatedCharPosition = Math.max(0, estimatedCharPosition - safetyMargin);
+
+            // Make sure we don't exceed the paragraph length
+            estimatedCharPosition = Math.min(estimatedCharPosition, paragraphText.length() - 1);
+
+            // Return relative position within the paragraph
+            return estimatedCharPosition;
+
+        } catch (Exception e) {
+            // If calculation fails, return current position
+            return bufferManager.getCurrentCharPosition();
+        }
+    }
+
     private void updateDisplay() {
         if (currentBook == null) return;
 
@@ -234,6 +382,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 return;
             }
             tvSentence.setText(currentParagraph);
+
+            // Restore scroll position based on character position
+            restoreScrollPosition();
         } else {
             // Display current sentence (bite-size mode)
             String currentSentence = bufferManager.getCurrentSentence();
@@ -251,7 +402,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         // Update book object for real-time percentage calculation
         currentBook.setCurrentPosition(currentParagraphIndex);
-        currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
+        // Note: Don't update currentCharPosition here - it should only be updated in saveProgressAsync()
 
         // Show paragraph divider only in sentence mode at end of paragraphs
         if (isFullParagraphMode) {
@@ -318,31 +469,79 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     }
 
     private void toggleReadingMode() {
-        isFullParagraphMode = !isFullParagraphMode;
-
         if (isFullParagraphMode) {
-            // When switching to paragraph mode, reset to beginning of current paragraph
-            currentSentenceIndex = 0;
+            // Currently in paragraph mode, switching to sentence mode
+            // Calculate character position based on scroll percentage
+            int scrollBasedCharPosition = calculateScrollBasedCharPosition();
+            currentBook.setCurrentCharPosition(scrollBasedCharPosition);
+
+            // Find which sentence contains this character position
+            setSentenceFromCharPosition(scrollBasedCharPosition);
+
+            Toast.makeText(this, "Párrafo→Oración: char " + scrollBasedCharPosition, Toast.LENGTH_SHORT).show();
         } else {
-            // When switching from paragraph to sentence mode, force reload the current paragraph
-            // This ensures the paragraph is properly processed for sentence splitting
-            int currentParagraphIndex = bufferManager.getCurrentParagraphIndex();
+            // Currently in sentence mode, switching to paragraph mode
+            // Get current character position and calculate scroll percentage
+            int currentCharPosition = bufferManager.getCurrentCharPosition();
+            currentBook.setCurrentCharPosition(currentCharPosition);
 
-            // Set loading state to prevent interaction during reload
-            isLoading = true;
+            // Calculate scroll position from character position
+            scrollToCharPosition(currentCharPosition);
 
-            // Force reload - this will trigger onBufferLoaded when complete
-            bufferManager.jumpToPosition(currentParagraphIndex, 0);
-
-            // Update display immediately to show loading state and correct button
-            updateDisplay();
-            return; // Don't call updateDisplay again
+            Toast.makeText(this, "Oración→Párrafo: char " + currentCharPosition, Toast.LENGTH_SHORT).show();
         }
 
+        // Switch the mode
+        isFullParagraphMode = !isFullParagraphMode;
+
+        // Update display immediately - no reloading needed
         updateDisplay();
 
-        // Save the reading mode preference immediately
+        // Save progress
         saveProgressAsync();
+    }
+
+    private void setSentenceFromCharPosition(int charPosition) {
+        // Use BufferManager to find which sentence contains this character position
+        bufferManager.setCharacterPosition(charPosition);
+    }
+
+    private void scrollToCharPosition(int charPosition) {
+        if (scrollView == null || tvSentence == null) {
+            return;
+        }
+
+        // Wait for layout to be complete before calculating scroll
+        tvSentence.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                tvSentence.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                try {
+                    String paragraphText = bufferManager.getCurrentParagraphText();
+                    if (paragraphText == null || paragraphText.isEmpty()) return;
+
+                    // Add buffer to character position (like your suggestion of +85)
+                    int adjustedCharPosition = charPosition + 85;
+
+                    // Calculate scroll percentage: adjustedChar * 100 / totalChars
+                    float scrollPercent = Math.min(100f, (adjustedCharPosition * 100f) / paragraphText.length());
+
+                    // Calculate scroll position after layout is complete
+                    int maxScrollY = Math.max(0, tvSentence.getHeight() - scrollView.getHeight());
+                    int scrollY = (int) (maxScrollY * scrollPercent / 100f);
+
+                    // Post again to ensure layout is fully settled
+                    scrollView.post(() -> {
+                        scrollView.smoothScrollTo(0, scrollY);
+                        Toast.makeText(SentenceReaderActivity.this, "Scroll: " + (int)scrollPercent + "% → " + scrollY + "px (max:" + maxScrollY + ")", Toast.LENGTH_SHORT).show();
+                    });
+
+                } catch (Exception e) {
+                    // If calculation fails, stay at current position
+                }
+            }
+        });
     }
 
     private void showCompletionDialog() {
@@ -367,7 +566,15 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         executor.execute(() -> {
             try {
                 currentBook.setCurrentPosition(bufferManager.getCurrentParagraphIndex());
-                currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
+
+                // In paragraph mode, calculate character position based on scroll
+                if (isFullParagraphMode) {
+                    int scrollBasedCharPosition = calculateScrollBasedCharPosition();
+                    currentBook.setCurrentCharPosition(scrollBasedCharPosition);
+                } else {
+                    currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
+                }
+
                 currentBook.setLastReadDate(new Date());
                 currentBook.setFullParagraphMode(isFullParagraphMode); // Guardar modo de lectura
                 cacheManager.saveBookMeta(currentBook);
@@ -382,6 +589,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         runOnUiThread(() -> {
             isLoading = false;
             updateDisplay();
+
+            // Save progress after buffer loads to persist the mode switch
+            saveProgressAsync();
         });
     }
 

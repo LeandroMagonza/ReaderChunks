@@ -26,27 +26,53 @@
             android:id="@+id/layoutHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:padding="24dp"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:background="@color/surface">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Title and subtitle container -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="📚 Tu Biblioteca"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/tvSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PDF, TXT, Markdown, EPUB"
-                android:textSize="16sp"
-                android:textColor="@color/text_secondary" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📚 Tu Biblioteca"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PDF, TXT, Markdown, EPUB"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary" />
+
+            </LinearLayout>
+
+            <!-- Add button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddDocument"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:text="+"
+                android:textSize="20sp"
+                android:textStyle="normal"
+                android:fontFamily="monospace"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                app:cornerRadius="28dp" />
 
         </LinearLayout>
 
@@ -130,7 +156,23 @@
                 android:text="Agrega tu primer documento para comenzar"
                 android:textSize="16sp"
                 android:textColor="@color/text_secondary"
-                android:gravity="center" />
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddDocumentEmpty"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:text="+"
+                android:textSize="24sp"
+                android:textStyle="normal"
+                android:fontFamily="monospace"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                app:cornerRadius="32dp" />
 
         </LinearLayout>
 
@@ -144,16 +186,5 @@
             android:clipToPadding="false" />
 
     </LinearLayout>
-
-    <!-- Add book FAB -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabAddBook"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:text="Agregar Documento"
-        android:textAllCaps="false"
-        app:icon="@android:drawable/ic_input_add" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -202,7 +202,16 @@ public class BufferManager {
     }
 
     /**
-     * Get current character position for saving progress
+     * Set current sentence index within paragraph (used for mode switching)
+     */
+    public void setCurrentSentenceIndex(int sentenceIndex) {
+        if (currentParagraph != null && sentenceIndex >= 0 && sentenceIndex < currentParagraph.getSentenceCount()) {
+            this.currentSentenceIndex = sentenceIndex;
+        }
+    }
+
+    /**
+     * Get current character position for saving progress (relative position within paragraph)
      */
     public int getCurrentCharPosition() {
         if (currentParagraph == null) {
