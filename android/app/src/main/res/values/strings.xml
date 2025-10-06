@@ -47,4 +47,69 @@
     <string name="error_reset_progress">Error al restablecer el progreso: %s</string>
     <string name="error_delete_book">Error al eliminar el libro: %s</string>
     <string name="error_could_not_delete">No se pudo eliminar el libro</string>
+
+    <!-- Main Activity -->
+    <string name="your_library">📚 Tu Biblioteca</string>
+    <string name="supported_formats">PDF, TXT, Markdown, EPUB</string>
+    <string name="no_books_title">No hay libros en tu biblioteca</string>
+    <string name="no_books_subtitle">Agrega un documento para comenzar a leer</string>
+    <string name="add_document">Agregar Documento</string>
+
+    <!-- Settings -->
+    <string name="settings">Configuración</string>
+    <string name="font_settings">Configuración de Fuente</string>
+    <string name="font_size">Tamaño de letra</string>
+    <string name="line_spacing">Espaciado entre líneas</string>
+    <string name="side_margins">Márgenes laterales</string>
+    <string name="bionic_reading">Lectura Biónica</string>
+    <string name="bionic_reading_description">Resalta las primeras letras de cada palabra para mejorar la velocidad de lectura</string>
+    <string name="bionic_off">Desactivado</string>
+    <string name="bionic_classic">Clásico (todas las palabras)</string>
+    <string name="bionic_modern">Moderno (palabras largas)</string>
+    <string name="preview">Vista previa</string>
+    <string name="preview_text">Esta es una vista previa del texto con la configuración actual. Aquí puedes ver cómo se verá el texto en la aplicación con el tamaño de letra, espaciado y márgenes seleccionados.</string>
+    <string name="reset_defaults">Restablecer valores por defecto</string>
+    <string name="language">Idioma</string>
+    <string name="select_language">Seleccionar Idioma</string>
+
+    <!-- Content descriptions -->
+    <string name="decrease_font_size">Disminuir tamaño de letra</string>
+    <string name="increase_font_size">Aumentar tamaño de letra</string>
+    <string name="decrease_spacing">Disminuir espaciado</string>
+    <string name="increase_spacing">Aumentar espaciado</string>
+    <string name="decrease_margins">Disminuir márgenes</string>
+    <string name="increase_margins">Aumentar márgenes</string>
+
+    <!-- Reader Activity -->
+    <string name="error_book_not_found">Error: Libro no encontrado</string>
+    <string name="error_loading_book">Error cargando libro: %s</string>
+    <string name="error_loading_buffer">Error de carga: %s</string>
+    <string name="continue_reading">Continuar</string>
+    <string name="exit_reading_title">Salir de la lectura</string>
+    <string name="exit_reading_message">El progreso se ha guardado automáticamente.</string>
+    <string name="save_and_exit">Salir</string>
+    <string name="exit_without_saving">Salir sin guardar</string>
+    <string name="continue_reading_dialog">Continuar leyendo</string>
+
+    <!-- Book management -->
+    <string name="book_added_success">Libro agregado correctamente</string>
+    <string name="book_added_error">Error al agregar libro: %s</string>
+    <string name="error_loading_library">Error cargando biblioteca</string>
+    <string name="read_again">Leer de nuevo</string>
+    <string name="start_reading">Comenzar</string>
+
+    <!-- Book progress and time -->
+    <string name="progress_completed_paragraphs" formatted="false">%.1f%% completado • %d / %d párrafos</string>
+    <string name="never_read">Nunca leído</string>
+    <string name="just_now">Hace un momento</string>
+    <string name="minutes_ago">Hace %d min</string>
+    <string name="hours_ago">Hace %d horas</string>
+    <string name="yesterday">Ayer</string>
+    <string name="days_ago">Hace %d días</string>
+    <string name="date_prefix">El %s</string>
+
+    <!-- Processing and status messages -->
+    <string name="file_added_success" formatted="false">✅ %s agregado: %s</string>
+    <string name="error_processing_file" formatted="false">❌ Error procesando %s: %s</string>
+    <string name="opening_file">Abriendo %s...</string>
 </resources>

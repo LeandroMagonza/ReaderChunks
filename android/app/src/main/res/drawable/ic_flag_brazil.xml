@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="16dp"
+    android:viewportWidth="24"
+    android:viewportHeight="16">
+
+    <!-- Green background -->
+    <path
+        android:fillColor="#009639"
+        android:pathData="M0,0 L24,0 L24,16 L0,16 Z"/>
+
+    <!-- Yellow diamond -->
+    <path
+        android:fillColor="#FEDF00"
+        android:pathData="M12,3 L20,8 L12,13 L4,8 Z"/>
+
+    <!-- Blue circle -->
+    <path
+        android:fillColor="#002776"
+        android:pathData="M12,5.5 C14,5.5 15.5,7 15.5,8 C15.5,9 14,10.5 12,10.5 C10,10.5 8.5,9 8.5,8 C8.5,7 10,5.5 12,5.5 Z"/>
+
+    <!-- Border -->
+    <path
+        android:strokeColor="#E0E0E0"
+        android:strokeWidth="0.5"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M0,0 L24,0 L24,16 L0,16 Z"/>
+</vector>

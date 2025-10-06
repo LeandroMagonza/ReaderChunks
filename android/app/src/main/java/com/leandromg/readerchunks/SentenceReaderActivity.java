@@ -46,6 +46,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private GestureDetector gestureDetector;
     private ThemeManager themeManager;
     private SettingsManager settingsManager;
+    private LanguageManager languageManager;
 
     // Current reading position (managed by BufferManager)
     private int currentParagraphIndex = 0;
@@ -56,7 +57,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Initialize theme and settings before setting content view
+        // Initialize language, theme and settings before setting content view
+        languageManager = new LanguageManager(this);
+        languageManager.applyStoredLanguage();
+
         themeManager = new ThemeManager(this);
         themeManager.applyTheme();
         settingsManager = new SettingsManager(this);
@@ -98,7 +102,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         String bookId = intent.getStringExtra("book_id");
 
         if (bookId == null) {
-            Toast.makeText(this, "Error: Libro no encontrado", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_book_not_found), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -121,7 +125,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Error cargando libro: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.error_loading_book, e.getMessage()), Toast.LENGTH_SHORT).show();
                     finish();
                 });
             }
@@ -655,7 +659,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     public void onBufferError(String error) {
         runOnUiThread(() -> {
             isLoading = false;
-            Toast.makeText(this, "Error de carga: " + error, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_loading_buffer, error), Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -663,12 +667,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     public void onBackPressed() {
         saveProgressAsync();
         new AlertDialog.Builder(this)
-                .setTitle("Salir de la lectura")
-                .setMessage("El progreso se ha guardado automáticamente.")
-                .setPositiveButton("Salir", (dialog, which) -> {
+                .setTitle(getString(R.string.exit_reading_title))
+                .setMessage(getString(R.string.exit_reading_message))
+                .setPositiveButton(getString(R.string.save_and_exit), (dialog, which) -> {
                     super.onBackPressed();
                 })
-                .setNegativeButton("Continuar leyendo", null)
+                .setNegativeButton(getString(R.string.continue_reading_dialog), null)
                 .show();
     }
 

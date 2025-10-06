@@ -3,17 +3,17 @@
 
     <item
         android:id="@+id/action_rename"
-        android:title="Renombrar"
+        android:title="@string/rename_book"
         android:icon="@android:drawable/ic_menu_edit" />
 
     <item
         android:id="@+id/action_reset_progress"
-        android:title="Restablecer progreso"
+        android:title="@string/reset_progress"
         android:icon="@android:drawable/ic_menu_revert" />
 
     <item
         android:id="@+id/action_delete"
-        android:title="Eliminar libro"
+        android:title="@string/delete_book"
         android:icon="@android:drawable/ic_menu_delete" />
 
 </menu>

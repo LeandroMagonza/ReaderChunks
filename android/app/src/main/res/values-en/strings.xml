@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BookBits</string>
+    <string name="select_document">Select Document</string>
+    <string name="processing">Processing...</string>
+    <string name="error_title">Error</string>
+    <string name="error_document_not_found">Document not found</string>
+    <string name="error_document_encrypted">Document is encrypted, cannot be processed</string>
+    <string name="error_document_processing">Error processing document</string>
+    <string name="error_format_not_supported">Format not supported. Valid formats: PDF, TXT, MD, EPUB</string>
+    <string name="sentences_extracted">Sentences extracted: %d</string>
+    <string name="progress_format" formatted="false">%d / %d</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="back">Back</string>
+    <string name="mode_paragraph_icon">|☰|</string>
+    <string name="mode_sentence_icon">|—|</string>
+    <string name="finished_reading">Reading completed!</string>
+    <string name="congratulations">Congratulations! You have finished reading the document.</string>
+
+    <!-- Book options menu -->
+    <string name="book_options">Book options</string>
+    <string name="rename_book">Rename</string>
+    <string name="reset_progress">Reset progress</string>
+    <string name="delete_book">Delete book</string>
+
+    <!-- Dialog titles and messages -->
+    <string name="rename_book_title">Rename book</string>
+    <string name="reset_progress_title">Reset progress</string>
+    <string name="delete_book_title">Delete book</string>
+    <string name="reset_progress_message">Are you sure you want to reset the progress of \"%s\"? You will return to the beginning of the book.</string>
+    <string name="delete_book_message">Are you sure you want to delete \"%s\"? This action cannot be undone.</string>
+
+    <!-- Dialog buttons -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset">Reset</string>
+    <string name="delete">Delete</string>
+
+    <!-- Success messages -->
+    <string name="book_renamed_success">Book renamed successfully</string>
+    <string name="progress_reset_success">Progress reset successfully</string>
+    <string name="book_deleted_success">Book deleted successfully</string>
+
+    <!-- Error messages -->
+    <string name="error_rename_book">Error renaming book: %s</string>
+    <string name="error_reset_progress">Error resetting progress: %s</string>
+    <string name="error_delete_book">Error deleting book: %s</string>
+    <string name="error_could_not_delete">Could not delete book</string>
+
+    <!-- Main Activity -->
+    <string name="your_library">📚 Your Library</string>
+    <string name="supported_formats">PDF, TXT, Markdown, EPUB</string>
+    <string name="no_books_title">No books in your library</string>
+    <string name="no_books_subtitle">Add a document to start reading</string>
+    <string name="add_document">Add Document</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="font_settings">Font Settings</string>
+    <string name="font_size">Font Size</string>
+    <string name="line_spacing">Line Spacing</string>
+    <string name="side_margins">Side Margins</string>
+    <string name="bionic_reading">Bionic Reading</string>
+    <string name="bionic_reading_description">Highlights the first letters of each word to improve reading speed</string>
+    <string name="bionic_off">Off</string>
+    <string name="bionic_classic">Classic (all words)</string>
+    <string name="bionic_modern">Modern (long words)</string>
+    <string name="preview">Preview</string>
+    <string name="preview_text">This is a preview of the text with the current settings. Here you can see how the text will look in the application with the selected font size, spacing and margins.</string>
+    <string name="reset_defaults">Reset to defaults</string>
+    <string name="language">Language</string>
+    <string name="select_language">Select Language</string>
+
+    <!-- Content descriptions -->
+    <string name="decrease_font_size">Decrease font size</string>
+    <string name="increase_font_size">Increase font size</string>
+    <string name="decrease_spacing">Decrease spacing</string>
+    <string name="increase_spacing">Increase spacing</string>
+    <string name="decrease_margins">Decrease margins</string>
+    <string name="increase_margins">Increase margins</string>
+
+    <!-- Reader Activity -->
+    <string name="error_book_not_found">Error: Book not found</string>
+    <string name="error_loading_book">Error loading book: %s</string>
+    <string name="error_loading_buffer">Loading error: %s</string>
+    <string name="continue_reading">Continue</string>
+    <string name="exit_reading_title">Exit Reading</string>
+    <string name="exit_reading_message">Progress has been saved automatically.</string>
+    <string name="save_and_exit">Exit</string>
+    <string name="exit_without_saving">Exit without Saving</string>
+    <string name="continue_reading_dialog">Continue Reading</string>
+
+    <!-- Book management -->
+    <string name="book_added_success">Book added successfully</string>
+    <string name="book_added_error">Error adding book: %s</string>
+    <string name="error_loading_library">Error loading library</string>
+    <string name="read_again">Read Again</string>
+    <string name="start_reading">Start</string>
+
+    <!-- Book progress and time -->
+    <string name="progress_completed_paragraphs" formatted="false">%.1f%% completed • %d / %d paragraphs</string>
+    <string name="never_read">Never read</string>
+    <string name="just_now">Just now</string>
+    <string name="minutes_ago">%d min ago</string>
+    <string name="hours_ago">%d hours ago</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="days_ago">%d days ago</string>
+    <string name="date_prefix">On %s</string>
+
+    <!-- Processing and status messages -->
+    <string name="file_added_success" formatted="false">✅ %s added: %s</string>
+    <string name="error_processing_file" formatted="false">❌ Error processing %s: %s</string>
+    <string name="opening_file">Opening %s...</string>
+</resources>

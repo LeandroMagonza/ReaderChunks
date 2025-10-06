@@ -18,7 +18,15 @@
       "Bash(gradlew.bat assembleDebug:*)",
       "Bash(del:*)",
       "Bash(./gradlew.bat:*)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(md:*)",
+      "Bash(.gradlew.bat assembleDebug)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(copy:*)",
+      "Bash(cp:*)",
+      "Bash(keytool:*)",
+      "Bash(gradlew.bat bundleRelease:*)"
     ],
     "deny": [],
     "ask": []

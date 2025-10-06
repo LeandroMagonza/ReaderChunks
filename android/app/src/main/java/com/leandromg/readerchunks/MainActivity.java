@@ -45,12 +45,17 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private BookAdapter bookAdapter;
     private List<Book> books;
     private ThemeManager themeManager;
+    private LanguageManager languageManager;
+    private boolean isProcessing = false;
 
     private ActivityResultLauncher<String[]> documentPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Initialize theme before setting content view
+        // Initialize language and theme before setting content view
+        languageManager = new LanguageManager(this);
+        languageManager.applyStoredLanguage();
+
         themeManager = new ThemeManager(this);
         themeManager.applyTheme();
 
@@ -168,32 +173,32 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                     updateViewState();
 
                     String fileType = extension.toUpperCase();
-                    Toast.makeText(this, "✅ " + fileType + " agregado: " + book.getDisplayTitle(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, getString(R.string.file_added_success, fileType, book.getDisplayTitle()), Toast.LENGTH_LONG).show();
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     showLoading(false);
                     String fileType = extension != null ? extension.toUpperCase() : "archivo";
-                    showError("❌ Error procesando " + fileType + ": " + e.getMessage());
+                    showError(getString(R.string.error_processing_file, fileType, e.getMessage()));
                 });
             }
         });
     }
 
     private void showLoading(boolean show) {
+        isProcessing = show;
         layoutLoading.setVisibility(show ? View.VISIBLE : View.GONE);
         btnAddDocument.setEnabled(!show);
         btnAddDocumentEmpty.setEnabled(!show);
 
-        if (!show) {
-            updateViewState();
-        }
+        // Always update view state to handle empty message visibility
+        updateViewState();
     }
 
     private void loadBooks() {
         showLoading(true);
-        tvStatus.setText("Cargando tu biblioteca...");
+        tvStatus.setText(getString(R.string.processing));
 
         executor.execute(() -> {
             try {
@@ -222,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 runOnUiThread(() -> {
                     showLoading(false);
                     updateViewState();
-                    showError("Error cargando biblioteca");
+                    showError(getString(R.string.error_loading_library));
                 });
             }
         });
@@ -233,12 +238,16 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     }
 
     private void updateViewState() {
-        if (books.isEmpty()) {
+        // Don't show empty state while processing
+        android.util.Log.d("MainActivity", "updateViewState: books.isEmpty()=" + books.isEmpty() + ", isProcessing=" + isProcessing);
+        if (books.isEmpty() && !isProcessing) {
+            android.util.Log.d("MainActivity", "Showing empty state");
             layoutEmpty.setVisibility(View.VISIBLE);
             recyclerBooks.setVisibility(View.GONE);
         } else {
+            android.util.Log.d("MainActivity", "Hiding empty state");
             layoutEmpty.setVisibility(View.GONE);
-            recyclerBooks.setVisibility(View.VISIBLE);
+            recyclerBooks.setVisibility(books.isEmpty() ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -266,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void showRenameDialog(Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Renombrar libro");
+        builder.setTitle(getString(R.string.rename_book_title));
 
         EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -274,36 +283,34 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         input.setSelection(book.getDisplayTitle().length());
         builder.setView(input);
 
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.save), (dialog, which) -> {
             String newTitle = input.getText().toString().trim();
             if (!newTitle.isEmpty() && !newTitle.equals(book.getDisplayTitle())) {
                 renameBook(book, newTitle);
             }
         });
 
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
     private void showResetProgressDialog(Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Restablecer progreso");
-        builder.setMessage("¿Estás seguro de que deseas restablecer el progreso de \"" +
-                          book.getDisplayTitle() + "\"? Volverás al inicio del libro.");
+        builder.setTitle(getString(R.string.reset_progress_title));
+        builder.setMessage(getString(R.string.reset_progress_message, book.getDisplayTitle()));
 
-        builder.setPositiveButton("Restablecer", (dialog, which) -> resetBookProgress(book));
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.setPositiveButton(getString(R.string.reset), (dialog, which) -> resetBookProgress(book));
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
     private void showDeleteBookDialog(Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Eliminar libro");
-        builder.setMessage("¿Estás seguro de que deseas eliminar \"" +
-                          book.getDisplayTitle() + "\"? Esta acción no se puede deshacer.");
+        builder.setTitle(getString(R.string.delete_book_title));
+        builder.setMessage(getString(R.string.delete_book_message, book.getDisplayTitle()));
 
-        builder.setPositiveButton("Eliminar", (dialog, which) -> deleteBook(book));
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.setPositiveButton(getString(R.string.delete), (dialog, which) -> deleteBook(book));
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
@@ -317,12 +324,12 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
                 runOnUiThread(() -> {
                     bookAdapter.updateBooks(books);
-                    Toast.makeText(this, "Libro renombrado correctamente", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.book_renamed_success), Toast.LENGTH_SHORT).show();
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    showError("Error al renombrar el libro: " + e.getMessage());
+                    showError(getString(R.string.error_rename_book, e.getMessage()));
                 });
             }
         });
@@ -339,12 +346,12 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
                 runOnUiThread(() -> {
                     bookAdapter.updateBooks(books);
-                    Toast.makeText(this, "Progreso restablecido correctamente", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.progress_reset_success), Toast.LENGTH_SHORT).show();
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    showError("Error al restablecer el progreso: " + e.getMessage());
+                    showError(getString(R.string.error_reset_progress, e.getMessage()));
                 });
             }
         });
@@ -360,17 +367,17 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                         books.remove(book);
                         bookAdapter.updateBooks(books);
                         updateViewState();
-                        Toast.makeText(this, "Libro eliminado correctamente", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.book_deleted_success), Toast.LENGTH_SHORT).show();
                     });
                 } else {
                     runOnUiThread(() -> {
-                        showError("No se pudo eliminar el libro");
+                        showError(getString(R.string.error_could_not_delete));
                     });
                 }
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    showError("Error al eliminar el libro: " + e.getMessage());
+                    showError(getString(R.string.error_delete_book, e.getMessage()));
                 });
             }
         });
@@ -411,12 +418,6 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         return fileName;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Refresh book progress when returning from reading
-        refreshBookProgress();
-    }
 
     private void refreshBookProgress() {
         if (books.isEmpty()) return;
@@ -429,6 +430,17 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 runOnUiThread(() -> {
                     books.clear();
                     books.addAll(updatedBooks);
+
+                    // Sort by most recent date (read or creation) - newest first
+                    books.sort((book1, book2) -> {
+                        Date date1 = book1.getMostRecentDate();
+                        Date date2 = book2.getMostRecentDate();
+                        if (date1 == null && date2 == null) return 0;
+                        if (date1 == null) return 1;  // books without dates go to end
+                        if (date2 == null) return -1;
+                        return date2.compareTo(date1); // newer dates first
+                    });
+
                     bookAdapter.updateBooks(books);
                 });
 
@@ -470,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 android.util.Log.d("MainActivity", "External file intent - File: " + fileName + ", URI: " + fileUri);
 
                 // Show a toast to indicate the file is being processed
-                Toast.makeText(this, "Abriendo " + fileName + "...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.opening_file, fileName), Toast.LENGTH_SHORT).show();
 
                 // Process the external file directly
                 processDocument(fileUri, fileName);
@@ -517,6 +529,20 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         recreate();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Check if language was changed and recreate if needed
+        if (languageManager.shouldRecreateActivity()) {
+            languageManager.clearRecreateFlag();
+            recreate();
+            return; // Don't refresh books if we're recreating
+        }
+
+        // Refresh book progress when returning from reading
+        refreshBookProgress();
+    }
 
     @Override
     protected void onDestroy() {

@@ -5,9 +5,9 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Primary colors -->
-    <color name="primary">#FF007AFF</color>
-    <color name="primary_dark">#FF0051CC</color>
-    <color name="accent">#FF007AFF</color>
+    <color name="primary">#FF5738b1</color>
+    <color name="primary_dark">#FF3e2a7c</color>
+    <color name="accent">#FF5738b1</color>
 
     <!-- Light theme colors -->
     <color name="background_light">#FFFFFFFF</color>

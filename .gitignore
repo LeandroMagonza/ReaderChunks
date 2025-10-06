@@ -181,6 +181,14 @@ android/build/
 android/.gradle/
 android/local.properties
 
+# Android signing files (SECURITY - NEVER COMMIT!)
+*.jks
+*.keystore
+*.p12
+*.key
+keystore.properties
+signing.properties
+
 # Android generated files
 android/app/src/main/res/mipmap-*dpi/
 android/app/src/main/res/drawable-*dpi/

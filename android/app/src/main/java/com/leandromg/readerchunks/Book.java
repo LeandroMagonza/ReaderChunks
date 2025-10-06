@@ -102,7 +102,7 @@ public class Book {
     }
 
     public boolean isCompleted() {
-        return currentPosition >= totalSentences - 1;
+        return currentPosition >= totalSentences;
     }
 
     public boolean isStarted() {

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BookBits</string>
+    <string name="select_document">Selecionar Documento</string>
+    <string name="processing">Processando...</string>
+    <string name="error_title">Erro</string>
+    <string name="error_document_not_found">Documento não encontrado</string>
+    <string name="error_document_encrypted">Documento criptografado, não pode ser processado</string>
+    <string name="error_document_processing">Erro ao processar documento</string>
+    <string name="error_format_not_supported">Formato não suportado. Formatos válidos: PDF, TXT, MD, EPUB</string>
+    <string name="sentences_extracted">Frases extraídas: %d</string>
+    <string name="progress_format" formatted="false">%d / %d</string>
+    <string name="next">Próximo</string>
+    <string name="previous">Anterior</string>
+    <string name="back">Voltar</string>
+    <string name="mode_paragraph_icon">|☰|</string>
+    <string name="mode_sentence_icon">|—|</string>
+    <string name="finished_reading">Leitura concluída!</string>
+    <string name="congratulations">Parabéns! Você terminou de ler o documento.</string>
+
+    <!-- Book options menu -->
+    <string name="book_options">Opções do livro</string>
+    <string name="rename_book">Renomear</string>
+    <string name="reset_progress">Redefinir progresso</string>
+    <string name="delete_book">Excluir livro</string>
+
+    <!-- Dialog titles and messages -->
+    <string name="rename_book_title">Renomear livro</string>
+    <string name="reset_progress_title">Redefinir progresso</string>
+    <string name="delete_book_title">Excluir livro</string>
+    <string name="reset_progress_message">Tem certeza de que deseja redefinir o progresso de \"%s\"? Você voltará ao início do livro.</string>
+    <string name="delete_book_message">Tem certeza de que deseja excluir \"%s\"? Esta ação não pode ser desfeita.</string>
+
+    <!-- Dialog buttons -->
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="reset">Redefinir</string>
+    <string name="delete">Excluir</string>
+
+    <!-- Success messages -->
+    <string name="book_renamed_success">Livro renomeado com sucesso</string>
+    <string name="progress_reset_success">Progresso redefinido com sucesso</string>
+    <string name="book_deleted_success">Livro excluído com sucesso</string>
+
+    <!-- Error messages -->
+    <string name="error_rename_book">Erro ao renomear o livro: %s</string>
+    <string name="error_reset_progress">Erro ao redefinir o progresso: %s</string>
+    <string name="error_delete_book">Erro ao excluir o livro: %s</string>
+    <string name="error_could_not_delete">Não foi possível excluir o livro</string>
+
+    <!-- Main Activity -->
+    <string name="your_library">📚 Sua Biblioteca</string>
+    <string name="supported_formats">PDF, TXT, Markdown, EPUB</string>
+    <string name="no_books_title">Nenhum livro em sua biblioteca</string>
+    <string name="no_books_subtitle">Adicione um documento para começar a ler</string>
+    <string name="add_document">Adicionar Documento</string>
+
+    <!-- Settings -->
+    <string name="settings">Configurações</string>
+    <string name="font_settings">Configurações de Fonte</string>
+    <string name="font_size">Tamanho da Fonte</string>
+    <string name="line_spacing">Espaçamento de Linha</string>
+    <string name="side_margins">Margens Laterais</string>
+    <string name="bionic_reading">Leitura Biônica</string>
+    <string name="bionic_reading_description">Destaca as primeiras letras de cada palavra para melhorar a velocidade de leitura</string>
+    <string name="bionic_off">Desativada</string>
+    <string name="bionic_classic">Clássica (todas as palavras)</string>
+    <string name="bionic_modern">Moderna (palavras longas)</string>
+    <string name="preview">Visualização</string>
+    <string name="preview_text">Esta é uma visualização do texto com as configurações atuais. Aqui você pode ver como o texto ficará no aplicativo com o tamanho da fonte, espaçamento e margens selecionados.</string>
+    <string name="reset_defaults">Redefinir para padrão</string>
+    <string name="language">Idioma</string>
+    <string name="select_language">Selecionar Idioma</string>
+
+    <!-- Content descriptions -->
+    <string name="decrease_font_size">Diminuir tamanho da fonte</string>
+    <string name="increase_font_size">Aumentar tamanho da fonte</string>
+    <string name="decrease_spacing">Diminuir espaçamento</string>
+    <string name="increase_spacing">Aumentar espaçamento</string>
+    <string name="decrease_margins">Diminuir margens</string>
+    <string name="increase_margins">Aumentar margens</string>
+
+    <!-- Reader Activity -->
+    <string name="error_book_not_found">Erro: Livro não encontrado</string>
+    <string name="error_loading_book">Erro ao carregar livro: %s</string>
+    <string name="error_loading_buffer">Erro de carregamento: %s</string>
+    <string name="continue_reading">Continuar</string>
+    <string name="exit_reading_title">Sair da Leitura</string>
+    <string name="exit_reading_message">O progresso foi salvo automaticamente.</string>
+    <string name="save_and_exit">Sair</string>
+    <string name="exit_without_saving">Sair sem Salvar</string>
+    <string name="continue_reading_dialog">Continuar Lendo</string>
+
+    <!-- Book management -->
+    <string name="book_added_success">Livro adicionado com sucesso</string>
+    <string name="book_added_error">Erro ao adicionar livro: %s</string>
+    <string name="error_loading_library">Erro ao carregar biblioteca</string>
+    <string name="read_again">Ler Novamente</string>
+    <string name="start_reading">Começar</string>
+
+    <!-- Book progress and time -->
+    <string name="progress_completed_paragraphs" formatted="false">%.1f%% concluído • %d / %d parágrafos</string>
+    <string name="never_read">Nunca lido</string>
+    <string name="just_now">Agora mesmo</string>
+    <string name="minutes_ago">Há %d min</string>
+    <string name="hours_ago">Há %d horas</string>
+    <string name="yesterday">Ontem</string>
+    <string name="days_ago">Há %d dias</string>
+    <string name="date_prefix">Em %s</string>
+
+    <!-- Processing and status messages -->
+    <string name="file_added_success" formatted="false">✅ %s adicionado: %s</string>
+    <string name="error_processing_file" formatted="false">❌ Erro ao processar %s: %s</string>
+    <string name="opening_file">Abrindo %s...</string>
+</resources>

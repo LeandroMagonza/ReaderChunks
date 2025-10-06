@@ -3,16 +3,26 @@ package com.leandromg.readerchunks;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.button.MaterialButton;
 import android.widget.RadioGroup;
 import android.widget.RadioButton;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
+import java.util.List;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private SettingsManager settingsManager;
+    private LanguageManager languageManager;
 
     // Font Size controls
     private ImageButton btnDecreaseFontSize, btnIncreaseFontSize;
@@ -37,10 +47,26 @@ public class SettingsActivity extends AppCompatActivity {
     // Reset button
     private MaterialButton btnReset;
 
+    // Language selection
+    private LinearLayout layoutLanguageSelector;
+    private ImageView ivLanguageFlag;
+    private TextView tvLanguageName;
+
+    // Collapsible sections
+    private LinearLayout sectionFontHeader;
+    private LinearLayout sectionFontContent;
+    private ImageView ivFontExpand;
+    private LinearLayout sectionBionicHeader;
+    private LinearLayout sectionBionicContent;
+    private ImageView ivBionicExpand;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        languageManager = new LanguageManager(this);
+        languageManager.applyStoredLanguage();
 
         settingsManager = new SettingsManager(this);
         initViews();
@@ -77,6 +103,19 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Reset
         btnReset = findViewById(R.id.btnReset);
+
+        // Language selection
+        layoutLanguageSelector = findViewById(R.id.layoutLanguageSelector);
+        ivLanguageFlag = findViewById(R.id.ivLanguageFlag);
+        tvLanguageName = findViewById(R.id.tvLanguageName);
+
+        // Collapsible sections
+        sectionFontHeader = findViewById(R.id.sectionFontHeader);
+        sectionFontContent = findViewById(R.id.sectionFontContent);
+        ivFontExpand = findViewById(R.id.ivFontExpand);
+        sectionBionicHeader = findViewById(R.id.sectionBionicHeader);
+        sectionBionicContent = findViewById(R.id.sectionBionicContent);
+        ivBionicExpand = findViewById(R.id.ivBionicExpand);
     }
 
     private void setupToolbar() {
@@ -142,6 +181,13 @@ public class SettingsActivity extends AppCompatActivity {
             settingsManager.resetToDefaults();
             updateUI();
         });
+
+        // Language Selection
+        layoutLanguageSelector.setOnClickListener(v -> showLanguageSelectionDialog());
+
+        // Collapsible sections
+        sectionFontHeader.setOnClickListener(v -> toggleSection(sectionFontContent, ivFontExpand));
+        sectionBionicHeader.setOnClickListener(v -> toggleSection(sectionBionicContent, ivBionicExpand));
     }
 
     private void updateUI() {
@@ -178,6 +224,9 @@ public class SettingsActivity extends AppCompatActivity {
         btnDecreasePadding.setEnabled(settingsManager.canDecreasePadding());
         btnIncreasePadding.setEnabled(settingsManager.canIncreasePadding());
 
+        // Update language selection UI
+        updateLanguageUI();
+
         // Update preview
         updatePreview(fontSize, lineSpacing, padding, bionicMode);
     }
@@ -197,11 +246,101 @@ public class SettingsActivity extends AppCompatActivity {
                                   paddingPx, previewContainer.getPaddingBottom());
 
         // Apply bionic reading based on mode
-        String previewText = "Esta es una vista previa del texto con la configuración actual. Aquí puedes ver cómo se verá el texto en la aplicación con el tamaño de letra, espaciado y márgenes seleccionados.";
+        String previewText = getString(R.string.preview_text);
         if (bionicMode != BionicTextProcessor.BionicMode.OFF) {
             tvPreview.setText(BionicTextProcessor.process(previewText, bionicMode), TextView.BufferType.SPANNABLE);
         } else {
             tvPreview.setText(previewText);
+        }
+    }
+
+    private void updateLanguageUI() {
+        LanguageManager.Language currentLanguage = languageManager.getCurrentLanguageInfo();
+        ivLanguageFlag.setImageResource(currentLanguage.flagResource);
+        tvLanguageName.setText(currentLanguage.displayName);
+    }
+
+    private void showLanguageSelectionDialog() {
+        List<LanguageManager.Language> languages = languageManager.getSupportedLanguages();
+        String currentLangCode = languageManager.getCurrentLanguage();
+
+        // Create custom list view
+        ListView listView = new ListView(this);
+        LanguageAdapter adapter = new LanguageAdapter(languages, currentLangCode);
+        listView.setAdapter(adapter);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.select_language));
+        builder.setView(listView);
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            LanguageManager.Language selectedLang = languages.get(position);
+            languageManager.setLanguage(selectedLang.code);
+            updateLanguageUI();
+
+            // Recreate activity to apply language change
+            recreate();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private class LanguageAdapter extends BaseAdapter {
+        private final List<LanguageManager.Language> languages;
+        private final String currentLanguageCode;
+
+        public LanguageAdapter(List<LanguageManager.Language> languages, String currentLanguageCode) {
+            this.languages = languages;
+            this.currentLanguageCode = currentLanguageCode;
+        }
+
+        @Override
+        public int getCount() {
+            return languages.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return languages.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(SettingsActivity.this)
+                    .inflate(R.layout.dialog_language_item, parent, false);
+            }
+
+            LanguageManager.Language language = languages.get(position);
+
+            ImageView ivFlag = convertView.findViewById(R.id.ivFlag);
+            TextView tvLanguageName = convertView.findViewById(R.id.tvLanguageName);
+            RadioButton rbLanguage = convertView.findViewById(R.id.rbLanguage);
+
+            ivFlag.setImageResource(language.flagResource);
+            tvLanguageName.setText(language.displayName);
+            rbLanguage.setChecked(language.code.equals(currentLanguageCode));
+
+            return convertView;
+        }
+    }
+
+    private void toggleSection(LinearLayout content, ImageView expandIcon) {
+        if (content.getVisibility() == View.VISIBLE) {
+            content.setVisibility(View.GONE);
+            expandIcon.setRotation(0);
+        } else {
+            content.setVisibility(View.VISIBLE);
+            expandIcon.setRotation(180);
         }
     }
 

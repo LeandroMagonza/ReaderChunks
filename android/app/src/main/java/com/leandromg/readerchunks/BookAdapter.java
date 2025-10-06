@@ -85,8 +85,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
             // Progress text with precise calculation
             double progressPercent = book.getPreciseProgressPercentage(cacheManager);
-            String progressText = String.format(Locale.getDefault(),
-                    "%.1f%% completado • %d / %d párrafos",
+            String progressText = itemView.getContext().getString(R.string.progress_completed_paragraphs,
                     progressPercent,
                     book.getCurrentPosition() + 1,
                     book.getTotalSentences());
@@ -101,11 +100,11 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
             // Button text based on progress
             if (book.isCompleted()) {
-                btnContinue.setText("Leer de nuevo");
+                btnContinue.setText(itemView.getContext().getString(R.string.read_again));
             } else if (book.isStarted()) {
-                btnContinue.setText("Continuar");
+                btnContinue.setText(itemView.getContext().getString(R.string.continue_reading));
             } else {
-                btnContinue.setText("Comenzar");
+                btnContinue.setText(itemView.getContext().getString(R.string.start_reading));
             }
 
             // Click listeners
@@ -120,7 +119,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
         private String formatLastReadTime(Date lastRead) {
             if (lastRead == null) {
-                return "Nunca leído";
+                return itemView.getContext().getString(R.string.never_read);
             }
 
             long diffInMillis = new Date().getTime() - lastRead.getTime();
@@ -129,18 +128,18 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis);
 
             if (diffInMinutes < 1) {
-                return "Hace un momento";
+                return itemView.getContext().getString(R.string.just_now);
             } else if (diffInMinutes < 60) {
-                return String.format(Locale.getDefault(), "Hace %d min", diffInMinutes);
+                return itemView.getContext().getString(R.string.minutes_ago, diffInMinutes);
             } else if (diffInHours < 24) {
-                return String.format(Locale.getDefault(), "Hace %d horas", diffInHours);
+                return itemView.getContext().getString(R.string.hours_ago, diffInHours);
             } else if (diffInDays == 1) {
-                return "Ayer";
+                return itemView.getContext().getString(R.string.yesterday);
             } else if (diffInDays < 7) {
-                return String.format(Locale.getDefault(), "Hace %d días", diffInDays);
+                return itemView.getContext().getString(R.string.days_ago, diffInDays);
             } else {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                return "El " + sdf.format(lastRead);
+                return itemView.getContext().getString(R.string.date_prefix, sdf.format(lastRead));
             }
         }
 

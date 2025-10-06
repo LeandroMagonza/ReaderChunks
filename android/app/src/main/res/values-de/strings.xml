@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BookBits</string>
+    <string name="select_document">Dokument Auswählen</string>
+    <string name="processing">Verarbeitung...</string>
+    <string name="error_title">Fehler</string>
+    <string name="error_document_not_found">Dokument nicht gefunden</string>
+    <string name="error_document_encrypted">Dokument ist verschlüsselt, kann nicht verarbeitet werden</string>
+    <string name="error_document_processing">Fehler beim Verarbeiten des Dokuments</string>
+    <string name="error_format_not_supported">Format nicht unterstützt. Gültige Formate: PDF, TXT, MD, EPUB</string>
+    <string name="sentences_extracted">Sätze extrahiert: %d</string>
+    <string name="progress_format" formatted="false">%d / %d</string>
+    <string name="next">Weiter</string>
+    <string name="previous">Zurück</string>
+    <string name="back">Zurück</string>
+    <string name="mode_paragraph_icon">|☰|</string>
+    <string name="mode_sentence_icon">|—|</string>
+    <string name="finished_reading">Lektüre abgeschlossen!</string>
+    <string name="congratulations">Herzlichen Glückwunsch! Sie haben das Dokument fertig gelesen.</string>
+
+    <!-- Book options menu -->
+    <string name="book_options">Buchoptionen</string>
+    <string name="rename_book">Umbenennen</string>
+    <string name="reset_progress">Fortschritt zurücksetzen</string>
+    <string name="delete_book">Buch löschen</string>
+
+    <!-- Dialog titles and messages -->
+    <string name="rename_book_title">Buch umbenennen</string>
+    <string name="reset_progress_title">Fortschritt zurücksetzen</string>
+    <string name="delete_book_title">Buch löschen</string>
+    <string name="reset_progress_message">Sind Sie sicher, dass Sie den Fortschritt von \"%s\" zurücksetzen möchten? Sie kehren zum Anfang des Buches zurück.</string>
+    <string name="delete_book_message">Sind Sie sicher, dass Sie \"%s\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+
+    <!-- Dialog buttons -->
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="delete">Löschen</string>
+
+    <!-- Success messages -->
+    <string name="book_renamed_success">Buch erfolgreich umbenannt</string>
+    <string name="progress_reset_success">Fortschritt erfolgreich zurückgesetzt</string>
+    <string name="book_deleted_success">Buch erfolgreich gelöscht</string>
+
+    <!-- Error messages -->
+    <string name="error_rename_book">Fehler beim Umbenennen des Buches: %s</string>
+    <string name="error_reset_progress">Fehler beim Zurücksetzen des Fortschritts: %s</string>
+    <string name="error_delete_book">Fehler beim Löschen des Buches: %s</string>
+    <string name="error_could_not_delete">Buch konnte nicht gelöscht werden</string>
+
+    <!-- Main Activity -->
+    <string name="your_library">📚 Ihre Bibliothek</string>
+    <string name="supported_formats">PDF, TXT, Markdown, EPUB</string>
+    <string name="no_books_title">Keine Bücher in Ihrer Bibliothek</string>
+    <string name="no_books_subtitle">Fügen Sie ein Dokument hinzu, um mit dem Lesen zu beginnen</string>
+    <string name="add_document">Dokument Hinzufügen</string>
+
+    <!-- Settings -->
+    <string name="settings">Einstellungen</string>
+    <string name="font_settings">Schrifteinstellungen</string>
+    <string name="font_size">Schriftgröße</string>
+    <string name="line_spacing">Zeilenabstand</string>
+    <string name="side_margins">Seitenränder</string>
+    <string name="bionic_reading">Bionisches Lesen</string>
+    <string name="bionic_reading_description">Hebt die ersten Buchstaben jedes Wortes hervor, um die Lesegeschwindigkeit zu verbessern</string>
+    <string name="bionic_off">Aus</string>
+    <string name="bionic_classic">Klassisch (alle Wörter)</string>
+    <string name="bionic_modern">Modern (lange Wörter)</string>
+    <string name="preview">Vorschau</string>
+    <string name="preview_text">Dies ist eine Vorschau des Textes mit den aktuellen Einstellungen. Hier können Sie sehen, wie der Text in der Anwendung mit der ausgewählten Schriftgröße, dem Abstand und den Rändern aussehen wird.</string>
+    <string name="reset_defaults">Auf Standard zurücksetzen</string>
+    <string name="language">Sprache</string>
+    <string name="select_language">Sprache Auswählen</string>
+
+    <!-- Content descriptions -->
+    <string name="decrease_font_size">Schriftgröße verringern</string>
+    <string name="increase_font_size">Schriftgröße vergrößern</string>
+    <string name="decrease_spacing">Abstand verringern</string>
+    <string name="increase_spacing">Abstand vergrößern</string>
+    <string name="decrease_margins">Ränder verringern</string>
+    <string name="increase_margins">Ränder vergrößern</string>
+
+    <!-- Reader Activity -->
+    <string name="error_book_not_found">Fehler: Buch nicht gefunden</string>
+    <string name="error_loading_book">Fehler beim Laden des Buches: %s</string>
+    <string name="error_loading_buffer">Ladefehler: %s</string>
+    <string name="continue_reading">Weiter</string>
+    <string name="exit_reading_title">Lektüre Beenden</string>
+    <string name="exit_reading_message">Der Fortschritt wurde automatisch gespeichert.</string>
+    <string name="save_and_exit">Beenden</string>
+    <string name="exit_without_saving">Beenden ohne Speichern</string>
+    <string name="continue_reading_dialog">Weiterlesen</string>
+
+    <!-- Book management -->
+    <string name="book_added_success">Buch erfolgreich hinzugefügt</string>
+    <string name="book_added_error">Fehler beim Hinzufügen des Buches: %s</string>
+    <string name="error_loading_library">Fehler beim Laden der Bibliothek</string>
+    <string name="read_again">Erneut Lesen</string>
+    <string name="start_reading">Beginnen</string>
+
+    <!-- Book progress and time -->
+    <string name="progress_completed_paragraphs" formatted="false">%.1f%% abgeschlossen • %d / %d Absätze</string>
+    <string name="never_read">Nie gelesen</string>
+    <string name="just_now">Gerade eben</string>
+    <string name="minutes_ago">Vor %d Min</string>
+    <string name="hours_ago">Vor %d Stunden</string>
+    <string name="yesterday">Gestern</string>
+    <string name="days_ago">Vor %d Tagen</string>
+    <string name="date_prefix">Am %s</string>
+
+    <!-- Processing and status messages -->
+    <string name="file_added_success" formatted="false">✅ %s hinzugefügt: %s</string>
+    <string name="error_processing_file" formatted="false">❌ Fehler beim Verarbeiten von %s: %s</string>
+    <string name="opening_file">Öffne %s...</string>
+</resources>
