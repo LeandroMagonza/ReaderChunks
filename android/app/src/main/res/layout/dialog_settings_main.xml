@@ -23,6 +23,16 @@
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            android:scaleType="fitCenter"
+            android:padding="12dp" />
+
     </LinearLayout>
 
     <!-- Categories List -->

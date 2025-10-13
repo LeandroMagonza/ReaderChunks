@@ -119,6 +119,29 @@
 
     </LinearLayout>
 
+    <!-- TTS Play/Stop Button -->
+    <LinearLayout
+        android:id="@+id/ttsPlayStopContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btnTTSPlayStop"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_stop"
+            android:background="@drawable/circular_button_background"
+            android:contentDescription="TTS Play/Stop"
+            android:scaleType="fitCenter"
+            android:padding="12dp" />
+
+    </LinearLayout>
+
     <!-- Sentence display area -->
     <LinearLayout
         android:id="@+id/sentenceContainer"

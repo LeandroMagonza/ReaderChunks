@@ -33,9 +33,9 @@ public class SettingsManager {
 
     // Ranges
     public static final int MIN_FONT_SIZE = 12;
-    public static final int MAX_FONT_SIZE = 36;
+    public static final int MAX_FONT_SIZE = 60;
     public static final int MIN_LINE_SPACING = 0;
-    public static final int MAX_LINE_SPACING = 16;
+    public static final int MAX_LINE_SPACING = 60;
     public static final int MIN_PADDING = 4;
     public static final int MAX_PADDING = 32;
     public static final int INCREMENT = 2;

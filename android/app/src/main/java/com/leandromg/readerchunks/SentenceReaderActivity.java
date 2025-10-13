@@ -43,6 +43,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnToggleMode;
     private ImageButton btnFontSettings;
     private ImageButton btnTTSSettings;
+    private ImageButton btnTTSPlayStop;
+    private View ttsPlayStopContainer;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
     private ProgressBar progressCircle;
@@ -73,6 +75,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private boolean isTTSReady = false;
     private boolean isPendingTTSSpeak = false;
     private String pendingTTSText = null;
+    private boolean isTTSTemporarilyStopped = false; // For play/stop button
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +110,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnToggleMode = findViewById(R.id.btnToggleMode);
         btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSSettings = findViewById(R.id.btnTTSSettings);
+        btnTTSPlayStop = findViewById(R.id.btnTTSPlayStop);
+        ttsPlayStopContainer = findViewById(R.id.ttsPlayStopContainer);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
         progressCircle = findViewById(R.id.progressCircle);
@@ -147,12 +152,17 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 runOnUiThread(() -> {
                     // If auto-scroll is enabled, move to next sentence/paragraph
                     if (settingsManager.isTTSAutoScrollEnabled() &&
-                        settingsManager.isTTSEnabled()) {
+                        settingsManager.isTTSEnabled() && !isTTSTemporarilyStopped) {
                         // Different delays based on context
                         int delay = getAutoScrollDelay();
-                        scrollView.postDelayed(() -> {
+                        if (delay == 0) {
+                            // Immediate advance for character limit cuts
                             nextSentence();
-                        }, delay);
+                        } else {
+                            scrollView.postDelayed(() -> {
+                                nextSentence();
+                            }, delay);
+                        }
                     }
                 });
             }
@@ -212,6 +222,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             settingsDialogManager.setSettingsChangeListener(() -> {
                 applySettings();
                 refreshCurrentContent();
+                updateTTSButtonIcon(); // Always update TTS button when settings change
             });
             settingsDialogManager.show();
         });
@@ -223,6 +234,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             });
             settingsDialogManager.showVoiceSettings();
         });
+        btnTTSPlayStop.setOnClickListener(v -> toggleTTSPlayStop());
     }
 
     private void setupGestureDetector() {
@@ -826,6 +838,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                                paddingHorizontal, container.getPaddingBottom());
         }
 
+        // Apply TTS settings immediately
+        if (ttsManager != null && isTTSReady) {
+            ttsManager.setEnabled(settingsManager.isTTSEnabled());
+            ttsManager.setSpeechRate(settingsManager.getTTSSpeechRate());
+        }
+
         // Refresh text display with current content to apply bionic reading if needed
         updateDisplay();
     }
@@ -857,8 +875,29 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         }
     }
 
+    private void toggleTTSPlayStop() {
+        if (!settingsManager.isTTSEnabled()) {
+            return; // This shouldn't happen as button is hidden when TTS is disabled
+        }
+
+        if (isTTSTemporarilyStopped) {
+            // Currently stopped, start playing
+            isTTSTemporarilyStopped = false;
+            updateTTSPlayStopButton();
+            // Restart current sentence/paragraph
+            speakCurrentText();
+        } else {
+            // Currently playing, stop
+            isTTSTemporarilyStopped = true;
+            updateTTSPlayStopButton();
+            if (ttsManager != null) {
+                ttsManager.stop();
+            }
+        }
+    }
+
     private void speakCurrentText() {
-        if (ttsManager == null || !settingsManager.isTTSEnabled()) {
+        if (ttsManager == null || !settingsManager.isTTSEnabled() || isTTSTemporarilyStopped) {
             return;
         }
 
@@ -1033,6 +1072,29 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 btnTTSSettings.setAlpha(0.6f); // Ligeramente transparente
             }
         }
+
+        // Update play/stop button visibility
+        if (ttsPlayStopContainer != null) {
+            boolean ttsEnabled = settingsManager.isTTSEnabled();
+            ttsPlayStopContainer.setVisibility(ttsEnabled ? View.VISIBLE : View.GONE);
+            if (ttsEnabled) {
+                // Reset temporary stop state when TTS is re-enabled
+                isTTSTemporarilyStopped = false;
+                updateTTSPlayStopButton();
+            }
+        }
+    }
+
+    private void updateTTSPlayStopButton() {
+        if (btnTTSPlayStop != null) {
+            if (isTTSTemporarilyStopped) {
+                btnTTSPlayStop.setImageResource(R.drawable.ic_play);
+                btnTTSPlayStop.setContentDescription("Play TTS");
+            } else {
+                btnTTSPlayStop.setImageResource(R.drawable.ic_stop);
+                btnTTSPlayStop.setContentDescription("Stop TTS");
+            }
+        }
     }
 
     private int getAutoScrollDelay() {
@@ -1047,13 +1109,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 case PARAGRAPH_END:
                     return 1000; // Pausa larga para fin de párrafo
                 case SENTENCE_END:
-                    return 500;  // Pausa media para fin de oración (.!?)
+                    return 500;  // Pausa breve para punto final (.!?)
                 case SOFT_BREAK:
-                    return 200;  // Pausa corta para cortes suaves (:;,)
                 case CHARACTER_LIMIT:
-                    return 0;    // Sin pausa para cortes por límite de caracteres
+                    return 0;    // Inmediato para cortes suaves y límite de caracteres
                 default:
-                    return 300;  // Fallback
+                    return 0;    // Default to immediate (no pause)
             }
         }
     }

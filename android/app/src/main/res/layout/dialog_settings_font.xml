@@ -40,7 +40,7 @@
     <!-- Split view: Controls on top, Preview on bottom -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="500dp"
+        android:layout_height="700dp"
         android:orientation="vertical">
 
         <!-- Controls Panel (Top half - 50%) -->

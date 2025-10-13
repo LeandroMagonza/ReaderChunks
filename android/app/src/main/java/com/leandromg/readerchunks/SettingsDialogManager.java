@@ -39,6 +39,7 @@ public class SettingsDialogManager {
     private AlertDialog mainDialog;
     private View currentView;
     private SettingsCategory currentCategory = SettingsCategory.MAIN_LIST;
+    private boolean isNavigating = false; // Flag to prevent premature callbacks during navigation
 
     // Callback for settings changes (optional)
     public interface SettingsChangeListener {
@@ -64,6 +65,9 @@ public class SettingsDialogManager {
     private void showCategoryList() {
         currentCategory = SettingsCategory.MAIN_LIST;
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_main, null);
+
+        ImageButton btnClose = dialogView.findViewById(R.id.btnClose);
+        btnClose.setOnClickListener(v -> closeDialog());
 
         RecyclerView recyclerCategories = dialogView.findViewById(R.id.recyclerCategories);
         recyclerCategories.setLayoutManager(new LinearLayoutManager(context));
@@ -148,9 +152,6 @@ public class SettingsDialogManager {
 
         LanguageAdapter languageAdapter = new LanguageAdapter(languages, currentLangCode, (language) -> {
             languageManager.setLanguage(language.code);
-            if (changeListener != null) {
-                changeListener.onSettingsChanged();
-            }
             Toast.makeText(context, context.getString(R.string.language_changed), Toast.LENGTH_SHORT).show();
             showCategoryList(); // Return to main list with updated info
         });
@@ -236,10 +237,6 @@ public class SettingsDialogManager {
             // Update preview
             updatePreview(tvPreview, previewContainer, fontSize, lineSpacing, padding, maxSentenceLength, bionicMode);
 
-            // Notify changes
-            if (changeListener != null) {
-                changeListener.onSettingsChanged();
-            }
         };
 
         // Set initial values
@@ -341,11 +338,11 @@ public class SettingsDialogManager {
     }
 
     private String calculateTextForHeight(String fullText, TextView tvPreview, int fontSize, int lineSpacing) {
-        // Get the height of the preview container (should be 50% of 500dp = 250dp)
+        // Get the height of the preview container (should be 50% of 700dp = 350dp)
         // Subtract padding to get available text height
         int containerHeightPx = (int) TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
-            225, // Approximately 250dp minus some padding for the "Preview" label
+            320, // Approximately 350dp minus some padding for the "Preview" label
             context.getResources().getDisplayMetrics()
         );
 
@@ -423,6 +420,7 @@ public class SettingsDialogManager {
         // Set up listeners
         switchTTSEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsManager.setTTSEnabled(isChecked);
+            // Immediately notify of settings change when TTS is enabled/disabled
             if (changeListener != null) {
                 changeListener.onSettingsChanged();
             }
@@ -439,9 +437,6 @@ public class SettingsDialogManager {
                     float speed = 0.5f + (progress / 20.0f);
                     settingsManager.setTTSSpeechRate(speed);
                     updateSpeedText(tvSpeedValue, speed);
-                    if (changeListener != null) {
-                        changeListener.onSettingsChanged();
-                    }
                 }
             }
 
@@ -470,6 +465,8 @@ public class SettingsDialogManager {
 
     private void showDialog(View view, String title) {
         if (mainDialog != null && mainDialog.isShowing()) {
+            // Set navigating flag to prevent premature callback during navigation
+            isNavigating = true;
             mainDialog.dismiss();
         }
 
@@ -477,15 +474,31 @@ public class SettingsDialogManager {
         mainDialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setCancelable(true)
+                .setOnDismissListener(dialog -> {
+                    // Only execute callback when not navigating (actual close)
+                    if (!isNavigating && changeListener != null) {
+                        changeListener.onSettingsChanged();
+                    }
+                    // Reset flag after handling dismiss
+                    isNavigating = false;
+                })
                 .create();
 
         mainDialog.show();
+        // Reset navigating flag after showing new dialog
+        isNavigating = false;
     }
 
     public void dismiss() {
         if (mainDialog != null && mainDialog.isShowing()) {
             mainDialog.dismiss();
         }
+    }
+
+    private void closeDialog() {
+        // Ensure callback is executed when closing via close button
+        isNavigating = false;
+        dismiss();
     }
 
     // Data classes
