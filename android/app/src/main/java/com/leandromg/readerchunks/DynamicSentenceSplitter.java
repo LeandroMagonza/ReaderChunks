@@ -9,6 +9,7 @@ public class DynamicSentenceSplitter {
 
     private String paragraph;
     private int[] endPositions;
+    private SentenceEndType[] endTypes;
     private int maxLength;
 
     public DynamicSentenceSplitter(String paragraph) {
@@ -18,19 +19,22 @@ public class DynamicSentenceSplitter {
     public DynamicSentenceSplitter(String paragraph, int maxLength) {
         this.paragraph = paragraph != null ? paragraph : "";
         this.maxLength = maxLength;
-        this.endPositions = calculateEndPositions();
+        calculateEndPositionsAndTypes();
     }
 
     /**
-     * Pre-calculates all sentence end positions for the paragraph.
+     * Pre-calculates all sentence end positions and their types for the paragraph.
      * Always splits by .!? first, then splits long sentences by :;, priority.
      */
-    private int[] calculateEndPositions() {
+    private void calculateEndPositionsAndTypes() {
         if (paragraph.trim().isEmpty()) {
-            return new int[0];
+            this.endPositions = new int[0];
+            this.endTypes = new SentenceEndType[0];
+            return;
         }
 
         List<Integer> positions = new ArrayList<>();
+        List<SentenceEndType> types = new ArrayList<>();
         int start = 0;
 
         while (start < paragraph.length()) {
@@ -45,22 +49,54 @@ public class DynamicSentenceSplitter {
 
             // Find next .!?
             int end = findNextSentenceEnd(start);
+            SentenceEndType endType;
+
+            // Determine if it's a natural sentence end
+            boolean isNaturalSentenceEnd = end < paragraph.length() &&
+                (paragraph.charAt(end - 1) == '.' || paragraph.charAt(end - 1) == '!' || paragraph.charAt(end - 1) == '?');
 
             // If too long, split by priority: : > ; > , > space
             if (end - start > maxLength) {
-                end = findBestSplitPoint(start, end);
+                SplitResult splitResult = findBestSplitPointWithType(start, end);
+                end = splitResult.position;
+                endType = splitResult.type;
+            } else if (isNaturalSentenceEnd) {
+                // Check if it's end of paragraph
+                if (end >= paragraph.length()) {
+                    endType = SentenceEndType.PARAGRAPH_END;
+                } else {
+                    endType = SentenceEndType.SENTENCE_END;
+                }
+            } else {
+                // Reached end of paragraph without punctuation
+                endType = SentenceEndType.PARAGRAPH_END;
             }
 
             positions.add(end);
+            types.add(endType);
             start = end;
         }
 
-        // Convert to array
-        int[] result = new int[positions.size()];
+        // Convert to arrays
+        this.endPositions = new int[positions.size()];
+        this.endTypes = new SentenceEndType[types.size()];
         for (int i = 0; i < positions.size(); i++) {
-            result[i] = positions.get(i);
+            this.endPositions[i] = positions.get(i);
+            this.endTypes[i] = types.get(i);
         }
-        return result;
+    }
+
+    /**
+     * Helper class to hold split results with type information
+     */
+    private static class SplitResult {
+        final int position;
+        final SentenceEndType type;
+
+        SplitResult(int position, SentenceEndType type) {
+            this.position = position;
+            this.type = type;
+        }
     }
 
     /**
@@ -96,30 +132,40 @@ public class DynamicSentenceSplitter {
     }
 
     /**
-     * Find best split point when sentence is too long.
+     * Find best split point when sentence is too long, returning position and type.
      * Priority: : > ; > , > space
      * Only split if followed by whitespace or end of text (not inside words)
      */
-    private int findBestSplitPoint(int start, int sentenceEnd) {
+    private SplitResult findBestSplitPointWithType(int start, int sentenceEnd) {
         int maxEnd = Math.min(start + maxLength, sentenceEnd);
 
-        // Priority characters: : > ; > , > space
-        char[] splitCharacters = {':', ';', ',', ' '};
+        // Priority characters with their corresponding types
+        char[] splitCharacters = {':', ';', ','};
 
+        // First try punctuation splits (soft breaks)
         for (char splitChar : splitCharacters) {
             // Search backwards from maxEnd
             for (int position = maxEnd - 1; position > start + maxLength / 2; position--) {
                 if (paragraph.charAt(position) == splitChar) {
                     // Check if followed by whitespace or end of text (not inside word)
                     if (isValidSplitPosition(position)) {
-                        return position + 1; // Split after the character
+                        return new SplitResult(position + 1, SentenceEndType.SOFT_BREAK);
                     }
                 }
             }
         }
 
-        // No good split found, cut at maxLength
-        return Math.min(start + maxLength, sentenceEnd);
+        // Try space splits (character limit)
+        for (int position = maxEnd - 1; position > start + maxLength / 2; position--) {
+            if (paragraph.charAt(position) == ' ') {
+                if (isValidSplitPosition(position)) {
+                    return new SplitResult(position + 1, SentenceEndType.CHARACTER_LIMIT);
+                }
+            }
+        }
+
+        // No good split found, cut at maxLength (character limit)
+        return new SplitResult(Math.min(start + maxLength, sentenceEnd), SentenceEndType.CHARACTER_LIMIT);
     }
 
     /**
@@ -222,9 +268,26 @@ public class DynamicSentenceSplitter {
     }
 
     /**
+     * Get the type of sentence ending for a given sentence index
+     */
+    public SentenceEndType getSentenceEndType(int sentenceIndex) {
+        if (sentenceIndex < 0 || sentenceIndex >= endTypes.length) {
+            return SentenceEndType.CHARACTER_LIMIT; // Default fallback
+        }
+        return endTypes[sentenceIndex];
+    }
+
+    /**
      * Get all end positions for debugging
      */
     public int[] getEndPositions() {
         return endPositions.clone();
+    }
+
+    /**
+     * Get all end types for debugging
+     */
+    public SentenceEndType[] getEndTypes() {
+        return endTypes.clone();
     }
 }

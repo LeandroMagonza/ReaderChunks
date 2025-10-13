@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+    <!-- Header with back button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:background="@color/surface"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back"
+            android:scaleType="fitCenter"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/font_settings"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Split view: Controls on top, Preview on bottom -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
+        android:orientation="vertical">
+
+        <!-- Controls Panel (Top half - 50%) -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Font Size Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/font_size"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <ImageButton
+                        android:id="@+id/btnDecreaseFontSize"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_remove"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/decrease_font_size" />
+
+                    <TextView
+                        android:id="@+id/tvFontSize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="24 sp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        android:gravity="center"
+                        android:background="@color/surface_variant"
+                        android:padding="8dp"
+                        android:layout_marginHorizontal="12dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnIncreaseFontSize"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_add"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/increase_font_size" />
+
+                </LinearLayout>
+
+                <!-- Line Spacing Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/line_spacing"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <ImageButton
+                        android:id="@+id/btnDecreaseLineSpacing"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_remove"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/decrease_spacing" />
+
+                    <TextView
+                        android:id="@+id/tvLineSpacing"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="4 sp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        android:gravity="center"
+                        android:background="@color/surface_variant"
+                        android:padding="8dp"
+                        android:layout_marginHorizontal="12dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnIncreaseLineSpacing"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_add"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/increase_spacing" />
+
+                </LinearLayout>
+
+                <!-- Padding Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/side_margins"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <ImageButton
+                        android:id="@+id/btnDecreasePadding"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_remove"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/decrease_margins" />
+
+                    <TextView
+                        android:id="@+id/tvPadding"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="16 dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        android:gravity="center"
+                        android:background="@color/surface_variant"
+                        android:padding="8dp"
+                        android:layout_marginHorizontal="12dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnIncreasePadding"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_add"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/increase_margins" />
+
+                </LinearLayout>
+
+                <!-- Sentence Length Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sentence_length"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sentence_length_description"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50%"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <SeekBar
+                        android:id="@+id/seekBarSentenceLength"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginHorizontal="12dp"
+                        android:max="100"
+                        android:progress="50" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="500%"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvSentenceLengthValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="100% (150 caracteres)"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center"
+                    android:background="@color/surface_variant"
+                    android:padding="6dp"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- Bionic Reading Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bionic_reading"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <RadioGroup
+                    android:id="@+id/radioGroupBionic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioBionicOff"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bionic_off"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/radioBionicClassic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bionic_classic"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary" />
+
+                    <RadioButton
+                        android:id="@+id/radioBionicModern"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bionic_modern"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary" />
+
+                </RadioGroup>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <!-- Preview Panel (Bottom half - 50%) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/background">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/preview"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:id="@+id/previewContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@color/surface"
+                android:padding="12dp"
+                android:elevation="1dp">
+
+                <TextView
+                    android:id="@+id/tvPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/preview_text"
+                    android:textSize="24sp"
+                    android:lineSpacingExtra="4sp"
+                    android:textColor="@color/text_primary"
+                    android:gravity="top"
+                    android:scrollbars="none"
+                    android:scrollbarStyle="outsideOverlay" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

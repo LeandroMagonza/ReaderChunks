@@ -93,6 +93,18 @@
 
         </RelativeLayout>
 
+        <!-- Font Settings Button -->
+        <ImageButton
+            android:id="@+id/btnFontSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_text_size"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/font_settings"
+            android:scaleType="fitCenter"
+            android:padding="12dp" />
+
         <!-- TTS Button -->
         <ImageButton
             android:id="@+id/btnTTSSettings"

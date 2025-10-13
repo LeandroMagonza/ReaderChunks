@@ -4,16 +4,22 @@ public class ParagraphSentences {
     private String paragraph;
     private int[] endPositions;
     private int paragraphIndex;
+    private DynamicSentenceSplitter splitter;
 
     public ParagraphSentences(String paragraph, int paragraphIndex) {
+        this(paragraph, paragraphIndex, 150); // Default max length
+    }
+
+    public ParagraphSentences(String paragraph, int paragraphIndex, int maxSentenceLength) {
         this.paragraph = paragraph;
         this.paragraphIndex = paragraphIndex;
 
         if (paragraph != null && !paragraph.trim().isEmpty()) {
-            DynamicSentenceSplitter splitter = new DynamicSentenceSplitter(paragraph);
+            this.splitter = new DynamicSentenceSplitter(paragraph, maxSentenceLength);
             this.endPositions = splitter.getEndPositions();
         } else {
             this.endPositions = new int[0];
+            this.splitter = null;
         }
     }
 
@@ -103,5 +109,15 @@ public class ParagraphSentences {
      */
     public boolean isEmpty() {
         return endPositions.length == 0;
+    }
+
+    /**
+     * Get the type of sentence ending for a given sentence index
+     */
+    public SentenceEndType getSentenceEndType(int sentenceIndex) {
+        if (splitter == null) {
+            return SentenceEndType.CHARACTER_LIMIT; // Default fallback
+        }
+        return splitter.getSentenceEndType(sentenceIndex);
     }
 }

@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 
 public class BufferManager {
     private BookCacheManager cacheManager;
+    private SettingsManager settingsManager;
     private ExecutorService executor;
     private String currentBookId;
     private int totalParagraphs;
@@ -26,8 +27,9 @@ public class BufferManager {
         void onBufferError(String error);
     }
 
-    public BufferManager(BookCacheManager cacheManager) {
+    public BufferManager(BookCacheManager cacheManager, SettingsManager settingsManager) {
         this.cacheManager = cacheManager;
+        this.settingsManager = settingsManager;
         this.executor = Executors.newSingleThreadExecutor();
     }
 
@@ -339,14 +341,17 @@ public class BufferManager {
     private void loadParagraphsAroundIndexSync(int paragraphIndex) throws IOException {
         currentParagraphIndex = paragraphIndex;
 
+        // Get current max sentence length
+        int maxSentenceLength = settingsManager.getMaxSentenceLength();
+
         // Load current paragraph
         String currentText = cacheManager.getSentence(currentBookId, paragraphIndex);
-        currentParagraph = new ParagraphSentences(currentText, paragraphIndex);
+        currentParagraph = new ParagraphSentences(currentText, paragraphIndex, maxSentenceLength);
 
         // Load previous paragraph if exists
         if (paragraphIndex > 0) {
             String prevText = cacheManager.getSentence(currentBookId, paragraphIndex - 1);
-            previousParagraph = new ParagraphSentences(prevText, paragraphIndex - 1);
+            previousParagraph = new ParagraphSentences(prevText, paragraphIndex - 1, maxSentenceLength);
         } else {
             previousParagraph = null;
         }
@@ -354,7 +359,7 @@ public class BufferManager {
         // Load next paragraph if exists
         if (paragraphIndex < totalParagraphs - 1) {
             String nextText = cacheManager.getSentence(currentBookId, paragraphIndex + 1);
-            nextParagraph = new ParagraphSentences(nextText, paragraphIndex + 1);
+            nextParagraph = new ParagraphSentences(nextText, paragraphIndex + 1, maxSentenceLength);
         } else {
             nextParagraph = null;
         }
@@ -371,7 +376,8 @@ public class BufferManager {
             executor.execute(() -> {
                 try {
                     String nextText = cacheManager.getSentence(currentBookId, nextIndex);
-                    nextParagraph = new ParagraphSentences(nextText, nextIndex);
+                    int maxSentenceLength = settingsManager.getMaxSentenceLength();
+                    nextParagraph = new ParagraphSentences(nextText, nextIndex, maxSentenceLength);
                 } catch (IOException e) {
                     // Silent fail for async preload
                     nextParagraph = null;
@@ -388,7 +394,8 @@ public class BufferManager {
             executor.execute(() -> {
                 try {
                     String prevText = cacheManager.getSentence(currentBookId, prevIndex);
-                    previousParagraph = new ParagraphSentences(prevText, prevIndex);
+                    int maxSentenceLength = settingsManager.getMaxSentenceLength();
+                    previousParagraph = new ParagraphSentences(prevText, prevIndex, maxSentenceLength);
                 } catch (IOException e) {
                     // Silent fail for async preload
                     previousParagraph = null;
@@ -396,6 +403,15 @@ public class BufferManager {
             });
         } else {
             previousParagraph = null;
+        }
+    }
+
+    /**
+     * Reload current paragraph buffer with updated sentence length settings
+     */
+    public void reloadCurrentParagraph() {
+        if (currentBookId != null && currentParagraphIndex >= 0) {
+            loadParagraphsAroundIndex(currentParagraphIndex);
         }
     }
 

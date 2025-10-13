@@ -68,6 +68,8 @@
     <string name="bionic_modern">Moderno (palabras largas)</string>
     <string name="preview">Vista previa</string>
     <string name="preview_text">Esta es una vista previa del texto con la configuración actual. Aquí puedes ver cómo se verá el texto en la aplicación con el tamaño de letra, espaciado y márgenes seleccionados.</string>
+    <string name="sentence_length">Longitud de oraciones</string>
+    <string name="sentence_length_description">Ajusta cuántos caracteres mostrar por oración en el modo bite-size. Se adapta automáticamente al tamaño de letra.</string>
     <string name="reset_defaults">Restablecer valores por defecto</string>
     <string name="language">Idioma</string>
     <string name="select_language">Seleccionar Idioma</string>
@@ -134,4 +136,17 @@
     <string name="language_french">Francés</string>
     <string name="language_german">Alemán</string>
     <string name="language_italian">Italiano</string>
+
+    <!-- Unified Settings System -->
+    <string name="voice_settings">Configuración de voz</string>
+    <string name="text_to_speech">Síntesis de voz</string>
+    <string name="tts_description">Configuración para la lectura por voz</string>
+    <string name="enable_tts">Habilitar lectura por voz</string>
+    <string name="enabled">Activado</string>
+    <string name="disabled">Desactivado</string>
+    <string name="auto_scroll">Auto-avance</string>
+    <string name="speech_speed">Velocidad de voz</string>
+    <string name="speed_description">Ajusta la velocidad de la síntesis de voz</string>
+    <string name="language_changed">Idioma cambiado correctamente</string>
+    <string name="normal_text">Normal</string>
 </resources>

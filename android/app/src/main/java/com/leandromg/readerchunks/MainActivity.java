@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private List<Book> books;
     private ThemeManager themeManager;
     private LanguageManager languageManager;
+    private SettingsManager settingsManager;
+    private SettingsDialogManager settingsDialogManager;
     private boolean isProcessing = false;
 
     private ActivityResultLauncher<String[]> documentPickerLauncher;
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         setupToolbar();
         setupExecutor();
         setupCacheManager();
+        setupSettingsManager();
         setupRecyclerView();
         setupDocumentPicker();
         setupClickListeners();
@@ -96,6 +99,11 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     private void setupCacheManager() {
         cacheManager = new BookCacheManager(this);
+    }
+
+    private void setupSettingsManager() {
+        settingsManager = new SettingsManager(this);
+        settingsDialogManager = new SettingsDialogManager(this, settingsManager, languageManager);
     }
 
     private void setupRecyclerView() {
@@ -517,7 +525,7 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
             toggleTheme();
             return true;
         } else if (item.getItemId() == R.id.action_settings) {
-            startActivity(new android.content.Intent(this, SettingsActivity.class));
+            settingsDialogManager.show();
             return true;
         }
         return super.onOptionsItemSelected(item);

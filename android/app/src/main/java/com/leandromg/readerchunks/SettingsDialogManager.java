@@ -1,0 +1,507 @@
+package com.leandromg.readerchunks;
+
+import android.content.Context;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class SettingsDialogManager {
+
+    public enum SettingsCategory {
+        MAIN_LIST,
+        LANGUAGE,
+        FONT,
+        VOICE
+    }
+
+    private Context context;
+    private SettingsManager settingsManager;
+    private LanguageManager languageManager;
+    private AlertDialog mainDialog;
+    private View currentView;
+    private SettingsCategory currentCategory = SettingsCategory.MAIN_LIST;
+
+    // Callback for settings changes (optional)
+    public interface SettingsChangeListener {
+        void onSettingsChanged();
+    }
+
+    private SettingsChangeListener changeListener;
+
+    public SettingsDialogManager(Context context, SettingsManager settingsManager, LanguageManager languageManager) {
+        this.context = context;
+        this.settingsManager = settingsManager;
+        this.languageManager = languageManager;
+    }
+
+    public void setSettingsChangeListener(SettingsChangeListener listener) {
+        this.changeListener = listener;
+    }
+
+    public void show() {
+        showCategoryList();
+    }
+
+    private void showCategoryList() {
+        currentCategory = SettingsCategory.MAIN_LIST;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_main, null);
+
+        RecyclerView recyclerCategories = dialogView.findViewById(R.id.recyclerCategories);
+        recyclerCategories.setLayoutManager(new LinearLayoutManager(context));
+
+        List<CategoryItem> categories = createCategoryItems();
+        CategoryAdapter adapter = new CategoryAdapter(categories, this::onCategoryClick);
+        recyclerCategories.setAdapter(adapter);
+
+        showDialog(dialogView, context.getString(R.string.settings));
+    }
+
+    private List<CategoryItem> createCategoryItems() {
+        List<CategoryItem> categories = new ArrayList<>();
+
+        // Language category
+        LanguageManager.Language currentLang = languageManager.getCurrentLanguageInfo();
+        categories.add(new CategoryItem(
+            SettingsCategory.LANGUAGE,
+            "🌐",
+            context.getString(R.string.language),
+            currentLang.displayName,
+            currentLang.flagResource
+        ));
+
+        // Font category
+        int fontSize = settingsManager.getFontSize();
+        String fontSubtitle = fontSize + "sp, " +
+            (settingsManager.getBionicReadingMode() != BionicTextProcessor.BionicMode.OFF ?
+                context.getString(R.string.bionic_reading) :
+                context.getString(R.string.normal_text));
+        categories.add(new CategoryItem(
+            SettingsCategory.FONT,
+            "Aa",
+            context.getString(R.string.font_settings),
+            fontSubtitle,
+            0
+        ));
+
+        // Voice category
+        boolean ttsEnabled = settingsManager.isTTSEnabled();
+        float speed = settingsManager.getTTSSpeechRate();
+        String voiceSubtitle = (ttsEnabled ? context.getString(R.string.enabled) : context.getString(R.string.disabled)) +
+                             ", " + String.format("%.1fx", speed);
+        categories.add(new CategoryItem(
+            SettingsCategory.VOICE,
+            "🔊",
+            context.getString(R.string.voice_settings),
+            voiceSubtitle,
+            0
+        ));
+
+        return categories;
+    }
+
+    private void onCategoryClick(SettingsCategory category) {
+        switch (category) {
+            case LANGUAGE:
+                showLanguageSettings();
+                break;
+            case FONT:
+                showFontSettings();
+                break;
+            case VOICE:
+                showVoiceSettings();
+                break;
+        }
+    }
+
+    private void showLanguageSettings() {
+        currentCategory = SettingsCategory.LANGUAGE;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_language, null);
+
+        ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
+        RecyclerView recyclerLanguages = dialogView.findViewById(R.id.recyclerLanguages);
+
+        btnBack.setOnClickListener(v -> showCategoryList());
+
+        // Setup language list
+        recyclerLanguages.setLayoutManager(new LinearLayoutManager(context));
+        List<LanguageManager.Language> languages = languageManager.getSupportedLanguages();
+        String currentLangCode = languageManager.getCurrentLanguage();
+
+        LanguageAdapter languageAdapter = new LanguageAdapter(languages, currentLangCode, (language) -> {
+            languageManager.setLanguage(language.code);
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+            Toast.makeText(context, context.getString(R.string.language_changed), Toast.LENGTH_SHORT).show();
+            showCategoryList(); // Return to main list with updated info
+        });
+        recyclerLanguages.setAdapter(languageAdapter);
+
+        showDialog(dialogView, context.getString(R.string.language));
+    }
+
+    private void showFontSettings() {
+        currentCategory = SettingsCategory.FONT;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_font, null);
+
+        setupFontControls(dialogView);
+        showDialog(dialogView, context.getString(R.string.font_settings));
+    }
+
+    private void setupFontControls(View dialogView) {
+        ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
+
+        // Font size controls
+        ImageButton btnDecreaseFontSize = dialogView.findViewById(R.id.btnDecreaseFontSize);
+        ImageButton btnIncreaseFontSize = dialogView.findViewById(R.id.btnIncreaseFontSize);
+        TextView tvFontSize = dialogView.findViewById(R.id.tvFontSize);
+
+        // Line spacing controls
+        ImageButton btnDecreaseLineSpacing = dialogView.findViewById(R.id.btnDecreaseLineSpacing);
+        ImageButton btnIncreaseLineSpacing = dialogView.findViewById(R.id.btnIncreaseLineSpacing);
+        TextView tvLineSpacing = dialogView.findViewById(R.id.tvLineSpacing);
+
+        // Padding controls
+        ImageButton btnDecreasePadding = dialogView.findViewById(R.id.btnDecreasePadding);
+        ImageButton btnIncreasePadding = dialogView.findViewById(R.id.btnIncreasePadding);
+        TextView tvPadding = dialogView.findViewById(R.id.tvPadding);
+
+        // Sentence length controls
+        SeekBar seekBarSentenceLength = dialogView.findViewById(R.id.seekBarSentenceLength);
+        TextView tvSentenceLengthValue = dialogView.findViewById(R.id.tvSentenceLengthValue);
+
+        // Bionic reading controls
+        RadioGroup radioGroupBionic = dialogView.findViewById(R.id.radioGroupBionic);
+        RadioButton radioBionicOff = dialogView.findViewById(R.id.radioBionicOff);
+        RadioButton radioBionicClassic = dialogView.findViewById(R.id.radioBionicClassic);
+        RadioButton radioBionicModern = dialogView.findViewById(R.id.radioBionicModern);
+
+        // Preview
+        TextView tvPreview = dialogView.findViewById(R.id.tvPreview);
+        LinearLayout previewContainer = dialogView.findViewById(R.id.previewContainer);
+
+        btnBack.setOnClickListener(v -> showCategoryList());
+
+        // Helper to update all UI elements
+        Runnable updateUI = () -> {
+            int fontSize = settingsManager.getFontSize();
+            int lineSpacing = settingsManager.getLineSpacing();
+            int padding = settingsManager.getPaddingHorizontal();
+            float sentenceMultiplier = settingsManager.getSentenceLengthMultiplier();
+            int maxSentenceLength = settingsManager.getMaxSentenceLength();
+            BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
+
+            tvFontSize.setText(fontSize + " sp");
+            tvLineSpacing.setText(lineSpacing + " sp");
+            tvPadding.setText(padding + " dp");
+
+            int percentageValue = Math.round(sentenceMultiplier * 100);
+            tvSentenceLengthValue.setText(percentageValue + "% (" + maxSentenceLength + " caracteres)");
+
+            int seekBarProgress = (int)((sentenceMultiplier - 0.5f) * 100 / 4.5f);
+            seekBarSentenceLength.setProgress(seekBarProgress);
+
+            // Update bionic radio buttons
+            switch (bionicMode) {
+                case CLASSIC:
+                    radioBionicClassic.setChecked(true);
+                    break;
+                case MODERN:
+                    radioBionicModern.setChecked(true);
+                    break;
+                default:
+                    radioBionicOff.setChecked(true);
+                    break;
+            }
+
+            // Update preview
+            updatePreview(tvPreview, previewContainer, fontSize, lineSpacing, padding, maxSentenceLength, bionicMode);
+
+            // Notify changes
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        };
+
+        // Set initial values
+        updateUI.run();
+
+        // Set up listeners
+        btnDecreaseFontSize.setOnClickListener(v -> {
+            settingsManager.adjustFontSize(-SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        btnIncreaseFontSize.setOnClickListener(v -> {
+            settingsManager.adjustFontSize(SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        btnDecreaseLineSpacing.setOnClickListener(v -> {
+            settingsManager.adjustLineSpacing(-SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        btnIncreaseLineSpacing.setOnClickListener(v -> {
+            settingsManager.adjustLineSpacing(SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        btnDecreasePadding.setOnClickListener(v -> {
+            settingsManager.adjustPadding(-SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        btnIncreasePadding.setOnClickListener(v -> {
+            settingsManager.adjustPadding(SettingsManager.INCREMENT);
+            updateUI.run();
+        });
+
+        seekBarSentenceLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    float multiplier = 0.5f + (progress * 4.5f / 100.0f);
+                    settingsManager.setSentenceLengthMultiplier(multiplier);
+                    updateUI.run();
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        radioGroupBionic.setOnCheckedChangeListener((group, checkedId) -> {
+            BionicTextProcessor.BionicMode mode;
+            if (checkedId == R.id.radioBionicClassic) {
+                mode = BionicTextProcessor.BionicMode.CLASSIC;
+            } else if (checkedId == R.id.radioBionicModern) {
+                mode = BionicTextProcessor.BionicMode.MODERN;
+            } else {
+                mode = BionicTextProcessor.BionicMode.OFF;
+            }
+            settingsManager.setBionicReadingMode(mode);
+            updateUI.run();
+        });
+    }
+
+    private void updatePreview(TextView tvPreview, LinearLayout previewContainer,
+                             int fontSize, int lineSpacing, int padding,
+                             int maxSentenceLength, BionicTextProcessor.BionicMode bionicMode) {
+        tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
+        tvPreview.setLineSpacing(lineSpacing, 1.0f);
+
+        int paddingPx = (int) TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            padding,
+            context.getResources().getDisplayMetrics()
+        );
+        previewContainer.setPadding(paddingPx, previewContainer.getPaddingTop(),
+                                  paddingPx, previewContainer.getPaddingBottom());
+
+        String previewText = context.getString(R.string.preview_text);
+
+        // Calculate how much text fits in the available height
+        String truncatedText = calculateTextForHeight(previewText, tvPreview, fontSize, lineSpacing);
+
+        // Ensure it doesn't exceed maxSentenceLength either
+        if (truncatedText.length() > maxSentenceLength) {
+            truncatedText = truncatedText.substring(0, maxSentenceLength - 3) + "...";
+        }
+
+        previewText = truncatedText;
+
+        if (bionicMode != BionicTextProcessor.BionicMode.OFF) {
+            tvPreview.setText(BionicTextProcessor.process(previewText, bionicMode), TextView.BufferType.SPANNABLE);
+        } else {
+            tvPreview.setText(previewText);
+        }
+    }
+
+    private String calculateTextForHeight(String fullText, TextView tvPreview, int fontSize, int lineSpacing) {
+        // Get the height of the preview container (should be 50% of 500dp = 250dp)
+        // Subtract padding to get available text height
+        int containerHeightPx = (int) TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            225, // Approximately 250dp minus some padding for the "Preview" label
+            context.getResources().getDisplayMetrics()
+        );
+
+        // Calculate approximate line height
+        float fontSizePx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            fontSize,
+            context.getResources().getDisplayMetrics()
+        );
+        float lineSpacingPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            lineSpacing,
+            context.getResources().getDisplayMetrics()
+        );
+
+        float lineHeight = fontSizePx + lineSpacingPx;
+        int maxLines = (int) (containerHeightPx / lineHeight);
+
+        if (maxLines <= 0) {
+            maxLines = 1; // At least one line
+        }
+
+        // Get the width of the TextView to calculate characters per line
+        int textWidthPx = (int) TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            280, // Approximate width after padding
+            context.getResources().getDisplayMetrics()
+        );
+
+        // Estimate characters per line (this is approximate)
+        float charWidth = fontSizePx * 0.6f; // Rough estimate for average character width
+        int charsPerLine = (int) (textWidthPx / charWidth);
+
+        if (charsPerLine <= 0) {
+            charsPerLine = 20; // Minimum
+        }
+
+        int maxChars = maxLines * charsPerLine;
+
+        if (fullText.length() <= maxChars) {
+            return fullText;
+        }
+
+        // Truncate at word boundary when possible
+        String truncated = fullText.substring(0, Math.min(maxChars - 3, fullText.length()));
+        int lastSpace = truncated.lastIndexOf(' ');
+        if (lastSpace > truncated.length() / 2) {
+            truncated = truncated.substring(0, lastSpace);
+        }
+
+        return truncated + "...";
+    }
+
+    public void showVoiceSettings() {
+        currentCategory = SettingsCategory.VOICE;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_voice, null);
+
+        ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
+        SwitchCompat switchTTSEnabled = dialogView.findViewById(R.id.switchTTSEnabled);
+        SwitchCompat switchAutoScroll = dialogView.findViewById(R.id.switchAutoScroll);
+        SeekBar seekBarSpeed = dialogView.findViewById(R.id.seekBarSpeed);
+        TextView tvSpeedValue = dialogView.findViewById(R.id.tvSpeedValue);
+
+        btnBack.setOnClickListener(v -> showCategoryList());
+
+        // Set current values
+        switchTTSEnabled.setChecked(settingsManager.isTTSEnabled());
+        switchAutoScroll.setChecked(settingsManager.isTTSAutoScrollEnabled());
+
+        float currentSpeed = settingsManager.getTTSSpeechRate();
+        int seekBarProgress = (int) ((currentSpeed - 0.5f) * 20);
+        seekBarSpeed.setProgress(seekBarProgress);
+        updateSpeedText(tvSpeedValue, currentSpeed);
+
+        // Set up listeners
+        switchTTSEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setTTSEnabled(isChecked);
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        switchAutoScroll.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setTTSAutoScrollEnabled(isChecked);
+        });
+
+        seekBarSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    float speed = 0.5f + (progress / 20.0f);
+                    settingsManager.setTTSSpeechRate(speed);
+                    updateSpeedText(tvSpeedValue, speed);
+                    if (changeListener != null) {
+                        changeListener.onSettingsChanged();
+                    }
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        showDialog(dialogView, context.getString(R.string.voice_settings));
+    }
+
+    private void updateSpeedText(TextView tvSpeedValue, float speed) {
+        String speedText;
+        if (speed < 0.7f) {
+            speedText = context.getString(R.string.slow);
+        } else if (speed > 1.3f) {
+            speedText = context.getString(R.string.fast);
+        } else {
+            speedText = context.getString(R.string.normal_speed);
+        }
+        speedText += " (" + String.format("%.1fx", speed) + ")";
+        tvSpeedValue.setText(speedText);
+    }
+
+    private void showDialog(View view, String title) {
+        if (mainDialog != null && mainDialog.isShowing()) {
+            mainDialog.dismiss();
+        }
+
+        currentView = view;
+        mainDialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .setCancelable(true)
+                .create();
+
+        mainDialog.show();
+    }
+
+    public void dismiss() {
+        if (mainDialog != null && mainDialog.isShowing()) {
+            mainDialog.dismiss();
+        }
+    }
+
+    // Data classes
+    public static class CategoryItem {
+        public SettingsCategory category;
+        public String icon;
+        public String title;
+        public String subtitle;
+        public int iconResource;
+
+        public CategoryItem(SettingsCategory category, String icon, String title, String subtitle, int iconResource) {
+            this.category = category;
+            this.icon = icon;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.iconResource = iconResource;
+        }
+    }
+}

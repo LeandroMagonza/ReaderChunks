@@ -17,6 +17,7 @@ public class SettingsManager {
     private static final String KEY_TTS_SPEECH_RATE = "tts_speech_rate";
     private static final String KEY_TTS_VOICE_NAME = "tts_voice_name";
     private static final String KEY_TTS_LANGUAGE_PREFIX = "tts_language_"; // + bookId
+    private static final String KEY_SENTENCE_LENGTH_MULTIPLIER = "sentence_length_multiplier";
 
     // Default values
     private static final boolean DEFAULT_DARK_MODE = false;
@@ -28,6 +29,7 @@ public class SettingsManager {
     private static final boolean DEFAULT_TTS_AUTO_SCROLL = false;
     private static final float DEFAULT_TTS_SPEECH_RATE = 1.0f; // Normal speed
     private static final String DEFAULT_TTS_VOICE_NAME = ""; // Empty = system default
+    private static final float DEFAULT_SENTENCE_LENGTH_MULTIPLIER = 1.0f; // 100%
 
     // Ranges
     public static final int MIN_FONT_SIZE = 12;
@@ -37,6 +39,13 @@ public class SettingsManager {
     public static final int MIN_PADDING = 4;
     public static final int MAX_PADDING = 32;
     public static final int INCREMENT = 2;
+
+    // Sentence Length ranges
+    public static final float MIN_SENTENCE_MULTIPLIER = 0.5f; // 50%
+    public static final float MAX_SENTENCE_MULTIPLIER = 5.0f; // 500%
+    public static final int BASE_SENTENCE_LENGTH = 150; // Base characters for 24sp
+    public static final int BASE_FONT_SIZE = 24; // sp
+    public static final int CHAR_ADJUSTMENT_PER_SP = 10; // characters per font size point
 
     private final SharedPreferences prefs;
 
@@ -205,6 +214,35 @@ public class SettingsManager {
                               languageCode != null ? languageCode : "").apply();
     }
 
+    // Sentence Length Multiplier
+    public float getSentenceLengthMultiplier() {
+        float multiplier = prefs.getFloat(KEY_SENTENCE_LENGTH_MULTIPLIER, DEFAULT_SENTENCE_LENGTH_MULTIPLIER);
+        return Math.max(MIN_SENTENCE_MULTIPLIER, Math.min(MAX_SENTENCE_MULTIPLIER, multiplier));
+    }
+
+    public void setSentenceLengthMultiplier(float multiplier) {
+        float clampedMultiplier = Math.max(MIN_SENTENCE_MULTIPLIER, Math.min(MAX_SENTENCE_MULTIPLIER, multiplier));
+        prefs.edit().putFloat(KEY_SENTENCE_LENGTH_MULTIPLIER, clampedMultiplier).apply();
+    }
+
+    /**
+     * Calculate the maximum sentence length based on current font size and user multiplier
+     * Formula: (BASE_SENTENCE_LENGTH - (fontSize - BASE_FONT_SIZE) * CHAR_ADJUSTMENT_PER_SP) * userMultiplier
+     */
+    public int getMaxSentenceLength() {
+        int fontSize = getFontSize();
+        float userMultiplier = getSentenceLengthMultiplier();
+
+        // Auto-adjusted length based on font size
+        int autoAdjusted = BASE_SENTENCE_LENGTH - (fontSize - BASE_FONT_SIZE) * CHAR_ADJUSTMENT_PER_SP;
+
+        // Apply user multiplier
+        int finalLength = (int)(autoAdjusted * userMultiplier);
+
+        // Ensure minimum of 30 characters
+        return Math.max(30, finalLength);
+    }
+
     // Reset to defaults
     public void resetToDefaults() {
         prefs.edit()
@@ -217,6 +255,7 @@ public class SettingsManager {
             .putBoolean(KEY_TTS_AUTO_SCROLL, DEFAULT_TTS_AUTO_SCROLL)
             .putFloat(KEY_TTS_SPEECH_RATE, DEFAULT_TTS_SPEECH_RATE)
             .putString(KEY_TTS_VOICE_NAME, DEFAULT_TTS_VOICE_NAME)
+            .putFloat(KEY_SENTENCE_LENGTH_MULTIPLIER, DEFAULT_SENTENCE_LENGTH_MULTIPLIER)
             .apply();
     }
 }

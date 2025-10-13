@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -40,6 +41,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnNext;
     private MaterialButton btnBack;
     private MaterialButton btnToggleMode;
+    private ImageButton btnFontSettings;
     private ImageButton btnTTSSettings;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
@@ -57,6 +59,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private ThemeManager themeManager;
     private SettingsManager settingsManager;
     private LanguageManager languageManager;
+    private SettingsDialogManager settingsDialogManager;
     private TTSManager ttsManager;
 
     // Current reading position (managed by BufferManager)
@@ -80,6 +83,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         themeManager = new ThemeManager(this);
         themeManager.applyTheme();
         settingsManager = new SettingsManager(this);
+        settingsDialogManager = new SettingsDialogManager(this, settingsManager, languageManager);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sentence_reader);
@@ -101,6 +105,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnNext = findViewById(R.id.btnNext);
         btnBack = findViewById(R.id.btnBack);
         btnToggleMode = findViewById(R.id.btnToggleMode);
+        btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSSettings = findViewById(R.id.btnTTSSettings);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
@@ -111,7 +116,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     private void setupManagers() {
         cacheManager = new BookCacheManager(this);
-        bufferManager = new BufferManager(cacheManager);
+        bufferManager = new BufferManager(cacheManager, settingsManager);
         executor = Executors.newSingleThreadExecutor();
     }
 
@@ -203,7 +208,21 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnNext.setOnClickListener(v -> nextSentence());
         btnBack.setOnClickListener(v -> finish());
         btnToggleMode.setOnClickListener(v -> toggleReadingMode());
-        btnTTSSettings.setOnClickListener(v -> showTTSSettingsDialog());
+        btnFontSettings.setOnClickListener(v -> {
+            settingsDialogManager.setSettingsChangeListener(() -> {
+                applySettings();
+                refreshCurrentContent();
+            });
+            settingsDialogManager.show();
+        });
+        btnTTSSettings.setOnClickListener(v -> {
+            settingsDialogManager.setSettingsChangeListener(() -> {
+                applySettings();
+                refreshCurrentContent();
+                updateTTSButtonIcon();
+            });
+            settingsDialogManager.showVoiceSettings();
+        });
     }
 
     private void setupGestureDetector() {
@@ -818,6 +837,24 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         applySettings();
         // Update TTS button icon
         updateTTSButtonIcon();
+        // Reload paragraphs if sentence length settings might have changed
+        reloadCurrentParagraphIfNeeded();
+    }
+
+    private void reloadCurrentParagraphIfNeeded() {
+        if (bufferManager != null && currentBook != null) {
+            // Force reload of current paragraph buffer with new sentence length settings
+            bufferManager.reloadCurrentParagraph();
+            updateDisplay();
+        }
+    }
+
+    private void refreshCurrentContent() {
+        if (bufferManager != null && currentBook != null) {
+            // Refresh current content after settings change
+            bufferManager.reloadCurrentParagraph();
+            updateDisplay();
+        }
     }
 
     private void speakCurrentText() {
@@ -854,8 +891,11 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     */
 
     private void showTTSSettingsDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_tts_settings, null);
+        // This method is deprecated - using unified settings instead
+        // Just close the dialog for now
+        return;
 
+        /*
         SwitchCompat switchTTSEnabled = dialogView.findViewById(R.id.switchTTSEnabled);
         SwitchCompat switchAutoScroll = dialogView.findViewById(R.id.switchAutoScroll);
         SeekBar seekBarSpeed = dialogView.findViewById(R.id.seekBarSpeed);
@@ -864,8 +904,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
         MaterialButton btnSave = dialogView.findViewById(R.id.btnSave);
 
-        // Hide language spinner for now to avoid issues
-        spinnerLanguage.setVisibility(View.GONE);
+        // Language section is now hidden in XML layout
 
         // Set current values
         switchTTSEnabled.setChecked(settingsManager.isTTSEnabled());
@@ -936,6 +975,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         });
 
         dialog.show();
+        */
     }
 
     private void updateSpeedText(TextView tvSpeedValue, float speed) {
@@ -1000,13 +1040,35 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // En modo párrafo, siempre hay cambio de párrafo
             return 1000; // 1 segundo para cambio de párrafo
         } else {
-            // En modo bite-size, verificar si la próxima oración está en otro párrafo
-            if (willNextSentenceChangeParagraph()) {
-                return 800; // 0.8 segundos para fin de párrafo en modo bite-size
-            } else {
-                return 300; // 0.3 segundos para oraciones dentro del mismo párrafo
+            // En modo bite-size, usar pausas inteligentes basadas en el tipo de corte
+            SentenceEndType endType = getCurrentSentenceEndType();
+
+            switch(endType) {
+                case PARAGRAPH_END:
+                    return 1000; // Pausa larga para fin de párrafo
+                case SENTENCE_END:
+                    return 500;  // Pausa media para fin de oración (.!?)
+                case SOFT_BREAK:
+                    return 200;  // Pausa corta para cortes suaves (:;,)
+                case CHARACTER_LIMIT:
+                    return 0;    // Sin pausa para cortes por límite de caracteres
+                default:
+                    return 300;  // Fallback
             }
         }
+    }
+
+    private SentenceEndType getCurrentSentenceEndType() {
+        try {
+            ParagraphSentences currentParagraphSentences = bufferManager.getCurrentParagraphSentences();
+            if (currentParagraphSentences != null) {
+                int currentSentenceIndex = bufferManager.getCurrentSentenceIndex();
+                return currentParagraphSentences.getSentenceEndType(currentSentenceIndex);
+            }
+        } catch (Exception e) {
+            // Fallback if any error occurs
+        }
+        return SentenceEndType.CHARACTER_LIMIT; // Default fallback
     }
 
     private boolean willNextSentenceChangeParagraph() {
