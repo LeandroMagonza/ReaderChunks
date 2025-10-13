@@ -12,6 +12,11 @@ public class SettingsManager {
     private static final String KEY_LINE_SPACING = "line_spacing";
     private static final String KEY_PADDING_HORIZONTAL = "padding_horizontal";
     private static final String KEY_BIONIC_READING_MODE = "bionic_reading_mode";
+    private static final String KEY_TTS_ENABLED = "tts_enabled";
+    private static final String KEY_TTS_AUTO_SCROLL = "tts_auto_scroll";
+    private static final String KEY_TTS_SPEECH_RATE = "tts_speech_rate";
+    private static final String KEY_TTS_VOICE_NAME = "tts_voice_name";
+    private static final String KEY_TTS_LANGUAGE_PREFIX = "tts_language_"; // + bookId
 
     // Default values
     private static final boolean DEFAULT_DARK_MODE = false;
@@ -19,6 +24,10 @@ public class SettingsManager {
     private static final int DEFAULT_LINE_SPACING = 4; // sp
     private static final int DEFAULT_PADDING_HORIZONTAL = 16; // dp
     private static final int DEFAULT_BIONIC_READING_MODE = 0; // 0=OFF, 1=CLASSIC, 2=MODERN
+    private static final boolean DEFAULT_TTS_ENABLED = false;
+    private static final boolean DEFAULT_TTS_AUTO_SCROLL = false;
+    private static final float DEFAULT_TTS_SPEECH_RATE = 1.0f; // Normal speed
+    private static final String DEFAULT_TTS_VOICE_NAME = ""; // Empty = system default
 
     // Ranges
     public static final int MIN_FONT_SIZE = 12;
@@ -151,6 +160,51 @@ public class SettingsManager {
         setBionicReadingMode(bionicReading ? BionicTextProcessor.BionicMode.CLASSIC : BionicTextProcessor.BionicMode.OFF);
     }
 
+    // TTS Settings
+    public boolean isTTSEnabled() {
+        return prefs.getBoolean(KEY_TTS_ENABLED, DEFAULT_TTS_ENABLED);
+    }
+
+    public void setTTSEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_TTS_ENABLED, enabled).apply();
+    }
+
+    public boolean isTTSAutoScrollEnabled() {
+        return prefs.getBoolean(KEY_TTS_AUTO_SCROLL, DEFAULT_TTS_AUTO_SCROLL);
+    }
+
+    public void setTTSAutoScrollEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_TTS_AUTO_SCROLL, enabled).apply();
+    }
+
+    public float getTTSSpeechRate() {
+        return prefs.getFloat(KEY_TTS_SPEECH_RATE, DEFAULT_TTS_SPEECH_RATE);
+    }
+
+    public void setTTSSpeechRate(float rate) {
+        // Clamp between 0.5 and 2.0
+        float clampedRate = Math.max(0.5f, Math.min(2.0f, rate));
+        prefs.edit().putFloat(KEY_TTS_SPEECH_RATE, clampedRate).apply();
+    }
+
+    public String getTTSVoiceName() {
+        return prefs.getString(KEY_TTS_VOICE_NAME, DEFAULT_TTS_VOICE_NAME);
+    }
+
+    public void setTTSVoiceName(String voiceName) {
+        prefs.edit().putString(KEY_TTS_VOICE_NAME, voiceName != null ? voiceName : "").apply();
+    }
+
+    // Per-book language settings
+    public String getTTSLanguageForBook(String bookId) {
+        return prefs.getString(KEY_TTS_LANGUAGE_PREFIX + bookId, ""); // Empty = auto-detect
+    }
+
+    public void setTTSLanguageForBook(String bookId, String languageCode) {
+        prefs.edit().putString(KEY_TTS_LANGUAGE_PREFIX + bookId,
+                              languageCode != null ? languageCode : "").apply();
+    }
+
     // Reset to defaults
     public void resetToDefaults() {
         prefs.edit()
@@ -159,6 +213,10 @@ public class SettingsManager {
             .putInt(KEY_LINE_SPACING, DEFAULT_LINE_SPACING)
             .putInt(KEY_PADDING_HORIZONTAL, DEFAULT_PADDING_HORIZONTAL)
             .putInt(KEY_BIONIC_READING_MODE, DEFAULT_BIONIC_READING_MODE)
+            .putBoolean(KEY_TTS_ENABLED, DEFAULT_TTS_ENABLED)
+            .putBoolean(KEY_TTS_AUTO_SCROLL, DEFAULT_TTS_AUTO_SCROLL)
+            .putFloat(KEY_TTS_SPEECH_RATE, DEFAULT_TTS_SPEECH_RATE)
+            .putString(KEY_TTS_VOICE_NAME, DEFAULT_TTS_VOICE_NAME)
             .apply();
     }
 }

@@ -93,6 +93,18 @@
 
         </RelativeLayout>
 
+        <!-- TTS Button -->
+        <ImageButton
+            android:id="@+id/btnTTSSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_volume_up"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tts_settings"
+            android:scaleType="fitCenter"
+            android:padding="12dp" />
+
     </LinearLayout>
 
     <!-- Sentence display area -->

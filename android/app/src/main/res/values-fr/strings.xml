@@ -112,4 +112,26 @@
     <string name="file_added_success" formatted="false">✅ %s ajouté: %s</string>
     <string name="error_processing_file" formatted="false">❌ Erreur lors du traitement de %s: %s</string>
     <string name="opening_file">Ouverture de %s...</string>
+
+    <!-- TTS (Text-to-Speech) -->
+    <string name="tts_settings">Paramètres Vocaux</string>
+    <string name="tts_enabled">Lecture Vocale</string>
+    <string name="tts_enabled_description">Lire le texte à haute voix</string>
+    <string name="tts_speed">Vitesse de Lecture</string>
+    <string name="slow">Lent</string>
+    <string name="fast">Rapide</string>
+    <string name="normal_speed">Vitesse normale</string>
+    <string name="tts_auto_scroll">Avancement Automatique</string>
+    <string name="tts_auto_scroll_description">Avancer automatiquement après la lecture</string>
+    <string name="tts_enabled_message">Lecture vocale activée</string>
+    <string name="tts_disabled_message">Lecture vocale désactivée</string>
+    <string name="tts_language">Langue de la Voix</string>
+    <string name="tts_language_description">Langue pour la synthèse vocale</string>
+    <string name="language_auto_detect">Détection automatique</string>
+    <string name="language_spanish">Espagnol</string>
+    <string name="language_english">Anglais</string>
+    <string name="language_portuguese">Portugais</string>
+    <string name="language_french">Français</string>
+    <string name="language_german">Allemand</string>
+    <string name="language_italian">Italien</string>
 </resources>

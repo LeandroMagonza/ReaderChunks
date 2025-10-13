@@ -2,22 +2,31 @@ package com.leandromg.readerchunks;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +40,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnNext;
     private MaterialButton btnBack;
     private MaterialButton btnToggleMode;
+    private ImageButton btnTTSSettings;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
     private ProgressBar progressCircle;
@@ -47,6 +57,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private ThemeManager themeManager;
     private SettingsManager settingsManager;
     private LanguageManager languageManager;
+    private TTSManager ttsManager;
 
     // Current reading position (managed by BufferManager)
     private int currentParagraphIndex = 0;
@@ -54,6 +65,11 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     // Reading mode toggle
     private boolean isFullParagraphMode = false;
+
+    // TTS control variables
+    private boolean isTTSReady = false;
+    private boolean isPendingTTSSpeak = false;
+    private String pendingTTSText = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +87,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         initViews();
         applySettings();
         setupManagers();
+        setupTTS();
         loadBook();
         setupClickListeners();
         setupGestureDetector();
@@ -84,6 +101,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnNext = findViewById(R.id.btnNext);
         btnBack = findViewById(R.id.btnBack);
         btnToggleMode = findViewById(R.id.btnToggleMode);
+        btnTTSSettings = findViewById(R.id.btnTTSSettings);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
         progressCircle = findViewById(R.id.progressCircle);
@@ -95,6 +113,54 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         cacheManager = new BookCacheManager(this);
         bufferManager = new BufferManager(cacheManager);
         executor = Executors.newSingleThreadExecutor();
+    }
+
+    private void setupTTS() {
+        ttsManager = new TTSManager(this, new TTSManager.TTSListener() {
+            @Override
+            public void onTTSReady() {
+                runOnUiThread(() -> {
+                    isTTSReady = true;
+                    // Apply current settings
+                    ttsManager.setEnabled(settingsManager.isTTSEnabled());
+                    ttsManager.setSpeechRate(settingsManager.getTTSSpeechRate());
+
+                    // Update button icon based on TTS state
+                    updateTTSButtonIcon();
+
+                    // If there was pending text to speak, speak it now
+                    if (isPendingTTSSpeak && pendingTTSText != null) {
+                        speakCurrentText();
+                        isPendingTTSSpeak = false;
+                        pendingTTSText = null;
+                    }
+                });
+            }
+
+            @Override
+            public void onTTSFinished() {
+                runOnUiThread(() -> {
+                    // If auto-scroll is enabled, move to next sentence/paragraph
+                    if (settingsManager.isTTSAutoScrollEnabled() &&
+                        settingsManager.isTTSEnabled()) {
+                        // Different delays based on context
+                        int delay = getAutoScrollDelay();
+                        scrollView.postDelayed(() -> {
+                            nextSentence();
+                        }, delay);
+                    }
+                });
+            }
+
+            @Override
+            public void onTTSError() {
+                runOnUiThread(() -> {
+                    // Show brief error message
+                    Toast.makeText(SentenceReaderActivity.this,
+                                 "Error de síntesis de voz", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private void loadBook() {
@@ -137,6 +203,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnNext.setOnClickListener(v -> nextSentence());
         btnBack.setOnClickListener(v -> finish());
         btnToggleMode.setOnClickListener(v -> toggleReadingMode());
+        btnTTSSettings.setOnClickListener(v -> showTTSSettingsDialog());
     }
 
     private void setupGestureDetector() {
@@ -211,18 +278,27 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void previousSentence() {
         if (isLoading) return;
 
+        // Stop current TTS
+        if (ttsManager != null) {
+            ttsManager.stop();
+        }
+
         if (isFullParagraphMode) {
             // In paragraph mode, navigate to previous paragraph
             if (bufferManager.moveToPreviousParagraph()) {
                 updateDisplay();
                 resetScrollPosition();
                 saveProgressAsync();
+                // Speak new content if TTS is enabled
+                speakCurrentText();
             }
         } else {
             // In sentence mode, navigate to previous sentence
             if (bufferManager.moveToPreviousSentence()) {
                 updateDisplay();
                 saveProgressAsync();
+                // Speak new content if TTS is enabled
+                speakCurrentText();
             }
         }
     }
@@ -230,12 +306,19 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void nextSentence() {
         if (currentBook == null || isLoading) return;
 
+        // Stop current TTS
+        if (ttsManager != null) {
+            ttsManager.stop();
+        }
+
         if (isFullParagraphMode) {
             // In paragraph mode, navigate to next paragraph
             if (bufferManager.moveToNextParagraph()) {
                 updateDisplay();
                 resetScrollPosition();
                 saveProgressAsync();
+                // Speak new content if TTS is enabled
+                speakCurrentText();
             } else {
                 showCompletionDialog();
             }
@@ -244,6 +327,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             if (bufferManager.moveToNextSentence()) {
                 updateDisplay();
                 saveProgressAsync();
+                // Speak new content if TTS is enabled
+                speakCurrentText();
             } else {
                 showCompletionDialog();
             }
@@ -556,11 +641,19 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         // Switch the mode
         isFullParagraphMode = !isFullParagraphMode;
 
+        // Stop current TTS
+        if (ttsManager != null) {
+            ttsManager.stop();
+        }
+
         // Update display immediately - no reloading needed
         updateDisplay();
 
         // Save progress
         saveProgressAsync();
+
+        // Speak new content if TTS is enabled
+        speakCurrentText();
     }
 
     private void setSentenceFromCharPosition(int charPosition) {
@@ -652,6 +745,11 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
             // Save progress after buffer loads to persist the mode switch
             saveProgressAsync();
+
+            // Auto-start TTS if enabled
+            if (settingsManager.isTTSEnabled()) {
+                speakCurrentText();
+            }
         });
     }
 
@@ -679,6 +777,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     @Override
     protected void onPause() {
         super.onPause();
+        // Stop TTS when activity is paused
+        if (ttsManager != null) {
+            ttsManager.stop();
+        }
         saveProgressAsync();
     }
 
@@ -714,11 +816,222 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         super.onResume();
         // Reapply settings when returning from settings screen
         applySettings();
+        // Update TTS button icon
+        updateTTSButtonIcon();
+    }
+
+    private void speakCurrentText() {
+        if (ttsManager == null || !settingsManager.isTTSEnabled()) {
+            return;
+        }
+
+        String textToSpeak;
+        if (isFullParagraphMode) {
+            textToSpeak = bufferManager.getCurrentParagraphText();
+        } else {
+            textToSpeak = bufferManager.getCurrentSentence();
+        }
+
+        if (textToSpeak == null || textToSpeak.trim().isEmpty() ||
+            textToSpeak.startsWith("Error:") || textToSpeak.equals("Cargando...")) {
+            return;
+        }
+
+        if (isTTSReady) {
+            ttsManager.speakText(textToSpeak);
+        } else {
+            // TTS not ready yet, store for later
+            isPendingTTSSpeak = true;
+            pendingTTSText = textToSpeak;
+        }
+    }
+
+    // Temporarily disabled language configuration to avoid TTS errors
+    /*
+    private void setupTTSLanguageForCurrentText(String text) {
+        // Language configuration disabled for stability
+    }
+    */
+
+    private void showTTSSettingsDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_tts_settings, null);
+
+        SwitchCompat switchTTSEnabled = dialogView.findViewById(R.id.switchTTSEnabled);
+        SwitchCompat switchAutoScroll = dialogView.findViewById(R.id.switchAutoScroll);
+        SeekBar seekBarSpeed = dialogView.findViewById(R.id.seekBarSpeed);
+        TextView tvSpeedValue = dialogView.findViewById(R.id.tvSpeedValue);
+        Spinner spinnerLanguage = dialogView.findViewById(R.id.spinnerLanguage);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+        MaterialButton btnSave = dialogView.findViewById(R.id.btnSave);
+
+        // Hide language spinner for now to avoid issues
+        spinnerLanguage.setVisibility(View.GONE);
+
+        // Set current values
+        switchTTSEnabled.setChecked(settingsManager.isTTSEnabled());
+        switchAutoScroll.setChecked(settingsManager.isTTSAutoScrollEnabled());
+
+        // Configure speed control (range 0.5 to 2.0)
+        float currentSpeed = settingsManager.getTTSSpeechRate();
+        int seekBarProgress = (int) ((currentSpeed - 0.5f) * 20); // Convert 0.5-2.0 to 0-30
+        seekBarSpeed.setProgress(seekBarProgress);
+        updateSpeedText(tvSpeedValue, currentSpeed);
+
+        // Speed change listener
+        seekBarSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    float speed = 0.5f + (progress / 20.0f); // Convert 0-30 to 0.5-2.0
+                    updateSpeedText(tvSpeedValue, speed);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            // Save settings
+            boolean ttsEnabled = switchTTSEnabled.isChecked();
+            boolean autoScrollEnabled = switchAutoScroll.isChecked();
+            float speed = 0.5f + (seekBarSpeed.getProgress() / 20.0f); // Convert 0-30 to 0.5-2.0
+
+            settingsManager.setTTSEnabled(ttsEnabled);
+            settingsManager.setTTSAutoScrollEnabled(autoScrollEnabled);
+            settingsManager.setTTSSpeechRate(speed);
+
+            // Apply TTS settings immediately
+            if (ttsManager != null) {
+                ttsManager.setEnabled(ttsEnabled);
+                ttsManager.setSpeechRate(speed);
+                if (!ttsEnabled) {
+                    ttsManager.stop(); // Stop if disabled
+                } else {
+                    // If enabled, speak current text
+                    speakCurrentText();
+                }
+            }
+
+            // Update button icon
+            updateTTSButtonIcon();
+
+            dialog.dismiss();
+
+            // Show feedback
+            String message = ttsEnabled ?
+                    getString(R.string.tts_enabled_message) :
+                    getString(R.string.tts_disabled_message);
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        });
+
+        dialog.show();
+    }
+
+    private void updateSpeedText(TextView tvSpeedValue, float speed) {
+        String speedText;
+        if (speed < 0.7f) {
+            speedText = getString(R.string.slow);
+        } else if (speed > 1.3f) {
+            speedText = getString(R.string.fast);
+        } else {
+            speedText = getString(R.string.normal_speed);
+        }
+        speedText += " (" + String.format("%.1fx", speed) + ")";
+        tvSpeedValue.setText(speedText);
+    }
+
+
+    private String getCurrentDisplayText() {
+        if (isFullParagraphMode) {
+            return bufferManager.getCurrentParagraphText();
+        } else {
+            return bufferManager.getCurrentSentence();
+        }
+    }
+
+    // Temporarily disabled language spinner to avoid TTS errors
+    /*
+    private void setupLanguageSpinner(Spinner spinnerLanguage) {
+        // Language spinner disabled for stability
+    }
+    */
+
+
+    // Temporarily disabled language loading to avoid TTS errors
+    /*
+    private void loadSavedLanguage() {
+        // Language loading disabled for stability
+    }
+    */
+
+    // Temporarily disabled preloading to simplify TTS
+    /*
+    private void preloadNextText() {
+        // Preloading disabled for stability
+    }
+    */
+
+    private void updateTTSButtonIcon() {
+        if (btnTTSSettings != null) {
+            boolean ttsEnabled = settingsManager.isTTSEnabled();
+            if (ttsEnabled) {
+                btnTTSSettings.setImageResource(R.drawable.ic_volume_up);
+                btnTTSSettings.setAlpha(1.0f); // Completamente visible
+            } else {
+                btnTTSSettings.setImageResource(R.drawable.ic_volume_off);
+                btnTTSSettings.setAlpha(0.6f); // Ligeramente transparente
+            }
+        }
+    }
+
+    private int getAutoScrollDelay() {
+        if (isFullParagraphMode) {
+            // En modo párrafo, siempre hay cambio de párrafo
+            return 1000; // 1 segundo para cambio de párrafo
+        } else {
+            // En modo bite-size, verificar si la próxima oración está en otro párrafo
+            if (willNextSentenceChangeParagraph()) {
+                return 800; // 0.8 segundos para fin de párrafo en modo bite-size
+            } else {
+                return 300; // 0.3 segundos para oraciones dentro del mismo párrafo
+            }
+        }
+    }
+
+    private boolean willNextSentenceChangeParagraph() {
+        try {
+            int currentParagraph = bufferManager.getCurrentParagraphIndex();
+            int currentSentence = bufferManager.getCurrentSentenceIndex();
+            int paragraphSentenceCount = bufferManager.getCurrentParagraphSentenceCount();
+
+            // Si estamos en la última oración del párrafo actual
+            if (currentSentence >= paragraphSentenceCount - 1) {
+                // Y no estamos en el último párrafo del libro
+                return currentParagraph < currentBook.getTotalSentences() - 1;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (ttsManager != null) {
+            ttsManager.destroy();
+        }
         if (bufferManager != null) {
             bufferManager.shutdown();
         }

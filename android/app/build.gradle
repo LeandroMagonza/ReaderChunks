@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'com.github.triplet.play'
 }
 
 // Load keystore properties from external file (not committed to git)
@@ -17,8 +18,8 @@ android {
         applicationId "com.leandromg.readerchunks"
         minSdk 21
         targetSdk 35
-        versionCode 2
-        versionName "1.1"
+        versionCode 3
+        versionName "1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,6 +48,27 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+// Google Play Publisher configuration
+play {
+    // Service account credentials file (create this from Google Cloud Console)
+    serviceAccountCredentials = file("../play-store-credentials.json")
+
+    // Track for release (internal, alpha, beta, production)
+    track = "internal"
+
+    // Release status (completed, draft, halted, inProgress)
+    releaseStatus = com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED
+
+    // Default to all users (can specify userFraction for staged rollouts)
+    userFraction = 1.0D
+
+    // Update priority (0-5, where 5 is highest)
+    updatePriority = 0
+
+    // Automatically resolve version conflicts
+    resolutionStrategy = com.github.triplet.gradle.androidpublisher.ResolutionStrategy.AUTO
 }
 
 dependencies {

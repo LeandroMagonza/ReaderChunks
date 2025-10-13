@@ -26,7 +26,12 @@
       "Bash(copy:*)",
       "Bash(cp:*)",
       "Bash(keytool:*)",
-      "Bash(gradlew.bat bundleRelease:*)"
+      "Bash(gradlew.bat bundleRelease:*)",
+      "Bash(.gradlew assembleDebug)",
+      "Bash(where convert)",
+      "Bash(where magick)",
+      "Bash(python:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
