@@ -129,35 +129,47 @@
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="8dp" />
 
+            <!-- TTS Speed Controls -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:gravity="center"
                 android:layout_marginBottom="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.5x"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
-
-                <SeekBar
-                    android:id="@+id/seekBarSpeed"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginHorizontal="12dp"
-                    android:max="30"
-                    android:progress="15" />
+                <ImageButton
+                    android:id="@+id/btnTTSSpeedDown"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_down"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Decrease TTS speed"
+                    android:scaleType="fitCenter"
+                    android:padding="8dp" />
 
                 <TextView
+                    android:id="@+id/tvTTSSpeed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2.0x"
-                    android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
+                    android:layout_marginHorizontal="16dp"
+                    android:text="1.0x"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:minWidth="80dp"
+                    android:gravity="center"
+                    android:background="@color/surface_variant"
+                    android:padding="12dp" />
+
+                <ImageButton
+                    android:id="@+id/btnTTSSpeedUp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_up"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Increase TTS speed"
+                    android:scaleType="fitCenter"
+                    android:padding="8dp" />
 
             </LinearLayout>
 
@@ -166,6 +178,80 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Normal (1.0x)"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:gravity="center"
+                android:background="@color/surface_variant"
+                android:padding="6dp"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Voice Pitch Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tono de voz"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ajusta qué tan grave o agudo suena la voz"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp" />
+
+            <!-- TTS Pitch Controls -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <ImageButton
+                    android:id="@+id/btnTTSPitchDown"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_down"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Decrease TTS pitch"
+                    android:scaleType="fitCenter"
+                    android:padding="8dp" />
+
+                <TextView
+                    android:id="@+id/tvTTSPitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="1.0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:minWidth="80dp"
+                    android:gravity="center"
+                    android:background="@color/surface_variant"
+                    android:padding="12dp" />
+
+                <ImageButton
+                    android:id="@+id/btnTTSPitchUp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_up"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Increase TTS pitch"
+                    android:scaleType="fitCenter"
+                    android:padding="8dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvPitchValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Normal (1.0)"
                 android:textSize="12sp"
                 android:textColor="@color/text_primary"
                 android:gravity="center"

@@ -352,8 +352,9 @@ Libro de 10,000 oraciones:
   - [ ] Feedback háptico en navegación
 - [ ] **Pantalla de configuración**:
   - [ ] Selección de idioma
-  - [ ] Métodos de navegación (botones/swipe/tocar bordes)
-  - [ ] Configuración de fuentes y márgenes
+  - [ ] Métodos de navegación (botones/swipe lateral o vertical/tocar bordes)
+  - [ ] Configuración de fuentes 
+  - [ ] Configuración de márgenes
 
 ### 🎛️ Configuración Avanzada
 - [ ] **Parámetros de lectura**:

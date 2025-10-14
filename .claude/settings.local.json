@@ -31,7 +31,8 @@
       "Bash(where convert)",
       "Bash(where magick)",
       "Bash(python:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(\"S:\\ReaderChunks\\android\\gradlew.bat\" assembleDebug)"
     ],
     "deny": [],
     "ask": []

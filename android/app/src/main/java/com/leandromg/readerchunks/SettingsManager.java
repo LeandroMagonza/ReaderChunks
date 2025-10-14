@@ -18,6 +18,7 @@ public class SettingsManager {
     private static final String KEY_TTS_ENABLED = "tts_enabled";
     private static final String KEY_TTS_AUTO_SCROLL = "tts_auto_scroll";
     private static final String KEY_TTS_SPEECH_RATE = "tts_speech_rate";
+    private static final String KEY_TTS_PITCH = "tts_pitch";
     private static final String KEY_TTS_VOICE_NAME = "tts_voice_name";
     private static final String KEY_TTS_LANGUAGE_PREFIX = "tts_language_"; // + bookId
     private static final String KEY_SENTENCE_LENGTH_MULTIPLIER = "sentence_length_multiplier";
@@ -31,6 +32,7 @@ public class SettingsManager {
     private static final boolean DEFAULT_TTS_ENABLED = false;
     private static final boolean DEFAULT_TTS_AUTO_SCROLL = false;
     private static final float DEFAULT_TTS_SPEECH_RATE = 1.0f; // Normal speed
+    private static final float DEFAULT_TTS_PITCH = 1.0f; // Normal pitch
     private static final String DEFAULT_TTS_VOICE_NAME = ""; // Empty = system default
     private static final float DEFAULT_SENTENCE_LENGTH_MULTIPLIER = 1.0f; // 100%
 
@@ -194,9 +196,19 @@ public class SettingsManager {
     }
 
     public void setTTSSpeechRate(float rate) {
-        // Clamp between 0.5 and 2.0
+        // Clamp between 0.5 and 2.0 (Google TTS maximum effective speed)
         float clampedRate = Math.max(0.5f, Math.min(2.0f, rate));
         prefs.edit().putFloat(KEY_TTS_SPEECH_RATE, clampedRate).apply();
+    }
+
+    public float getTTSPitch() {
+        return prefs.getFloat(KEY_TTS_PITCH, DEFAULT_TTS_PITCH);
+    }
+
+    public void setTTSPitch(float pitch) {
+        // Clamp between 0.5 and 2.0 (Android TTS effective range)
+        float clampedPitch = Math.max(0.5f, Math.min(2.0f, pitch));
+        prefs.edit().putFloat(KEY_TTS_PITCH, clampedPitch).apply();
     }
 
     public String getTTSVoiceName() {

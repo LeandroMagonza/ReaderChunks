@@ -472,8 +472,14 @@ public class SettingsDialogManager {
         ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
         SwitchCompat switchTTSEnabled = dialogView.findViewById(R.id.switchTTSEnabled);
         SwitchCompat switchAutoScroll = dialogView.findViewById(R.id.switchAutoScroll);
-        SeekBar seekBarSpeed = dialogView.findViewById(R.id.seekBarSpeed);
+        ImageButton btnTTSSpeedDown = dialogView.findViewById(R.id.btnTTSSpeedDown);
+        ImageButton btnTTSSpeedUp = dialogView.findViewById(R.id.btnTTSSpeedUp);
+        TextView tvTTSSpeed = dialogView.findViewById(R.id.tvTTSSpeed);
         TextView tvSpeedValue = dialogView.findViewById(R.id.tvSpeedValue);
+        ImageButton btnTTSPitchDown = dialogView.findViewById(R.id.btnTTSPitchDown);
+        ImageButton btnTTSPitchUp = dialogView.findViewById(R.id.btnTTSPitchUp);
+        TextView tvTTSPitch = dialogView.findViewById(R.id.tvTTSPitch);
+        TextView tvPitchValue = dialogView.findViewById(R.id.tvPitchValue);
 
         btnBack.setOnClickListener(v -> showCategoryList());
 
@@ -482,9 +488,10 @@ public class SettingsDialogManager {
         switchAutoScroll.setChecked(settingsManager.isTTSAutoScrollEnabled());
 
         float currentSpeed = settingsManager.getTTSSpeechRate();
-        int seekBarProgress = (int) ((currentSpeed - 0.5f) * 20);
-        seekBarSpeed.setProgress(seekBarProgress);
-        updateSpeedText(tvSpeedValue, currentSpeed);
+        updateTTSSpeedDisplay(tvTTSSpeed, tvSpeedValue, currentSpeed);
+
+        float currentPitch = settingsManager.getTTSPitch();
+        updateTTSPitchDisplay(tvTTSPitch, tvPitchValue, currentPitch);
 
         // Set up listeners
         switchTTSEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -501,23 +508,44 @@ public class SettingsDialogManager {
             hasActualChanges = true; // Mark that an actual change was made
         });
 
-        seekBarSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    float speed = 0.5f + (progress / 20.0f);
-                    settingsManager.setTTSSpeechRate(speed);
-                    updateSpeedText(tvSpeedValue, speed);
-                    hasActualChanges = true; // Mark that an actual change was made
-                    // Note: Changes will be applied when dialog closes
-                }
+        btnTTSSpeedDown.setOnClickListener(v -> {
+            float speed = settingsManager.getTTSSpeechRate();
+            if (speed > 0.5f) {
+                float newSpeed = Math.max(0.5f, speed - 0.1f);
+                settingsManager.setTTSSpeechRate(newSpeed);
+                updateTTSSpeedDisplay(tvTTSSpeed, tvSpeedValue, newSpeed);
+                hasActualChanges = true;
             }
+        });
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+        btnTTSSpeedUp.setOnClickListener(v -> {
+            float speed = settingsManager.getTTSSpeechRate();
+            if (speed < 2.0f) {
+                float newSpeed = Math.min(2.0f, speed + 0.1f);
+                settingsManager.setTTSSpeechRate(newSpeed);
+                updateTTSSpeedDisplay(tvTTSSpeed, tvSpeedValue, newSpeed);
+                hasActualChanges = true;
+            }
+        });
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+        btnTTSPitchDown.setOnClickListener(v -> {
+            float pitch = settingsManager.getTTSPitch();
+            if (pitch > 0.5f) {
+                float newPitch = Math.max(0.5f, pitch - 0.1f);
+                settingsManager.setTTSPitch(newPitch);
+                updateTTSPitchDisplay(tvTTSPitch, tvPitchValue, newPitch);
+                hasActualChanges = true;
+            }
+        });
+
+        btnTTSPitchUp.setOnClickListener(v -> {
+            float pitch = settingsManager.getTTSPitch();
+            if (pitch < 2.0f) {
+                float newPitch = Math.min(2.0f, pitch + 0.1f);
+                settingsManager.setTTSPitch(newPitch);
+                updateTTSPitchDisplay(tvTTSPitch, tvPitchValue, newPitch);
+                hasActualChanges = true;
+            }
         });
 
         showDialog(dialogView, context.getString(R.string.voice_settings));
@@ -619,6 +647,40 @@ public class SettingsDialogManager {
         // Ensure callback is executed when closing via close button
         isNavigating = false;
         dismiss();
+    }
+
+    private void updateTTSSpeedDisplay(TextView tvTTSSpeed, TextView tvSpeedValue, float speed) {
+        // Update the main speed display
+        tvTTSSpeed.setText(String.format("%.1fx", speed));
+
+        // Update the descriptive text
+        String speedText;
+        if (speed < 0.7f) {
+            speedText = context.getString(R.string.slow);
+        } else if (speed > 1.3f) {
+            speedText = context.getString(R.string.fast);
+        } else {
+            speedText = context.getString(R.string.normal_speed);
+        }
+        speedText += " (" + String.format("%.1fx", speed) + ")";
+        tvSpeedValue.setText(speedText);
+    }
+
+    private void updateTTSPitchDisplay(TextView tvTTSPitch, TextView tvPitchValue, float pitch) {
+        // Update the main pitch display
+        tvTTSPitch.setText(String.format("%.1f", pitch));
+
+        // Update the descriptive text
+        String pitchText;
+        if (pitch < 0.8f) {
+            pitchText = "Grave";
+        } else if (pitch > 1.2f) {
+            pitchText = "Agudo";
+        } else {
+            pitchText = "Normal";
+        }
+        pitchText += " (" + String.format("%.1f", pitch) + ")";
+        tvPitchValue.setText(pitchText);
     }
 
     // Data classes

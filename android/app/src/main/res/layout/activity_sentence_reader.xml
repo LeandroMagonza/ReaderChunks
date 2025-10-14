@@ -105,10 +105,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical|end"
+        android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:visibility="gone">
+
+        <!-- Auto-scroll speed controls (now on the left) -->
+        <LinearLayout
+            android:id="@+id/scrollSpeedContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="16dp"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/btnScrollSpeedDown"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_arrow_down"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Decrease scroll speed"
+                android:scaleType="fitCenter"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvScrollSpeed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:text="1.0"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <ImageButton
+                android:id="@+id/btnScrollSpeedUp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_arrow_up"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Increase scroll speed"
+                android:scaleType="fitCenter"
+                android:padding="4dp" />
+
+        </LinearLayout>
+
+        <!-- Spacer to push play/stop button to the right -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <ImageButton
             android:id="@+id/btnTTSPlayStop"

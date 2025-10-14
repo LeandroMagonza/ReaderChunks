@@ -2,6 +2,7 @@ package com.leandromg.readerchunks;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -43,6 +44,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private ImageButton btnFontSettings;
     private ImageButton btnTTSPlayStop;
     private View ttsControlBar;
+    private View scrollSpeedContainer;
+    private ImageButton btnScrollSpeedDown;
+    private ImageButton btnScrollSpeedUp;
+    private TextView tvScrollSpeed;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
     private ProgressBar progressCircle;
@@ -78,6 +83,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     // TTS sentence queue for paragraph mode
     private List<String> ttsSentenceQueue = new ArrayList<>();
     private int currentTTSSentenceIndex = 0;
+
+    // Auto-scroll control variables
+    private float scrollSpeed = 1.0f; // Speed levels 0.5-3.0 with 0.1 increments
+    private Handler scrollHandler = new Handler();
+    private Runnable scrollRunnable;
+    private boolean isAutoScrolling = false;
+    private boolean isScrollEnabled = true; // Can be toggled by clicking speed number
+    private boolean isManualScrollActive = false; // For manual scroll activation
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +128,13 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSPlayStop = findViewById(R.id.btnTTSPlayStop);
         ttsControlBar = findViewById(R.id.ttsControlBar);
+        scrollSpeedContainer = findViewById(R.id.scrollSpeedContainer);
+        btnScrollSpeedDown = findViewById(R.id.btnScrollSpeedDown);
+        btnScrollSpeedUp = findViewById(R.id.btnScrollSpeedUp);
+        tvScrollSpeed = findViewById(R.id.tvScrollSpeed);
+
+        // Initialize scroll speed display
+        updateScrollSpeedDisplay();
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
         progressCircle = findViewById(R.id.progressCircle);
@@ -137,6 +157,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                     // Apply current settings
                     ttsManager.setEnabled(settingsManager.isTTSEnabled());
                     ttsManager.setSpeechRate(settingsManager.getTTSSpeechRate());
+                    ttsManager.setPitch(settingsManager.getTTSPitch());
 
                     // Update button icon based on TTS state
                     updateTTSButtonIcon();
@@ -168,6 +189,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                                 // Finished all sentences in paragraph - clear queue and proceed to next paragraph
                                 ttsSentenceQueue.clear();
                                 currentTTSSentenceIndex = 0;
+                                stopAutoScroll();
                             }
                         }
 
@@ -255,6 +277,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             settingsDialogManager.show();
         });
         btnTTSPlayStop.setOnClickListener(v -> toggleTTSPlayStop());
+        tvScrollSpeed.setOnClickListener(v -> toggleScrollEnabled());
+        btnScrollSpeedDown.setOnClickListener(v -> decreaseScrollSpeed());
+        btnScrollSpeedUp.setOnClickListener(v -> increaseScrollSpeed());
     }
 
     private void setupGestureDetector() {
@@ -348,6 +373,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // In sentence mode, navigate to previous sentence
             if (bufferManager.moveToPreviousSentence()) {
                 updateDisplay();
+                resetScrollPosition();
                 saveProgressAsync();
                 // Speak new content if TTS is enabled
                 speakCurrentText();
@@ -379,6 +405,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // In sentence mode, navigate to next sentence
             if (bufferManager.moveToNextSentence()) {
                 updateDisplay();
+                resetScrollPosition();
                 saveProgressAsync();
                 // Speak new content if TTS is enabled
                 speakCurrentText();
@@ -661,6 +688,15 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             btnNext.setText(getString(R.string.next));
         }
 
+        // Update scroll controls visibility based on content height
+        // Use a post to ensure the text view has been laid out
+        tvSentence.post(() -> {
+            updateScrollControlsVisibility();
+            // Auto-start scroll if enabled and content needs scrolling
+            if (isScrollEnabled && hasVerticalScroll() && !isAutoScrolling) {
+                startManualScroll();
+            }
+        });
     }
 
     private void toggleReadingMode(boolean newIsFullParagraphMode) {
@@ -721,6 +757,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         // Save progress
         saveProgressAsync();
+
+        // Update TTS button and scroll controls visibility
+        updateTTSButtonIcon();
 
         // Speak new content if TTS is enabled
         speakCurrentText();
@@ -881,6 +920,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         if (ttsManager != null && isTTSReady) {
             ttsManager.setEnabled(settingsManager.isTTSEnabled());
             ttsManager.setSpeechRate(settingsManager.getTTSSpeechRate());
+            ttsManager.setPitch(settingsManager.getTTSPitch());
             ttsManager.setLanguage(languageManager.getCurrentLanguage());
         }
 
@@ -1010,6 +1050,11 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             return;
         }
 
+        // Start auto-scroll when beginning first sentence of paragraph
+        if (currentTTSSentenceIndex == 0) {
+            startAutoScroll();
+        }
+
         String sentenceToSpeak = ttsSentenceQueue.get(currentTTSSentenceIndex);
         if (isTTSReady) {
             ttsManager.speakText(sentenceToSpeak);
@@ -1023,8 +1068,160 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private void clearTTSQueue() {
         ttsSentenceQueue.clear();
         currentTTSSentenceIndex = 0;
+        stopAutoScroll();
     }
 
+    // Auto-scroll functionality for TTS paragraph mode
+    private void increaseScrollSpeed() {
+        if (scrollSpeed < 3.0f) {
+            scrollSpeed += 0.1f;
+            isScrollEnabled = true; // Enable scroll when changing speed
+            updateScrollSpeedDisplay();
+
+            // Start manual scroll if not already scrolling
+            if (!isAutoScrolling) {
+                startManualScroll();
+            } else {
+                // If already scrolling, restart with new speed
+                stopAutoScroll();
+                if (isManualScrollActive) {
+                    startManualScroll();
+                } else {
+                    startAutoScroll();
+                }
+            }
+        }
+    }
+
+    private void decreaseScrollSpeed() {
+        if (scrollSpeed > 0.5f) {
+            scrollSpeed -= 0.1f;
+            isScrollEnabled = true; // Enable scroll when changing speed
+            updateScrollSpeedDisplay();
+
+            // Start manual scroll if not already scrolling
+            if (!isAutoScrolling) {
+                startManualScroll();
+            } else {
+                // If already scrolling, restart with new speed
+                stopAutoScroll();
+                if (isManualScrollActive) {
+                    startManualScroll();
+                } else {
+                    startAutoScroll();
+                }
+            }
+        }
+    }
+
+    private void toggleScrollEnabled() {
+        isScrollEnabled = !isScrollEnabled;
+        updateScrollSpeedDisplay();
+
+        if (!isScrollEnabled && isAutoScrolling) {
+            stopAutoScroll();
+        } else if (isScrollEnabled && !isAutoScrolling && hasVerticalScroll()) {
+            // Start manual scroll when re-enabling
+            startManualScroll();
+        }
+    }
+
+    private void startManualScroll() {
+        if (!hasVerticalScroll()) {
+            return;
+        }
+
+        isManualScrollActive = true;
+        startAutoScroll(); // Reuse the same scroll logic
+    }
+
+    private void stopManualScroll() {
+        isManualScrollActive = false;
+        stopAutoScroll();
+    }
+
+    private void startAutoScroll() {
+        // Don't start auto-scroll if already scrolling or no vertical scroll available
+        if (isAutoScrolling || !hasVerticalScroll()) {
+            return;
+        }
+
+        isAutoScrolling = true;
+        scrollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isAutoScrolling && scrollView != null) {
+                    // Only check isScrollEnabled for manual scroll, not TTS auto-scroll
+                    boolean allowScroll = isManualScrollActive ? isScrollEnabled : true;
+
+                    if (allowScroll) {
+                        // Calculate smooth scroll amount (1-3 pixels per frame for smoothness)
+                        int scrollAmount = Math.max(1, Math.round(scrollSpeed * 2));
+                        scrollView.scrollBy(0, scrollAmount);
+                    }
+
+                    // Fixed 16ms delay (60 FPS) for smooth scrolling
+                    scrollHandler.postDelayed(this, 16);
+                }
+            }
+        };
+        scrollHandler.postDelayed(scrollRunnable, 100); // Initial delay
+    }
+
+    private void stopAutoScroll() {
+        isAutoScrolling = false;
+        if (scrollHandler != null && scrollRunnable != null) {
+            scrollHandler.removeCallbacks(scrollRunnable);
+        }
+    }
+
+    private boolean hasVerticalScroll() {
+        if (scrollView == null || tvSentence == null) {
+            return false;
+        }
+
+        // Check if the content height is greater than the visible area
+        int contentHeight = tvSentence.getHeight();
+        int scrollViewHeight = scrollView.getHeight();
+
+        // Account for padding
+        int paddingTop = scrollView.getPaddingTop();
+        int paddingBottom = scrollView.getPaddingBottom();
+        int availableHeight = scrollViewHeight - paddingTop - paddingBottom;
+
+        return contentHeight > availableHeight;
+    }
+
+    private void updateScrollSpeedDisplay() {
+        if (tvScrollSpeed != null) {
+            if (isScrollEnabled) {
+                tvScrollSpeed.setText(String.format("%.1f", scrollSpeed));
+                tvScrollSpeed.setAlpha(1.0f); // Normal opacity
+            } else {
+                tvScrollSpeed.setText("OFF");
+                tvScrollSpeed.setAlpha(0.6f); // Dimmed when disabled
+            }
+        }
+    }
+
+    private void updateScrollControlsVisibility() {
+        if (scrollSpeedContainer != null) {
+            // Show controls when there's vertical scroll content, regardless of TTS/mode
+            boolean showScrollControls = hasVerticalScroll();
+            scrollSpeedContainer.setVisibility(showScrollControls ? View.VISIBLE : View.GONE);
+
+            // If no scroll is available and auto scroll was active, stop it
+            if (!showScrollControls && isAutoScrolling) {
+                stopAutoScroll();
+            }
+
+            // Also show TTS control bar if scroll controls are visible
+            if (ttsControlBar != null) {
+                boolean showTTSBar = settingsManager.isTTSEnabled() || showScrollControls;
+                ttsControlBar.setVisibility(showTTSBar ? View.VISIBLE : View.GONE);
+            }
+        }
+    }
 
     // Temporarily disabled language configuration to avoid TTS errors
     /*
@@ -1041,7 +1238,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         /*
         SwitchCompat switchTTSEnabled = dialogView.findViewById(R.id.switchTTSEnabled);
         SwitchCompat switchAutoScroll = dialogView.findViewById(R.id.switchAutoScroll);
-        SeekBar seekBarSpeed = dialogView.findViewById(R.id.seekBarSpeed);
+        ImageButton btnTTSSpeedDown = dialogView.findViewById(R.id.btnTTSSpeedDown);
+        ImageButton btnTTSSpeedUp = dialogView.findViewById(R.id.btnTTSSpeedUp);
+        TextView tvTTSSpeed = dialogView.findViewById(R.id.tvTTSSpeed);
         TextView tvSpeedValue = dialogView.findViewById(R.id.tvSpeedValue);
         Spinner spinnerLanguage = dialogView.findViewById(R.id.spinnerLanguage);
         MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
@@ -1053,9 +1252,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         switchTTSEnabled.setChecked(settingsManager.isTTSEnabled());
         switchAutoScroll.setChecked(settingsManager.isTTSAutoScrollEnabled());
 
-        // Configure speed control (range 0.5 to 2.0)
+        // Configure speed control (range 0.5 to 4.0)
         float currentSpeed = settingsManager.getTTSSpeechRate();
-        int seekBarProgress = (int) ((currentSpeed - 0.5f) * 20); // Convert 0.5-2.0 to 0-30
+        int seekBarProgress = (int) ((currentSpeed - 0.5f) / 0.1f); // Convert 0.5-4.0 to 0-35
         seekBarSpeed.setProgress(seekBarProgress);
         updateSpeedText(tvSpeedValue, currentSpeed);
 
@@ -1064,7 +1263,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    float speed = 0.5f + (progress / 20.0f); // Convert 0-30 to 0.5-2.0
+                    float speed = 0.5f + (progress * 0.1f); // Convert 0-35 to 0.5-4.0
                     updateSpeedText(tvSpeedValue, speed);
                 }
             }
@@ -1087,7 +1286,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // Save settings
             boolean ttsEnabled = switchTTSEnabled.isChecked();
             boolean autoScrollEnabled = switchAutoScroll.isChecked();
-            float speed = 0.5f + (seekBarSpeed.getProgress() / 20.0f); // Convert 0-30 to 0.5-2.0
+            float speed = 0.5f + (seekBarSpeed.getProgress() * 0.1f); // Convert 0-35 to 0.5-4.0
 
             settingsManager.setTTSEnabled(ttsEnabled);
             settingsManager.setTTSAutoScrollEnabled(autoScrollEnabled);
@@ -1097,6 +1296,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             if (ttsManager != null) {
                 ttsManager.setEnabled(ttsEnabled);
                 ttsManager.setSpeechRate(speed);
+                ttsManager.setPitch(settingsManager.getTTSPitch());
                 if (!ttsEnabled) {
                     ttsManager.stop(); // Stop if disabled
                 } else {
@@ -1125,6 +1325,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         String speedText;
         if (speed < 0.7f) {
             speedText = getString(R.string.slow);
+        } else if (speed > 2.5f) {
+            speedText = "Muy rápido";
         } else if (speed > 1.3f) {
             speedText = getString(R.string.fast);
         } else {
@@ -1176,6 +1378,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 updateTTSPlayStopButton();
             }
         }
+
+        // Update auto-scroll controls visibility (when vertical scroll is available)
+        updateScrollControlsVisibility();
     }
 
     private void updateTTSPlayStopButton() {

@@ -66,8 +66,9 @@ public class TTSManager implements TextToSpeech.OnInitListener {
                     Log.d(TAG, "Using device language: " + deviceLocale.toString());
                 }
 
-                // Set default speech rate
+                // Set default speech rate and pitch
                 tts.setSpeechRate(1.0f);
+                tts.setPitch(1.0f);
 
                 // Set up utterance progress listener
                 tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
@@ -221,6 +222,19 @@ public class TTSManager implements TextToSpeech.OnInitListener {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error setting speech rate: " + e.getMessage());
+        }
+    }
+
+    public void setPitch(float pitch) {
+        try {
+            if (tts != null && isInitialized) {
+                // Clamp pitch between 0.5 and 2.0
+                float clampedPitch = Math.max(0.5f, Math.min(2.0f, pitch));
+                tts.setPitch(clampedPitch);
+                Log.d(TAG, "Speech pitch set to: " + clampedPitch);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting speech pitch: " + e.getMessage());
         }
     }
 
