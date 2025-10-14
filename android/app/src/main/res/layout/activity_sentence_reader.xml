@@ -7,59 +7,31 @@
     android:background="@color/background">
 
     <!-- Header with back button and progress -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:padding="16dp"
-        android:gravity="center_vertical"
         android:background="@color/surface"
         android:elevation="4dp">
 
+        <!-- Back Button - Far Left -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:text="@string/back"
             android:textAllCaps="false" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <!-- Progress text container -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/tvParagraphProgress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:text="28 / 284" />
-
-            <TextView
-                android:id="@+id/tvSentenceProgress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:text="(1/18)" />
-
-        </LinearLayout>
-
-        <!-- Progress circle with percentage -->
+        <!-- Progress Circle - Centered Horizontally -->
         <RelativeLayout
+            android:id="@+id/progressContainer"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="16dp">
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true">
 
             <ProgressBar
                 android:id="@+id/progressCircle"
@@ -82,32 +54,50 @@
 
         </RelativeLayout>
 
-        <!-- Settings Button -->
+        <!-- Progress Text - Right of Progress Circle -->
+        <LinearLayout
+            android:id="@+id/progressTextContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/progressContainer"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical"
+            android:gravity="start">
+
+            <TextView
+                android:id="@+id/tvParagraphProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary"
+                android:text="28 / 284" />
+
+            <TextView
+                android:id="@+id/tvSentenceProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:text="(1/18)" />
+
+        </LinearLayout>
+
+        <!-- Settings Button - Far Right -->
         <ImageButton
             android:id="@+id/btnFontSettings"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
             android:src="@drawable/ic_settings"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/settings"
             android:scaleType="fitCenter"
             android:padding="12dp" />
 
-        <!-- Debug Button -->
-        <ImageButton
-            android:id="@+id/btnDebugLogs"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:src="@android:drawable/ic_menu_info_details"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Debug Logs"
-            android:scaleType="fitCenter"
-            android:padding="12dp"
-            android:alpha="0.7" />
-
-    </LinearLayout>
+    </RelativeLayout>
 
     <!-- TTS Control Bar -->
     <LinearLayout

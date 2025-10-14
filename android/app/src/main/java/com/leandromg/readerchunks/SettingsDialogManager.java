@@ -31,7 +31,8 @@ public class SettingsDialogManager {
         LANGUAGE,
         FONT,
         VOICE,
-        READING_MODE
+        READING_MODE,
+        DEBUG_LOGS
     }
 
     private Context context;
@@ -57,7 +58,13 @@ public class SettingsDialogManager {
         void onReadingModeChanged(boolean isFullParagraphMode);
     }
 
+    // Callback for debug logs
+    public interface DebugLogsListener {
+        void onDebugLogsRequested();
+    }
+
     private SettingsChangeListener changeListener;
+    private DebugLogsListener debugLogsListener;
 
     public SettingsDialogManager(Context context, SettingsManager settingsManager, LanguageManager languageManager) {
         this.context = context;
@@ -75,6 +82,10 @@ public class SettingsDialogManager {
 
     public void setCurrentReadingMode(boolean isFullParagraphMode) {
         this.isFullParagraphMode = isFullParagraphMode;
+    }
+
+    public void setDebugLogsListener(DebugLogsListener listener) {
+        this.debugLogsListener = listener;
     }
 
     public void show() {
@@ -151,6 +162,15 @@ public class SettingsDialogManager {
             0
         ));
 
+        // Debug logs category
+        categories.add(new CategoryItem(
+            SettingsCategory.DEBUG_LOGS,
+            "🐛",
+            "Debug Logs",
+            "Ver registros de debug",
+            0
+        ));
+
         return categories;
     }
 
@@ -167,6 +187,9 @@ public class SettingsDialogManager {
                 break;
             case READING_MODE:
                 showReadingModeSettings();
+                break;
+            case DEBUG_LOGS:
+                showDebugLogs();
                 break;
         }
     }
@@ -536,6 +559,14 @@ public class SettingsDialogManager {
         });
 
         showDialog(dialogView, context.getString(R.string.reading_mode));
+    }
+
+    private void showDebugLogs() {
+        // Close the settings dialog and trigger debug logs
+        dismiss();
+        if (debugLogsListener != null) {
+            debugLogsListener.onDebugLogsRequested();
+        }
     }
 
     private void updateSpeedText(TextView tvSpeedValue, float speed) {

@@ -42,7 +42,6 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private MaterialButton btnBack;
     private ImageButton btnFontSettings;
     private ImageButton btnTTSPlayStop;
-    private ImageButton btnDebugLogs;
     private View ttsControlBar;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
@@ -115,7 +114,6 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnBack = findViewById(R.id.btnBack);
         btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSPlayStop = findViewById(R.id.btnTTSPlayStop);
-        btnDebugLogs = findViewById(R.id.btnDebugLogs);
         ttsControlBar = findViewById(R.id.ttsControlBar);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
@@ -251,11 +249,12 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             settingsDialogManager.setCurrentReadingMode(isFullParagraphMode);
             settingsDialogManager.setReadingModeChangeListener(this::toggleReadingMode);
 
+            // Set up debug logs listener
+            settingsDialogManager.setDebugLogsListener(this::showDebugLogsDialog);
+
             settingsDialogManager.show();
         });
         btnTTSPlayStop.setOnClickListener(v -> toggleTTSPlayStop());
-
-        btnDebugLogs.setOnClickListener(v -> showDebugLogsDialog());
     }
 
     private void setupGestureDetector() {
