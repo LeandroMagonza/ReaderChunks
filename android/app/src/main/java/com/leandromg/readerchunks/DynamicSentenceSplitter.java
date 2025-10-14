@@ -1,5 +1,6 @@
 package com.leandromg.readerchunks;
 
+import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,39 +134,131 @@ public class DynamicSentenceSplitter {
 
     /**
      * Find best split point when sentence is too long, returning position and type.
-     * Priority: : > ; > , > space
-     * Only split if followed by whitespace or end of text (not inside words)
+     * New improved algorithm with punctuation priority:
+     * 1. Strong breaks: ; : (higher priority)
+     * 2. Medium breaks: , ' " ( ¡ ¿
+     * 3. Space breaks (as fallback)
+     * 4. Hard cut at maxLength (worst case)
+     *
+     * Always chooses the character closest to maxLength within each priority tier.
      */
     private SplitResult findBestSplitPointWithType(int start, int sentenceEnd) {
-        int maxEnd = Math.min(start + maxLength, sentenceEnd);
+        int targetPosition = start + maxLength;
+        int maxSearchEnd = Math.min(targetPosition, sentenceEnd);
 
-        // Priority characters with their corresponding types
-        char[] splitCharacters = {':', ';', ','};
+        // Priority tiers - higher priority characters first
+        char[][] priorityTiers = {
+            {';', ':'}, // Tier 1: Strong punctuation breaks
+            {',', '\'', '"', '(', '¡', '¿', ')', ']', '}', '!', '?', '-', '–', '—', '[', '{', '/', '\\', '*', '&'}, // Tier 2: Medium breaks
+            {' '} // Tier 3: Space breaks (fallback)
+        };
 
-        // First try punctuation splits (soft breaks)
-        for (char splitChar : splitCharacters) {
-            // Search backwards from maxEnd
-            for (int position = maxEnd - 1; position > start + maxLength / 2; position--) {
-                if (paragraph.charAt(position) == splitChar) {
-                    // Check if followed by whitespace or end of text (not inside word)
-                    if (isValidSplitPosition(position)) {
-                        return new SplitResult(position + 1, SentenceEndType.SOFT_BREAK);
+        SentenceEndType[] tierTypes = {
+            SentenceEndType.SOFT_BREAK, // Strong breaks
+            SentenceEndType.SOFT_BREAK, // Medium breaks
+            SentenceEndType.CHARACTER_LIMIT // Space breaks
+        };
+
+        // Search each priority tier
+        for (int tierIndex = 0; tierIndex < priorityTiers.length; tierIndex++) {
+            char[] tierChars = priorityTiers[tierIndex];
+            SentenceEndType tierType = tierTypes[tierIndex];
+
+            // Find the closest valid character to target position within this tier
+            int bestPosition = -1;
+
+            // Search backwards from target position to find the closest valid split
+            for (int position = maxSearchEnd - 1; position > start; position--) {
+                char currentChar = paragraph.charAt(position);
+
+                // Check if current character is in this tier
+                for (char splitChar : tierChars) {
+                    if (currentChar == splitChar) {
+                        if (isValidSplitPosition(position)) {
+                            // Handle special paired characters
+                            if (isPairedCharacter(currentChar) && !isValidPairedSplit(position)) {
+                                continue; // Skip if it breaks a pair
+                            }
+
+                            bestPosition = position;
+                            break; // Found a valid position in this tier
+                        }
+                    }
+                }
+
+                if (bestPosition != -1) {
+                    break; // Found the closest position in this tier
+                }
+            }
+
+            // If we found a valid position in this tier, use it
+            if (bestPosition != -1) {
+                char splitChar = paragraph.charAt(bestPosition);
+                String textPreview = paragraph.substring(Math.max(0, bestPosition - 10),
+                    Math.min(paragraph.length(), bestPosition + 10));
+                Log.d("SENTENCE_SPLIT", String.format("Split at tier %d, char '%c' at pos %d: ...%s...",
+                    tierIndex + 1, splitChar, bestPosition, textPreview));
+                return new SplitResult(bestPosition + 1, tierType);
+            }
+        }
+
+        // No good split found anywhere, hard cut at maxLength
+        String textPreview = paragraph.substring(Math.max(0, maxSearchEnd - 15),
+            Math.min(paragraph.length(), maxSearchEnd + 5));
+        Log.d("SENTENCE_SPLIT", String.format("Hard cut at pos %d: ...%s...", maxSearchEnd, textPreview));
+        return new SplitResult(maxSearchEnd, SentenceEndType.CHARACTER_LIMIT);
+    }
+
+    /**
+     * Check if character is part of a pair that should stay together
+     */
+    private boolean isPairedCharacter(char c) {
+        return c == '"' || c == '\'' || c == '(' || c == ')' ||
+               c == '[' || c == ']' || c == '{' || c == '}' ||
+               c == '¡' || c == '¿' || c == '*';
+    }
+
+    /**
+     * Check if splitting at this paired character position is valid
+     * (i.e., we're not breaking up a pair)
+     */
+    private boolean isValidPairedSplit(int position) {
+        char currentChar = paragraph.charAt(position);
+
+        // For opening characters, prefer to keep the pair together if it's short
+        if (currentChar == '(' || currentChar == '"' || currentChar == '\'' ||
+            currentChar == '[' || currentChar == '{' || currentChar == '¡' || currentChar == '¿') {
+
+            // Look ahead to find the closing character
+            char closingChar = getClosingChar(currentChar);
+            if (closingChar != '\0') {
+                for (int i = position + 1; i < Math.min(position + 50, paragraph.length()); i++) {
+                    if (paragraph.charAt(i) == closingChar) {
+                        // If the pair is short (< 50 chars), try to keep it together
+                        int pairLength = i - position;
+                        return pairLength > 30; // Only split if pair is long enough
                     }
                 }
             }
         }
 
-        // Try space splits (character limit)
-        for (int position = maxEnd - 1; position > start + maxLength / 2; position--) {
-            if (paragraph.charAt(position) == ' ') {
-                if (isValidSplitPosition(position)) {
-                    return new SplitResult(position + 1, SentenceEndType.CHARACTER_LIMIT);
-                }
-            }
-        }
+        return true; // Default to allowing the split
+    }
 
-        // No good split found, cut at maxLength (character limit)
-        return new SplitResult(Math.min(start + maxLength, sentenceEnd), SentenceEndType.CHARACTER_LIMIT);
+    /**
+     * Get the closing character for a given opening character
+     */
+    private char getClosingChar(char openChar) {
+        switch (openChar) {
+            case '(': return ')';
+            case '[': return ']';
+            case '{': return '}';
+            case '"': return '"';
+            case '\'': return '\'';
+            case '¡': return '!';
+            case '¿': return '?';
+            default: return '\0';
+        }
     }
 
     /**

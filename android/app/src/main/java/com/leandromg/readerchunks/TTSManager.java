@@ -137,15 +137,13 @@ public class TTSManager implements TextToSpeech.OnInitListener {
         }
 
         try {
-            // Stop any current speech
-            stop();
-
             // Clean text for better TTS
             String cleanText = cleanTextForTTS(text);
 
             Log.d(TAG, "Speaking text: " + cleanText.substring(0, Math.min(50, cleanText.length())) + "...");
 
-            // Use QUEUE_FLUSH to stop any previous speech and start new one
+            // Use QUEUE_FLUSH without explicit stop() to reduce transition delay
+            // QUEUE_FLUSH will automatically stop previous speech
             int result = tts.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, UTTERANCE_ID);
 
             if (result == TextToSpeech.ERROR) {
@@ -223,6 +221,57 @@ public class TTSManager implements TextToSpeech.OnInitListener {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error setting speech rate: " + e.getMessage());
+        }
+    }
+
+    public void setLanguage(String languageCode) {
+        try {
+            if (tts != null && isInitialized && languageCode != null) {
+                Locale locale;
+
+                // Map language codes to Locale objects
+                switch (languageCode.toLowerCase()) {
+                    case "es":
+                        locale = new Locale("es");
+                        break;
+                    case "en":
+                        locale = Locale.ENGLISH;
+                        break;
+                    case "fr":
+                        locale = Locale.FRENCH;
+                        break;
+                    case "de":
+                        locale = Locale.GERMAN;
+                        break;
+                    case "it":
+                        locale = Locale.ITALIAN;
+                        break;
+                    case "pt":
+                        locale = new Locale("pt");
+                        break;
+                    default:
+                        // Try to create locale from language code
+                        locale = new Locale(languageCode);
+                        break;
+                }
+
+                int langResult = tts.setLanguage(locale);
+
+                if (langResult == TextToSpeech.LANG_MISSING_DATA ||
+                    langResult == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    // Try English as fallback
+                    langResult = tts.setLanguage(Locale.ENGLISH);
+                    if (langResult == TextToSpeech.SUCCESS) {
+                        Log.w(TAG, "Language " + languageCode + " not supported, using English as fallback");
+                    } else {
+                        Log.w(TAG, "No supported language found for code: " + languageCode);
+                    }
+                } else {
+                    Log.d(TAG, "Language set to: " + locale.toString());
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting language: " + e.getMessage());
         }
     }
 

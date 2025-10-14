@@ -119,13 +119,13 @@
 
     </LinearLayout>
 
-    <!-- TTS Play/Stop Button -->
+    <!-- TTS Control Bar -->
     <LinearLayout
-        android:id="@+id/ttsPlayStopContainer"
+        android:id="@+id/ttsControlBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end"
+        android:gravity="center_vertical|end"
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:visibility="gone">
@@ -150,7 +150,7 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="8dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp">
 
@@ -179,7 +179,9 @@
                     android:textAlignment="center"
                     android:textColor="@color/text_primary"
                     android:gravity="center"
-                    android:padding="16dp" />
+                    android:padding="16dp"
+                    android:breakStrategy="balanced"
+                    android:hyphenationFrequency="normal" />
 
             </LinearLayout>
 

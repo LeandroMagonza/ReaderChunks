@@ -40,6 +40,7 @@ public class SettingsDialogManager {
     private View currentView;
     private SettingsCategory currentCategory = SettingsCategory.MAIN_LIST;
     private boolean isNavigating = false; // Flag to prevent premature callbacks during navigation
+    private boolean hasActualChanges = false; // Flag to track if any actual settings were changed
 
     // Callback for settings changes (optional)
     public interface SettingsChangeListener {
@@ -59,6 +60,7 @@ public class SettingsDialogManager {
     }
 
     public void show() {
+        hasActualChanges = false; // Reset changes flag when opening settings
         showCategoryList();
     }
 
@@ -152,7 +154,9 @@ public class SettingsDialogManager {
 
         LanguageAdapter languageAdapter = new LanguageAdapter(languages, currentLangCode, (language) -> {
             languageManager.setLanguage(language.code);
+            hasActualChanges = true; // Mark that an actual change was made
             Toast.makeText(context, context.getString(R.string.language_changed), Toast.LENGTH_SHORT).show();
+            // Note: Changes will be applied when dialog closes
             showCategoryList(); // Return to main list with updated info
         });
         recyclerLanguages.setAdapter(languageAdapter);
@@ -245,31 +249,37 @@ public class SettingsDialogManager {
         // Set up listeners
         btnDecreaseFontSize.setOnClickListener(v -> {
             settingsManager.adjustFontSize(-SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
         btnIncreaseFontSize.setOnClickListener(v -> {
             settingsManager.adjustFontSize(SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
         btnDecreaseLineSpacing.setOnClickListener(v -> {
             settingsManager.adjustLineSpacing(-SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
         btnIncreaseLineSpacing.setOnClickListener(v -> {
             settingsManager.adjustLineSpacing(SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
         btnDecreasePadding.setOnClickListener(v -> {
             settingsManager.adjustPadding(-SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
         btnIncreasePadding.setOnClickListener(v -> {
             settingsManager.adjustPadding(SettingsManager.INCREMENT);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
 
@@ -279,6 +289,7 @@ public class SettingsDialogManager {
                 if (fromUser) {
                     float multiplier = 0.5f + (progress * 4.5f / 100.0f);
                     settingsManager.setSentenceLengthMultiplier(multiplier);
+                    hasActualChanges = true; // Mark that an actual change was made
                     updateUI.run();
                 }
             }
@@ -300,6 +311,7 @@ public class SettingsDialogManager {
                 mode = BionicTextProcessor.BionicMode.OFF;
             }
             settingsManager.setBionicReadingMode(mode);
+            hasActualChanges = true; // Mark that an actual change was made
             updateUI.run();
         });
     }
@@ -397,6 +409,7 @@ public class SettingsDialogManager {
     }
 
     public void showVoiceSettings() {
+        hasActualChanges = false; // Reset changes flag when opening voice settings
         currentCategory = SettingsCategory.VOICE;
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_voice, null);
 
@@ -420,7 +433,8 @@ public class SettingsDialogManager {
         // Set up listeners
         switchTTSEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsManager.setTTSEnabled(isChecked);
-            // Immediately notify of settings change when TTS is enabled/disabled
+            hasActualChanges = true; // Mark that an actual change was made
+            // Immediately notify of settings change when TTS is enabled/disabled (needed for button visibility)
             if (changeListener != null) {
                 changeListener.onSettingsChanged();
             }
@@ -428,6 +442,7 @@ public class SettingsDialogManager {
 
         switchAutoScroll.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsManager.setTTSAutoScrollEnabled(isChecked);
+            hasActualChanges = true; // Mark that an actual change was made
         });
 
         seekBarSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -437,6 +452,8 @@ public class SettingsDialogManager {
                     float speed = 0.5f + (progress / 20.0f);
                     settingsManager.setTTSSpeechRate(speed);
                     updateSpeedText(tvSpeedValue, speed);
+                    hasActualChanges = true; // Mark that an actual change was made
+                    // Note: Changes will be applied when dialog closes
                 }
             }
 
@@ -475,12 +492,13 @@ public class SettingsDialogManager {
                 .setView(view)
                 .setCancelable(true)
                 .setOnDismissListener(dialog -> {
-                    // Only execute callback when not navigating (actual close)
-                    if (!isNavigating && changeListener != null) {
+                    // Only execute callback when not navigating (actual close) AND there were actual changes
+                    if (!isNavigating && hasActualChanges && changeListener != null) {
                         changeListener.onSettingsChanged();
                     }
-                    // Reset flag after handling dismiss
+                    // Reset flags after handling dismiss
                     isNavigating = false;
+                    hasActualChanges = false;
                 })
                 .create();
 

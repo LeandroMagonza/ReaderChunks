@@ -44,7 +44,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private ImageButton btnFontSettings;
     private ImageButton btnTTSSettings;
     private ImageButton btnTTSPlayStop;
-    private View ttsPlayStopContainer;
+    private View ttsControlBar;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
     private ProgressBar progressCircle;
@@ -111,7 +111,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSSettings = findViewById(R.id.btnTTSSettings);
         btnTTSPlayStop = findViewById(R.id.btnTTSPlayStop);
-        ttsPlayStopContainer = findViewById(R.id.ttsPlayStopContainer);
+        ttsControlBar = findViewById(R.id.ttsControlBar);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
         progressCircle = findViewById(R.id.progressCircle);
@@ -153,7 +153,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                     // If auto-scroll is enabled, move to next sentence/paragraph
                     if (settingsManager.isTTSAutoScrollEnabled() &&
                         settingsManager.isTTSEnabled() && !isTTSTemporarilyStopped) {
-                        // Different delays based on context
+
                         int delay = getAutoScrollDelay();
                         if (delay == 0) {
                             // Immediate advance for character limit cuts
@@ -177,6 +177,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             }
         });
     }
+
 
     private void loadBook() {
         Intent intent = getIntent();
@@ -523,6 +524,14 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 tvSentence.setText("Cargando...");
                 return;
             }
+
+            // Additional safety check for empty paragraphs
+            currentParagraph = currentParagraph.trim();
+            if (currentParagraph.isEmpty()) {
+                tvSentence.setText("Párrafo vacío");
+                return;
+            }
+
             // Apply bionic reading based on mode
             if (settingsManager != null) {
                 BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
@@ -545,6 +554,15 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 tvSentence.setText("Cargando...");
                 return;
             }
+
+            // Additional safety check for empty sentences
+            currentSentence = currentSentence.trim();
+            if (currentSentence.isEmpty()) {
+                // If sentence is empty, move to next sentence
+                nextSentence();
+                return;
+            }
+
             // Apply bionic reading based on mode
             if (settingsManager != null) {
                 BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
@@ -628,6 +646,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         } else {
             btnToggleMode.setText(getString(R.string.mode_sentence_icon)); // |-|
         }
+
     }
 
     private void toggleReadingMode() {
@@ -842,6 +861,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         if (ttsManager != null && isTTSReady) {
             ttsManager.setEnabled(settingsManager.isTTSEnabled());
             ttsManager.setSpeechRate(settingsManager.getTTSSpeechRate());
+            ttsManager.setLanguage(languageManager.getCurrentLanguage());
         }
 
         // Refresh text display with current content to apply bionic reading if needed
@@ -921,6 +941,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             pendingTTSText = textToSpeak;
         }
     }
+
 
     // Temporarily disabled language configuration to avoid TTS errors
     /*
@@ -1073,10 +1094,10 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             }
         }
 
-        // Update play/stop button visibility
-        if (ttsPlayStopContainer != null) {
+        // Update play/stop button and container visibility
+        if (ttsControlBar != null && btnTTSPlayStop != null) {
             boolean ttsEnabled = settingsManager.isTTSEnabled();
-            ttsPlayStopContainer.setVisibility(ttsEnabled ? View.VISIBLE : View.GONE);
+            ttsControlBar.setVisibility(ttsEnabled ? View.VISIBLE : View.GONE);
             if (ttsEnabled) {
                 // Reset temporary stop state when TTS is re-enabled
                 isTTSTemporarilyStopped = false;
@@ -1105,15 +1126,26 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             // En modo bite-size, usar pausas inteligentes basadas en el tipo de corte
             SentenceEndType endType = getCurrentSentenceEndType();
 
+            // Debug logging para diagnosticar delays no deseados
+            String currentText = bufferManager.getCurrentSentence();
+            String textPreview = currentText != null ? currentText.substring(0, Math.min(50, currentText.length())) : "null";
+            Log.d("TTS_DELAY", "EndType: " + endType + " | Text: " + textPreview + "...");
+
             switch(endType) {
                 case PARAGRAPH_END:
-                    return 1000; // Pausa larga para fin de párrafo
+                    Log.d("TTS_DELAY", "Using PARAGRAPH_END delay: 800ms (optimized)");
+                    return 800; // Pausa para fin de párrafo - reducida para mejor flujo
                 case SENTENCE_END:
-                    return 500;  // Pausa breve para punto final (.!?)
+                    Log.d("TTS_DELAY", "Using SENTENCE_END delay: 200ms (optimized)");
+                    return 200;  // Pausa breve para punto final (.!?) - optimizada
                 case SOFT_BREAK:
+                    Log.d("TTS_DELAY", "Using SOFT_BREAK delay: 0ms");
+                    return 0;    // Inmediato para cortes suaves (, ; :)
                 case CHARACTER_LIMIT:
-                    return 0;    // Inmediato para cortes suaves y límite de caracteres
+                    Log.d("TTS_DELAY", "Using CHARACTER_LIMIT delay: 0ms");
+                    return 0;    // Inmediato para límite de caracteres - SIN DELAY
                 default:
+                    Log.d("TTS_DELAY", "Using default delay: 0ms");
                     return 0;    // Default to immediate (no pause)
             }
         }
@@ -1149,9 +1181,11 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         }
     }
 
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         if (ttsManager != null) {
             ttsManager.destroy();
         }

@@ -1,0 +1,128 @@
+RESULTADO DE PRUEBA DE CORTADO - LÍMITE: 40 CARACTERES
+================================================================
+
+1.
+Esta es una oración muy larga que
+debería cortarse en la coma,
+y después continuar normalmente con el
+resto del texto.
+
+2.
+El suspenso,
+con el papel arrugado entre sus manos;
+creaba una atmósfera tensa y
+misteriosa que nadie podía ignorar.
+
+3.
+Los estudiantes (que habían trabajado
+toda la noche)
+finalmente terminaron sus proyectos
+antes de la fecha límite establecida.
+
+4.
+¿Cómo podemos resolver este problema
+tan complejo? La respuesta no es fácil:
+requiere mucha paciencia y dedicación
+constante.
+
+5.
+El documento contiene información
+importante sobre:
+política, economía,
+sociedad y cultura de nuestro país en
+el siglo XXI.
+
+6.
+María dijo:
+"No puedo creer que haya pasado tanto
+tiempo desde la última vez que nos
+vimos en persona".
+
+7.
+Los ingredientes necesarios son:
+harina, azúcar, huevos,
+mantequilla y una pizca de sal para
+darle el sabor perfecto.
+
+8.
+¡Qué sorpresa tan increíble!
+Nunca imaginé que llegarías tan
+temprano a la celebración de cumpleaños
+de Ana.
+
+9.
+El análisis estadístico mostró
+resultados inesperados -
+la mayoría de las personas prefiere el
+color azul sobre el rojo.
+
+10.
+Durante la conferencia se discutieron
+temas como:
+inteligencia artificial,
+machine learning,
+big data y blockchain technology.
+
+11.
+Los archivos [documento1.pdf,
+documento2.docx, imagen.jpg]
+deben ser enviados antes del viernes
+por la tarde.
+
+12.
+La fórmula química H2SO4 es conocida
+como ácido sulfúrico &
+es ampliamente utilizada en la
+industria química moderna.
+
+13.
+El camino hacia el éxito requiere:
+trabajo duro, perseverancia,
+aprendizaje continuo y la capacidad de
+adaptarse a los cambios.
+
+14.
+¿Te acuerdas de aquella vez cuando
+fuimos al parque? Fue un día perfecto:
+sol brillante,
+brisa suave y compañía excelente.
+
+15.
+Los resultados del examen fueron
+publicados en el sitio web oficial
+(www.universidad.edu)
+para que todos pudieran consultarlos.
+
+16.
+El chef preparó una deliciosa cena con:
+entrada, plato principal,
+postre y una selección especial de
+vinos importados de Francia.
+
+17.
+¡Atención! -
+Este es un mensaje importante sobre
+las nuevas políticas de seguridad que
+entrarán en vigor la próxima semana.
+
+18.
+La biblioteca cuenta con una amplia
+colección de libros:
+novelas, ensayos, poesía,
+biografías y textos académicos
+especializados.
+
+19.
+Después de mucho reflexionar,
+tomé la decisión más difícil de mi
+vida;
+dejar mi trabajo actual y emprender un
+nuevo camino.
+
+20.
+El proyecto final debe incluir:
+introducción, desarrollo del tema,
+conclusiones,
+bibliografía y anexos con información
+complementaria.
+
