@@ -165,23 +165,45 @@ Oración 7.3 (98 chars): tasaron cada pliego del dicho libro...
 ## 📱 Estructura del Proyecto
 
 ```
-BookBits/
+ReaderChunks/
 ├── android/                           # Proyecto Android completo
-│   ├── app/src/main/java/com/leandromg/bookbits/
-│   │   ├── MainActivity.java          # Biblioteca de libros
-│   │   ├── SentenceReaderActivity.java # Lectura dual: bite-size ↔ párrafo
+│   ├── app/src/main/java/com/leandromg/readerchunks/
+│   │   ├── MainActivity.java          # Biblioteca de libros + gestión (eliminar/renombrar)
+│   │   ├── SentenceReaderActivity.java # Lectura dual: bite-size ↔ párrafo + TTS
 │   │   ├── Book.java                  # Modelo con persistencia de modo
 │   │   ├── BookCacheManager.java      # Cache + persistencia de preferencias
 │   │   ├── BufferManager.java         # Buffer con soporte dual
 │   │   ├── BookAdapter.java           # Adaptador RecyclerView
-│   │   ├── PDFTextExtractor.java      # Extracción PDF (PDFBox)
+│   │   │
+│   │   ├── # Extractores de texto (múltiples formatos)
+│   │   ├── TextExtractor.java         # Interface común
+│   │   ├── TextExtractorFactory.java  # Factory pattern para formatos
+│   │   ├── PDFTextExtractorImpl.java  # Extracción PDF (PDFBox)
+│   │   ├── TXTTextExtractorImpl.java  # Extracción TXT con UTF-8
+│   │   ├── MDTextExtractorImpl.java   # Extracción Markdown a texto plano
+│   │   ├── EPUBTextExtractorImpl.java # Extracción EPUB (HTML a texto)
+│   │   │
+│   │   ├── # Segmentación y procesamiento
 │   │   ├── SentenceSegmenter.java     # Segmentación de oraciones
 │   │   ├── DynamicSentenceSplitter.java # División dinámica en tiempo real
-│   │   └── ThemeManager.java          # Gestión de temas (modo oscuro/claro)
+│   │   ├── BionicTextProcessor.java   # Procesamiento Bionic Reading (CLASSIC/MODERN)
+│   │   │
+│   │   ├── # Configuración y temas
+│   │   ├── ThemeManager.java          # Gestión de temas (modo oscuro/claro)
+│   │   ├── SettingsManager.java       # Configuraciones (fuente, espaciado, TTS)
+│   │   ├── SettingsDialogManager.java # Modal de configuración UI
+│   │   │
+│   │   ├── # Text-to-Speech
+│   │   ├── TTSManager.java            # Motor TTS completo con configuración
+│   │   │
+│   │   └── # Utilidades
+│   │       ├── DebugLogger.java       # Logger para debugging
+│   │       └── [otros archivos de apoyo]
+│   │
 │   ├── app/src/main/res/
-│   │   ├── layout/                    # Layouts con ScrollView y toggle
+│   │   ├── layout/                    # Layouts con ScrollView, toggle y TTS
 │   │   └── values/                    # Strings con iconografía |—| |☰|
-│   └── app/build.gradle               # Dependencias Android
+│   └── app/build.gradle               # Dependencias Android (PDFBox, TTS)
 ├── PDFTextExtractor.java              # Versión standalone (testing)
 ├── example.pdf                        # PDF de prueba
 └── README.md                          # Este archivo
@@ -317,6 +339,14 @@ Libro de 10,000 oraciones:
 - [x] **UI optimizada** - FAB reubicado, botón [+] en header y estado vacío
 - [x] **Buffer inteligente sin sesgo** - eliminación de drift acumulativo en navegación
 
+### ✅ Nuevas Funcionalidades Implementadas
+- [x] **Múltiples formatos de archivo**: TXT, Markdown (.md), EPUB además de PDF
+- [x] **Gestión completa de biblioteca**: eliminar, renombrar, restablecer progreso
+- [x] **Text-to-Speech avanzado**: reproducción con controles de velocidad y auto-scroll
+- [x] **Bionic Reading**: dos modos (CLASSIC/MODERN) para mejorar velocidad de lectura
+- [x] **Configuración completa**: fuentes, espaciado, márgenes, modo oscuro/claro
+- [x] **Longitud de oraciones configurable**: adaptación inteligente según tamaño de fuente
+
 ### 🚀 Cómo Usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
 2. **APK**: `android/app/build/outputs/apk/debug/app-debug.apk`
@@ -327,44 +357,122 @@ Libro de 10,000 oraciones:
 
 ## 🚀 Roadmap - Próximas Mejoras
 
-### ✅ Formatos de Archivo
-- [x] **TXT**: Soporte para archivos de texto plano
-- [x] **Markdown**: Archivos .md con formato básico
-- [x] **EPUB**: Libros electrónicos estándar
-- [x] **Detección automática**: Identificar formato por extensión
+### ✅ Formatos de Archivo (COMPLETAMENTE IMPLEMENTADO)
+- [x] **TXT**: Soporte completo para archivos de texto plano con codificación UTF-8
+  - Implementación: `TXTTextExtractorImpl.java`
+  - Manejo de errores y fallback de charset
+- [x] **Markdown**: Archivos .md con conversión a texto plano
+  - Implementación: `MDTextExtractorImpl.java`
+  - Eliminación de sintaxis Markdown (headers, bold, italic, links, código)
+- [x] **EPUB**: Libros electrónicos estándar (formato ZIP)
+  - Implementación: `EPUBTextExtractorImpl.java`
+  - Extracción de contenido HTML/XHTML y conversión a texto plano
+- [x] **Detección automática**: Identificación de formato por extensión
+  - Implementación: `TextExtractorFactory.java`
+  - Factory pattern para seleccionar extractor apropiado
 
-### ✅ Gestión de Libros
+### ✅ Gestión de Libros (COMPLETAMENTE IMPLEMENTADO)
 - [x] **Menú de opciones por libro**:
   - [x] Eliminar libro (con confirmación y limpieza)
+    - Implementación: `MainActivity.java` línea 368 (`deleteBook`)
+    - Diálogo de confirmación y limpieza completa de archivos
   - [x] Restablecer progreso (volver al inicio)
+    - Implementación: `MainActivity.java` (`resetProgress`)
+    - Reinicia posición de lectura sin perder configuraciones
   - [x] Renombrar libro (cambiar título)
+    - Implementación: `MainActivity.java` línea 325 (`renameBook`)
+    - Actualización de metadata y persistencia
 - [x] **Estadísticas de lectura** (progreso % mostrado en biblioteca)
+  - Sistema de progreso dual: párrafos y porcentaje total
 - [ ] **Ordenación de biblioteca** (por fecha de última lectura)
 
-### 🎨 Experiencia de Usuario
+### ✅ Experiencia de Usuario (COMPLETAMENTE IMPLEMENTADO)
 - [x] **Temas y personalización**:
   - [x] Modo oscuro/claro
-  - [ ] Tamaños de fuente configurables
-  - [ ] Colores personalizables
+    - Implementación: `ThemeManager.java`
+    - Toggle con persistencia en SharedPreferences
+  - [x] Tamaños de fuente configurables (12-60sp)
+    - Implementación: `SettingsManager.java` líneas 70-78
+    - Aplicación dinámica en `SentenceReaderActivity.java`
+  - [x] Espaciado de líneas configurable (0-60sp)
+    - Implementación: `SettingsManager.java` líneas 80-88
+    - Control de line spacing para mejor legibilidad
+  - [x] Márgenes configurables (4-32dp)
+    - Implementación: `SettingsManager.java` líneas 90-98
+    - Padding horizontal ajustable
+  - [ ] Fuentes personalizables (diferentes familias tipográficas)
+  - [ ] Colores personalizables (más allá de modo oscuro/claro)
 - [x] **Animaciones y feedback**:
   - [x] Transiciones suaves en cambio de modo
   - [x] Animaciones de progreso
   - [ ] Feedback háptico en navegación
-- [ ] **Pantalla de configuración**:
-  - [ ] Selección de idioma
+- [x] **Pantalla de configuración**:
+  - [x] Modal de configuración implementado (`SettingsDialogManager.java`)
+  - [x] Selección de idioma
+    - Implementación: `LanguageManager.java` + `LanguageAdapter.java`
+    - Soporte: Español, English, Português, Français, Deutsch
+    - Detección automática del idioma del sistema
   - [ ] Métodos de navegación (botones/swipe lateral o vertical/tocar bordes)
-  - [ ] Configuración de fuentes 
-  - [ ] Configuración de márgenes
+  - [x] Configuración de fuentes y espaciado
+  - [x] Configuración de márgenes
+
+### ✅ Text-to-Speech (COMPLETAMENTE IMPLEMENTADO)
+- [x] **Motor TTS completo**:
+  - Implementación: `TTSManager.java`
+  - Inicialización automática con detección de idiomas
+  - Fallback a inglés si idioma del dispositivo no disponible
+- [x] **Controles de reproducción**:
+  - Play/Pause/Stop con estados visuales
+  - Control de velocidad de habla (0.5x - 2.0x)
+  - Control de tono de voz
+- [x] **Configuración avanzada**:
+  - Auto-scroll sincronizado con TTS
+  - Persistencia de configuraciones por libro
+  - Manejo de errores y reconexión automática
+- [x] **Integración con modos de lectura**:
+  - Compatible con modo bite-size y párrafo completo
+  - Navegación automática al terminar cada oración/párrafo
+
+### ✅ Bionic Reading (COMPLETAMENTE IMPLEMENTADO)
+- [x] **Procesamiento de texto inteligente**:
+  - Implementación: `BionicTextProcessor.java`
+  - Dos algoritmos: CLASSIC y MODERN
+- [x] **Modos de lectura biónica**:
+  - **CLASSIC**: `min(max(wordLength / 2, 1), 7)` - todas las palabras resaltadas
+  - **MODERN**: `min(floor(wordLength / 2.1), 7)` - letras individuales no resaltadas
+- [x] **Configuración por usuario**:
+  - Toggle OFF/CLASSIC/MODERN en configuraciones
+  - Aplicación en tiempo real sin reprocessar archivos
+- [x] **Integración completa**:
+  - Compatible con todos los formatos (PDF, TXT, MD, EPUB)
+  - Funciona en ambos modos de lectura (bite-size y párrafo)
 
 ### 🎛️ Configuración Avanzada
-- [ ] **Parámetros de lectura**:
-  - [ ] Longitud máxima de división (150 chars por defecto)
-  - [ ] Velocidad de auto-avance
+- [x] **Parámetros de lectura**:
+  - [x] Longitud máxima de división configurable (`sentenceLengthMultiplier`)
+  - [x] Control de caracteres por oración basado en tamaño de fuente
+  - [x] Velocidad de auto-avance
+    - Implementación: Auto-scroll con `Handler` y `Runnable` en `SentenceReaderActivity.java`
+    - Control de velocidad configurable y toggle on/off
   - [ ] Configuración de gestos
 - [ ] **Métricas y objetivos**:
   - [ ] Metas diarias de lectura
   - [ ] Estadísticas detalladas
   - [ ] Rachas de lectura
+
+### 💎 Funcionalidades Premium/Futuras
+- [ ] **IA y Traducción**:
+  - [ ] Traducción automática de textos con IA
+  - [ ] Resúmenes inteligentes por capítulo
+  - [ ] Análisis de complejidad de texto
+- [ ] **TTS Premium**:
+  - [ ] Voces premium de alta calidad
+  - [ ] Voces sintéticas personalizadas
+  - [ ] Emociones y entonación avanzada
+- [ ] **Personalización Avanzada**:
+  - [ ] Fuentes personalizables (diferentes familias tipográficas)
+  - [ ] Paletas de colores completamente personalizables
+  - [ ] Temas visuales complejos (gradientes, patrones)
 
 ### 📈 Funcionalidades Avanzadas
 - [ ] **Búsqueda y navegación**:
