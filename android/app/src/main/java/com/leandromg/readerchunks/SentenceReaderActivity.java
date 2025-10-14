@@ -17,7 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
-
+import android.widget.Button;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -44,6 +44,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private ImageButton btnFontSettings;
     private ImageButton btnTTSSettings;
     private ImageButton btnTTSPlayStop;
+    private ImageButton btnDebugLogs;
     private View ttsControlBar;
     private LinearProgressIndicator progressBar;
     private View dividerParagraph;
@@ -91,6 +92,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sentence_reader);
 
+        // Initialize debug logger
+        DebugLogger.init(this);
+
         initViews();
         applySettings();
         setupManagers();
@@ -111,6 +115,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         btnFontSettings = findViewById(R.id.btnFontSettings);
         btnTTSSettings = findViewById(R.id.btnTTSSettings);
         btnTTSPlayStop = findViewById(R.id.btnTTSPlayStop);
+        btnDebugLogs = findViewById(R.id.btnDebugLogs);
         ttsControlBar = findViewById(R.id.ttsControlBar);
         progressBar = findViewById(R.id.progressBar);
         dividerParagraph = findViewById(R.id.dividerParagraph);
@@ -121,7 +126,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
     private void setupManagers() {
         cacheManager = new BookCacheManager(this);
-        bufferManager = new BufferManager(cacheManager, settingsManager);
+        bufferManager = new BufferManager(cacheManager, settingsManager, this);
         executor = Executors.newSingleThreadExecutor();
     }
 
@@ -236,6 +241,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             settingsDialogManager.showVoiceSettings();
         });
         btnTTSPlayStop.setOnClickListener(v -> toggleTTSPlayStop());
+
+        btnDebugLogs.setOnClickListener(v -> showDebugLogsDialog());
     }
 
     private void setupGestureDetector() {
@@ -1181,6 +1188,37 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
         }
     }
 
+
+    private void showDebugLogsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_debug_logs, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        TextView tvDebugLogs = dialogView.findViewById(R.id.tvDebugLogs);
+        Button btnClearLogs = dialogView.findViewById(R.id.btnClearLogs);
+        Button btnRefreshLogs = dialogView.findViewById(R.id.btnRefreshLogs);
+        Button btnCloseDebug = dialogView.findViewById(R.id.btnCloseDebug);
+
+        // Load initial logs
+        tvDebugLogs.setText(DebugLogger.getAllLogs());
+
+        btnRefreshLogs.setOnClickListener(v -> {
+            tvDebugLogs.setText(DebugLogger.getAllLogs());
+            Toast.makeText(this, "Logs actualizados", Toast.LENGTH_SHORT).show();
+        });
+
+        btnClearLogs.setOnClickListener(v -> {
+            DebugLogger.clearLogs();
+            tvDebugLogs.setText("Logs limpiados");
+            Toast.makeText(this, "Logs borrados", Toast.LENGTH_SHORT).show();
+        });
+
+        btnCloseDebug.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
 
     @Override
     protected void onDestroy() {

@@ -2,6 +2,9 @@ package com.leandromg.readerchunks;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.util.Log;
 
 public class SettingsManager {
     private static final String PREFS_NAME = "BookBitsSettings";
@@ -226,10 +229,101 @@ public class SettingsManager {
     }
 
     /**
-     * Calculate the maximum sentence length based on current font size and user multiplier
-     * Formula: (BASE_SENTENCE_LENGTH - (fontSize - BASE_FONT_SIZE) * CHAR_ADJUSTMENT_PER_SP) * userMultiplier
+     * Calculate optimal sentence length based on actual screen dimensions and font size
+     * @param context Context needed to get display metrics
+     * @return Optimal sentence length for current screen and settings
      */
-    public int getMaxSentenceLength() {
+    public int calculateOptimalSentenceLength(Context context) {
+        if (context == null) {
+            // Fallback to old method if no context available
+            return getMaxSentenceLengthLegacy();
+        }
+
+        // Get display metrics
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+
+        // Calculate available space for text
+        int availableHeight = calculateAvailableTextHeight(context, screenHeight);
+        int availableWidth = calculateAvailableTextWidth(context, screenWidth);
+
+        // Get current font settings
+        int fontSize = getFontSize();
+        float fontSizePx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            fontSize,
+            metrics
+        );
+
+        // Calculate text dimensions
+        float charWidth = fontSizePx * 0.55f; // More accurate average character width
+        float lineHeight = fontSizePx * 1.3f; // Include line spacing
+
+        // Calculate capacity
+        int charsPerLine = Math.max(10, (int)(availableWidth / charWidth));
+        int maxLines = Math.max(1, (int)(availableHeight / lineHeight));
+        int screenCapacity = charsPerLine * maxLines;
+
+        // Apply user multiplier but keep it reasonable
+        float userMultiplier = getSentenceLengthMultiplier();
+        int optimalLength = (int)(screenCapacity * userMultiplier);
+
+        // Ensure reasonable bounds (min 30, max based on screen capacity)
+        int minLength = 30;
+        int maxLength = screenCapacity * 3; // Allow up to 3x screen capacity for very long sentences
+        int finalLength = Math.max(minLength, Math.min(maxLength, optimalLength));
+
+        // Debug logging
+        DebugLogger.logDynamicCalc(screenWidth, screenHeight, availableWidth, availableHeight,
+            fontSize, fontSizePx, charsPerLine, maxLines, screenCapacity, userMultiplier, finalLength);
+
+        return finalLength;
+    }
+
+    /**
+     * Calculate available height for text content
+     */
+    private int calculateAvailableTextHeight(Context context, int screenHeight) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+        // Estimate UI overhead (status bar, navigation, header, buttons)
+        int statusBarHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, metrics);
+        int navigationBarHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48, metrics);
+        int headerHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80, metrics);
+        int bottomButtonsHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80, metrics);
+        int ttsControlHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, metrics);
+        int verticalPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, metrics);
+
+        int totalOverhead = statusBarHeight + navigationBarHeight + headerHeight +
+                           bottomButtonsHeight + ttsControlHeight + verticalPadding;
+
+        return Math.max(200, screenHeight - totalOverhead);
+    }
+
+    /**
+     * Calculate available width for text content
+     */
+    private int calculateAvailableTextWidth(Context context, int screenWidth) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+        // Get horizontal padding
+        int horizontalPadding = (int) TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            getPaddingHorizontal() * 2, // Both sides
+            metrics
+        );
+
+        // Add some margin for text padding
+        int textPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, metrics);
+
+        return Math.max(200, screenWidth - horizontalPadding - textPadding);
+    }
+
+    /**
+     * Legacy calculation method (fallback)
+     */
+    private int getMaxSentenceLengthLegacy() {
         int fontSize = getFontSize();
         float userMultiplier = getSentenceLengthMultiplier();
 
@@ -241,6 +335,21 @@ public class SettingsManager {
 
         // Ensure minimum of 30 characters
         return Math.max(30, finalLength);
+    }
+
+    /**
+     * Main method to get maximum sentence length - now uses dynamic calculation
+     */
+    public int getMaxSentenceLength() {
+        // This will be updated to use context when called from Activity
+        return getMaxSentenceLengthLegacy();
+    }
+
+    /**
+     * Get maximum sentence length with context for dynamic calculation
+     */
+    public int getMaxSentenceLength(Context context) {
+        return calculateOptimalSentenceLength(context);
     }
 
     // Reset to defaults

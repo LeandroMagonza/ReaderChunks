@@ -20,6 +20,13 @@ public class DynamicSentenceSplitter {
     public DynamicSentenceSplitter(String paragraph, int maxLength) {
         this.paragraph = paragraph != null ? paragraph : "";
         this.maxLength = maxLength;
+
+        // Debug logging para ver qué límite recibe
+        DebugLogger.d("SPLITTER_DEBUG", String.format(
+            "Creating splitter with maxLength: %d, paragraph length: %d",
+            maxLength, paragraph != null ? paragraph.length() : 0
+        ));
+
         calculateEndPositionsAndTypes();
     }
 
@@ -58,10 +65,23 @@ public class DynamicSentenceSplitter {
 
             // If too long, split by priority: : > ; > , > space
             if (end - start > maxLength) {
+                int originalLength = end - start;
+                DebugLogger.d("SPLITTER_DEBUG", String.format(
+                    "Sentence too long! Length: %d, MaxLength: %d, Text: '%.50s...'",
+                    originalLength, maxLength, paragraph.substring(start, Math.min(start + 50, end))
+                ));
+
                 SplitResult splitResult = findBestSplitPointWithType(start, end);
                 end = splitResult.position;
                 endType = splitResult.type;
+
+                DebugLogger.d("SPLITTER_DEBUG", String.format(
+                    "Cut from %d to %d chars, EndType: %s", originalLength, end - start, endType
+                ));
             } else if (isNaturalSentenceEnd) {
+                DebugLogger.d("SPLITTER_DEBUG", String.format(
+                    "Sentence OK: %d chars (limit: %d)", end - start, maxLength
+                ));
                 // Check if it's end of paragraph
                 if (end >= paragraph.length()) {
                     endType = SentenceEndType.PARAGRAPH_END;
@@ -205,7 +225,7 @@ public class DynamicSentenceSplitter {
         // No good split found anywhere, hard cut at maxLength
         String textPreview = paragraph.substring(Math.max(0, maxSearchEnd - 15),
             Math.min(paragraph.length(), maxSearchEnd + 5));
-        Log.d("SENTENCE_SPLIT", String.format("Hard cut at pos %d: ...%s...", maxSearchEnd, textPreview));
+        DebugLogger.d("SENTENCE_SPLIT", String.format("Hard cut at pos %d: ...%s...", maxSearchEnd, textPreview));
         return new SplitResult(maxSearchEnd, SentenceEndType.CHARACTER_LIMIT);
     }
 

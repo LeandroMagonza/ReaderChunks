@@ -212,7 +212,7 @@ public class SettingsDialogManager {
             int lineSpacing = settingsManager.getLineSpacing();
             int padding = settingsManager.getPaddingHorizontal();
             float sentenceMultiplier = settingsManager.getSentenceLengthMultiplier();
-            int maxSentenceLength = settingsManager.getMaxSentenceLength();
+            int maxSentenceLength = settingsManager.getMaxSentenceLength(context);
             BionicTextProcessor.BionicMode bionicMode = settingsManager.getBionicReadingMode();
 
             tvFontSize.setText(fontSize + " sp");

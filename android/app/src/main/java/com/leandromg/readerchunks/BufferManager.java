@@ -3,10 +3,13 @@ package com.leandromg.readerchunks;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import android.content.Context;
+import android.util.Log;
 
 public class BufferManager {
     private BookCacheManager cacheManager;
     private SettingsManager settingsManager;
+    private Context context;
     private ExecutorService executor;
     private String currentBookId;
     private int totalParagraphs;
@@ -27,9 +30,10 @@ public class BufferManager {
         void onBufferError(String error);
     }
 
-    public BufferManager(BookCacheManager cacheManager, SettingsManager settingsManager) {
+    public BufferManager(BookCacheManager cacheManager, SettingsManager settingsManager, Context context) {
         this.cacheManager = cacheManager;
         this.settingsManager = settingsManager;
+        this.context = context;
         this.executor = Executors.newSingleThreadExecutor();
     }
 
@@ -341,8 +345,14 @@ public class BufferManager {
     private void loadParagraphsAroundIndexSync(int paragraphIndex) throws IOException {
         currentParagraphIndex = paragraphIndex;
 
-        // Get current max sentence length
-        int maxSentenceLength = settingsManager.getMaxSentenceLength();
+        // Get current max sentence length using dynamic calculation
+        int maxSentenceLength = settingsManager.getMaxSentenceLength(context);
+
+        // Debug logging para verificar el valor que se está pasando
+        DebugLogger.d("BUFFER_DEBUG", String.format(
+            "BufferManager: Using maxSentenceLength = %d for paragraph %d",
+            maxSentenceLength, paragraphIndex
+        ));
 
         // Load current paragraph
         String currentText = cacheManager.getSentence(currentBookId, paragraphIndex);
@@ -376,7 +386,7 @@ public class BufferManager {
             executor.execute(() -> {
                 try {
                     String nextText = cacheManager.getSentence(currentBookId, nextIndex);
-                    int maxSentenceLength = settingsManager.getMaxSentenceLength();
+                    int maxSentenceLength = settingsManager.getMaxSentenceLength(context);
                     nextParagraph = new ParagraphSentences(nextText, nextIndex, maxSentenceLength);
                 } catch (IOException e) {
                     // Silent fail for async preload
@@ -394,7 +404,7 @@ public class BufferManager {
             executor.execute(() -> {
                 try {
                     String prevText = cacheManager.getSentence(currentBookId, prevIndex);
-                    int maxSentenceLength = settingsManager.getMaxSentenceLength();
+                    int maxSentenceLength = settingsManager.getMaxSentenceLength(context);
                     previousParagraph = new ParagraphSentences(prevText, prevIndex, maxSentenceLength);
                 } catch (IOException e) {
                     // Silent fail for async preload
