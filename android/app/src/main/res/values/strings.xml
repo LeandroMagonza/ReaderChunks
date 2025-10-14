@@ -150,4 +150,10 @@
     <string name="language_changed">Idioma cambiado correctamente</string>
     <string name="normal_text">Normal</string>
     <string name="close">Cerrar</string>
+
+    <!-- Reading Mode Settings -->
+    <string name="reading_mode">Modo de lectura</string>
+    <string name="reading_mode_sentence">Oración</string>
+    <string name="reading_mode_paragraph">Párrafo</string>
+    <string name="reading_mode_description">Selecciona cómo mostrar el texto</string>
 </resources>

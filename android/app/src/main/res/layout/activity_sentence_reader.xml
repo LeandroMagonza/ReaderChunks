@@ -24,17 +24,6 @@
             android:text="@string/back"
             android:textAllCaps="false" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnToggleMode"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/mode_sentence_icon"
-            android:textAllCaps="false"
-            android:textSize="14sp"
-            android:minWidth="0dp"
-            android:paddingHorizontal="12dp" />
-
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
@@ -93,27 +82,15 @@
 
         </RelativeLayout>
 
-        <!-- Font Settings Button -->
+        <!-- Settings Button -->
         <ImageButton
             android:id="@+id/btnFontSettings"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
-            android:src="@drawable/ic_text_size"
+            android:src="@drawable/ic_settings"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/font_settings"
-            android:scaleType="fitCenter"
-            android:padding="12dp" />
-
-        <!-- TTS Button -->
-        <ImageButton
-            android:id="@+id/btnTTSSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_volume_up"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/tts_settings"
+            android:contentDescription="@string/settings"
             android:scaleType="fitCenter"
             android:padding="12dp" />
 

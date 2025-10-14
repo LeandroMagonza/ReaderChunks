@@ -30,7 +30,8 @@ public class SettingsDialogManager {
         MAIN_LIST,
         LANGUAGE,
         FONT,
-        VOICE
+        VOICE,
+        READING_MODE
     }
 
     private Context context;
@@ -42,9 +43,18 @@ public class SettingsDialogManager {
     private boolean isNavigating = false; // Flag to prevent premature callbacks during navigation
     private boolean hasActualChanges = false; // Flag to track if any actual settings were changed
 
+    // Reading mode state
+    private boolean isFullParagraphMode = false;
+    private ReadingModeChangeListener readingModeChangeListener;
+
     // Callback for settings changes (optional)
     public interface SettingsChangeListener {
         void onSettingsChanged();
+    }
+
+    // Callback for reading mode changes
+    public interface ReadingModeChangeListener {
+        void onReadingModeChanged(boolean isFullParagraphMode);
     }
 
     private SettingsChangeListener changeListener;
@@ -57,6 +67,14 @@ public class SettingsDialogManager {
 
     public void setSettingsChangeListener(SettingsChangeListener listener) {
         this.changeListener = listener;
+    }
+
+    public void setReadingModeChangeListener(ReadingModeChangeListener listener) {
+        this.readingModeChangeListener = listener;
+    }
+
+    public void setCurrentReadingMode(boolean isFullParagraphMode) {
+        this.isFullParagraphMode = isFullParagraphMode;
     }
 
     public void show() {
@@ -121,6 +139,18 @@ public class SettingsDialogManager {
             0
         ));
 
+        // Reading mode category
+        String readingModeSubtitle = isFullParagraphMode ?
+            context.getString(R.string.reading_mode_paragraph) :
+            context.getString(R.string.reading_mode_sentence);
+        categories.add(new CategoryItem(
+            SettingsCategory.READING_MODE,
+            "📖",
+            context.getString(R.string.reading_mode),
+            readingModeSubtitle,
+            0
+        ));
+
         return categories;
     }
 
@@ -134,6 +164,9 @@ public class SettingsDialogManager {
                 break;
             case VOICE:
                 showVoiceSettings();
+                break;
+            case READING_MODE:
+                showReadingModeSettings();
                 break;
         }
     }
@@ -465,6 +498,44 @@ public class SettingsDialogManager {
         });
 
         showDialog(dialogView, context.getString(R.string.voice_settings));
+    }
+
+    private void showReadingModeSettings() {
+        currentCategory = SettingsCategory.READING_MODE;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_reading_mode, null);
+
+        ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
+        RadioGroup radioGroupReadingMode = dialogView.findViewById(R.id.radioGroupReadingMode);
+        RadioButton radioSentenceMode = dialogView.findViewById(R.id.radioSentenceMode);
+        RadioButton radioParagraphMode = dialogView.findViewById(R.id.radioParagraphMode);
+
+        btnBack.setOnClickListener(v -> showCategoryList());
+
+        // Set current mode
+        if (isFullParagraphMode) {
+            radioParagraphMode.setChecked(true);
+        } else {
+            radioSentenceMode.setChecked(true);
+        }
+
+        // Set up listener for reading mode changes
+        radioGroupReadingMode.setOnCheckedChangeListener((group, checkedId) -> {
+            boolean newIsFullParagraphMode = (checkedId == R.id.radioParagraphMode);
+            if (newIsFullParagraphMode != isFullParagraphMode) {
+                isFullParagraphMode = newIsFullParagraphMode;
+                hasActualChanges = true; // Mark that an actual change was made
+
+                // Notify the reading activity immediately
+                if (readingModeChangeListener != null) {
+                    readingModeChangeListener.onReadingModeChanged(isFullParagraphMode);
+                }
+
+                // Return to main list with updated info
+                showCategoryList();
+            }
+        });
+
+        showDialog(dialogView, context.getString(R.string.reading_mode));
     }
 
     private void updateSpeedText(TextView tvSpeedValue, float speed) {
