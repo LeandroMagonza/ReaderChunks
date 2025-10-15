@@ -46,6 +46,30 @@ public class BookCacheManager {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
 
+            // Handle web URLs differently than file URIs
+            if (WebTextExtractorImpl.canHandleUri(uri)) {
+                android.util.Log.d("BookCacheManager", "Generating ID for web URL: " + uri.toString());
+                // For web URLs, use the URL string itself to generate ID
+                String urlString = uri.toString();
+                md.update(urlString.getBytes("UTF-8"));
+                byte[] digest = md.digest();
+
+                StringBuilder sb = new StringBuilder();
+                for (byte b : digest) {
+                    sb.append(String.format("%02x", b));
+                }
+                android.util.Log.d("BookCacheManager", "Generated web URL ID: " + sb.toString());
+                return sb.toString();
+            }
+
+            // Double-check that we're not trying to use ContentResolver on web URLs
+            String scheme = uri.getScheme();
+            if ("http".equals(scheme) || "https".equals(scheme)) {
+                android.util.Log.e("BookCacheManager", "ERROR: Web URL detected but canHandleUri returned false! URI: " + uri.toString());
+                throw new IOException("Error interno: URL web no manejada correctamente");
+            }
+
+            android.util.Log.d("BookCacheManager", "Generating ID for file URI: " + uri.toString());
             InputStream inputStream = context.getContentResolver().openInputStream(uri);
             if (inputStream == null) {
                 throw new IOException("Cannot open file");
@@ -77,14 +101,20 @@ public class BookCacheManager {
             return loadBookMeta(bookId);
         }
 
-        // Get appropriate text extractor using filename instead of URI
-        String extension = TextExtractorFactory.getFileExtension(fileName);
-        android.util.Log.d("BookCacheManager", "Processing file: " + fileName + " with extension: " + extension);
+        // Get appropriate text extractor - prioritize URI analysis over filename
+        android.util.Log.d("BookCacheManager", "Processing URI: " + uri.toString() + " with filename: " + fileName);
 
-        TextExtractor extractor = TextExtractorFactory.getExtractorForExtension(extension);
+        TextExtractor extractor = TextExtractorFactory.getExtractorForUri(uri);
         if (extractor == null) {
-            android.util.Log.e("BookCacheManager", "No extractor found for extension: " + extension);
-            throw new IOException("Formato de archivo no soportado: " + extension);
+            // Fallback to filename-based detection for local files
+            String extension = TextExtractorFactory.getFileExtension(fileName);
+            android.util.Log.d("BookCacheManager", "Fallback to extension: " + extension);
+            extractor = TextExtractorFactory.getExtractorForExtension(extension);
+        }
+
+        if (extractor == null) {
+            android.util.Log.e("BookCacheManager", "No extractor found for URI: " + uri.toString() + " or filename: " + fileName);
+            throw new IOException("Formato no soportado: " + uri.toString());
         }
 
         android.util.Log.d("BookCacheManager", "Using extractor: " + extractor.getClass().getSimpleName());

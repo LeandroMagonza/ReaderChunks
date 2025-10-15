@@ -17,6 +17,12 @@ public class PDFTextExtractorImpl implements TextExtractor {
 
     @Override
     public String extractTextFromUri(Context context, Uri uri) throws IOException {
+        // Defensive check: this extractor should never be called for web URLs
+        String scheme = uri.getScheme();
+        if ("http".equals(scheme) || "https".equals(scheme)) {
+            throw new IOException("PDFTextExtractorImpl cannot handle web URLs: " + uri.toString());
+        }
+
         PDFBoxResourceLoader.init(context);
 
         InputStream inputStream = null;

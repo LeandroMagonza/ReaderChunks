@@ -1,5 +1,6 @@
 package com.leandromg.readerchunks;
 
+import android.content.Context;
 import android.net.Uri;
 
 import java.util.ArrayList;
@@ -7,11 +8,12 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Factory class for creating appropriate text extractors based on file type
+ * Factory class for creating appropriate text extractors based on file type or URL
  */
 public class TextExtractorFactory {
 
     private static final List<TextExtractor> EXTRACTORS;
+    private static Context applicationContext;
 
     static {
         EXTRACTORS = Arrays.asList(
@@ -29,11 +31,28 @@ public class TextExtractorFactory {
     }
 
     /**
-     * Get the appropriate text extractor for a file URI
-     * @param uri File URI
+     * Initialize the factory with application context (required for WebTextExtractor)
+     */
+    public static void initialize(Context context) {
+        applicationContext = context.getApplicationContext();
+    }
+
+    /**
+     * Get the appropriate text extractor for a file URI or web URL
+     * @param uri File URI or web URL
      * @return TextExtractor instance or null if format is not supported
      */
     public static TextExtractor getExtractorForUri(Uri uri) {
+        // Check if it's a web URL first
+        if (WebTextExtractorImpl.canHandleUri(uri)) {
+            if (applicationContext == null) {
+                android.util.Log.e("TextExtractorFactory", "Context not initialized for WebTextExtractor");
+                return null;
+            }
+            return new WebTextExtractorImpl(applicationContext);
+        }
+
+        // Handle file URIs
         String extension = getFileExtension(uri);
         if (extension == null) {
             return null;
@@ -119,7 +138,30 @@ public class TextExtractorFactory {
      * @return Formatted string listing supported formats
      */
     public static String getSupportedFormatsDescription() {
-        return "PDF, TXT, Markdown (MD), EPUB";
+        return "PDF, TXT, Markdown (MD), EPUB, URLs Web";
+    }
+
+    /**
+     * Check if a URI is supported (file or web URL)
+     * @param uri URI to check
+     * @return true if supported, false otherwise
+     */
+    public static boolean isUriSupported(Uri uri) {
+        if (WebTextExtractorImpl.canHandleUri(uri)) {
+            return true;
+        }
+
+        String extension = getFileExtension(uri);
+        return extension != null && isExtensionSupported(extension);
+    }
+
+    /**
+     * Check if a URL string is a supported web URL
+     * @param url URL string to check
+     * @return true if supported, false otherwise
+     */
+    public static boolean isSupportedWebUrl(String url) {
+        return WebTextExtractorImpl.isSupportedUrl(url);
     }
 
     /**

@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize TextExtractorFactory with context for web support
+        TextExtractorFactory.initialize(this);
+
         initViews();
         setupToolbar();
         setupExecutor();
@@ -74,8 +77,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         setupClickListeners();
         loadBooks();
 
-        // Handle external file opening intent
-        handleExternalFileIntent();
+        // Handle external file or URL sharing intent
+        handleExternalIntent();
     }
 
     private void initViews() {
@@ -139,6 +142,19 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     }
 
     private void processDocument(Uri uri, String fileName) {
+        android.util.Log.d("MainActivity", "processDocument called with URI: " + uri.toString());
+        android.util.Log.d("MainActivity", "processDocument called with fileName: " + fileName);
+        android.util.Log.d("MainActivity", "URI scheme: " + uri.getScheme());
+
+        // Check if it's a web URL or file
+        if (WebTextExtractorImpl.canHandleUri(uri)) {
+            android.util.Log.d("MainActivity", "Detected as web URL, calling processWebUrl");
+            processWebUrl(uri, fileName);
+            return;
+        }
+
+        android.util.Log.d("MainActivity", "Detected as local file, processing normally");
+
         // Check if file format is supported
         String extension = TextExtractorFactory.getFileExtension(fileName);
         if (extension == null) {
@@ -189,6 +205,73 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                     showLoading(false);
                     String fileType = extension != null ? extension.toUpperCase() : "archivo";
                     showError(getString(R.string.error_processing_file, fileType, e.getMessage()));
+                });
+            }
+        });
+    }
+
+    private void processWebUrl(Uri uri, String fileName) {
+        String url = uri.toString();
+        android.util.Log.d("MainActivity", "=== PROCESSING WEB URL ===");
+        android.util.Log.d("MainActivity", "URL: " + url);
+        android.util.Log.d("MainActivity", "URI: " + uri.toString());
+        android.util.Log.d("MainActivity", "URI scheme: " + uri.getScheme());
+        android.util.Log.d("MainActivity", "Can handle URI: " + WebTextExtractorImpl.canHandleUri(uri));
+
+        // Validate the URI is actually a web URL
+        if (!WebTextExtractorImpl.canHandleUri(uri)) {
+            android.util.Log.e("MainActivity", "ERROR: URI is not a valid web URL: " + uri.toString());
+            showError("❌ URL no válida para contenido web: " + url);
+            return;
+        }
+
+        showLoading(true);
+        tvStatus.setText("Conectando a la página web...");
+
+        executor.execute(() -> {
+            try {
+                // Update status during processing
+                runOnUiThread(() -> tvStatus.setText("Descargando contenido web..."));
+
+                // Generate a proper title for the web content
+                String webTitle = WebToPDFProcessor.getTitleFromUrl(url);
+                android.util.Log.d("MainActivity", "Generated web title: " + webTitle);
+
+                android.util.Log.d("MainActivity", "Calling cacheManager.processAndCacheBook...");
+                Book book = cacheManager.processAndCacheBook(uri, webTitle);
+                android.util.Log.d("MainActivity", "Successfully processed web content. Book ID: " + book.getId());
+
+                runOnUiThread(() -> {
+                    tvStatus.setText("Guardando en biblioteca...");
+                });
+
+                // Small delay to show the final status
+                Thread.sleep(500);
+
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    books.add(0, book);
+                    bookAdapter.updateBooks(books);
+                    updateViewState();
+
+                    Toast.makeText(this, getString(R.string.web_content_added_success, webTitle), Toast.LENGTH_LONG).show();
+                });
+
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error processing web URL: " + url, e);
+                android.util.Log.e("MainActivity", "Exception type: " + e.getClass().getSimpleName());
+                android.util.Log.e("MainActivity", "Exception message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    android.util.Log.e("MainActivity", "Exception cause: " + e.getCause().getMessage());
+                }
+
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    String errorMsg = e.getMessage();
+                    if (errorMsg != null && errorMsg.contains("no content provider")) {
+                        errorMsg = "Error de configuración interna. Por favor intenta de nuevo.";
+                    }
+                    showError(getString(R.string.error_processing_web_content, errorMsg));
                 });
             }
         });
@@ -462,40 +545,158 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        // Update the intent and handle the new file
+        // Update the intent and handle the new file or URL
         setIntent(intent);
-        handleExternalFileIntent();
+        handleExternalIntent();
     }
 
     /**
-     * Handle when the app is opened via an external file intent
+     * Handle when the app is opened via an external file or URL sharing intent
      */
-    private void handleExternalFileIntent() {
+    private void handleExternalIntent() {
         Intent intent = getIntent();
-        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
-            Uri fileUri = intent.getData();
-            if (fileUri != null) {
-                // For content:// URIs, try to get persistent access permission
-                if ("content".equals(fileUri.getScheme())) {
-                    try {
-                        getContentResolver().takePersistableUriPermission(fileUri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    } catch (SecurityException e) {
-                        // Permission not available, but we can still try to process the file
-                        android.util.Log.w("MainActivity", "Could not get persistent permission for: " + fileUri);
-                    }
-                }
+        String action = intent.getAction();
 
-                String fileName = getFileNameFromUri(fileUri);
-                android.util.Log.d("MainActivity", "External file intent - File: " + fileName + ", URI: " + fileUri);
+        android.util.Log.d("MainActivity", "=== HANDLING EXTERNAL INTENT ===");
+        android.util.Log.d("MainActivity", "Intent action: " + action);
+        android.util.Log.d("MainActivity", "Intent data: " + intent.getData());
+        android.util.Log.d("MainActivity", "Intent type: " + intent.getType());
 
-                // Show a toast to indicate the file is being processed
-                Toast.makeText(this, getString(R.string.opening_file, fileName), Toast.LENGTH_SHORT).show();
-
-                // Process the external file directly
-                processDocument(fileUri, fileName);
+        // Log all extras
+        if (intent.getExtras() != null) {
+            for (String key : intent.getExtras().keySet()) {
+                android.util.Log.d("MainActivity", "Extra '" + key + "': " + intent.getExtras().get(key));
             }
         }
+
+        if (Intent.ACTION_VIEW.equals(action)) {
+            // Handle file opening or direct URL opening
+            Uri fileUri = intent.getData();
+            android.util.Log.d("MainActivity", "ACTION_VIEW with URI: " + fileUri);
+            if (fileUri != null) {
+                handleFileUri(fileUri);
+            }
+        } else if (Intent.ACTION_SEND.equals(action)) {
+            // Handle URL sharing from other apps
+            String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+            android.util.Log.d("MainActivity", "ACTION_SEND with text: " + sharedText);
+            if (sharedText != null) {
+                handleSharedUrl(sharedText);
+            } else {
+                android.util.Log.w("MainActivity", "ACTION_SEND but no EXTRA_TEXT found");
+            }
+        } else {
+            android.util.Log.w("MainActivity", "Unknown action: " + action);
+        }
+    }
+
+    private void handleFileUri(Uri fileUri) {
+        android.util.Log.d("MainActivity", "handleFileUri called with: " + fileUri);
+        android.util.Log.d("MainActivity", "URI scheme: " + fileUri.getScheme());
+
+        // Check if this is actually a web URL that came through ACTION_VIEW
+        if (WebTextExtractorImpl.canHandleUri(fileUri)) {
+            android.util.Log.d("MainActivity", "URI is web URL, processing as web content");
+            String title = WebToPDFProcessor.getTitleFromUrl(fileUri.toString());
+            processWebUrl(fileUri, title);
+            return;
+        }
+
+        // For content:// URIs, try to get persistent access permission
+        if ("content".equals(fileUri.getScheme())) {
+            try {
+                getContentResolver().takePersistableUriPermission(fileUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (SecurityException e) {
+                // Permission not available, but we can still try to process the file
+                android.util.Log.w("MainActivity", "Could not get persistent permission for: " + fileUri);
+            }
+        }
+
+        String fileName = getFileNameFromUri(fileUri);
+        android.util.Log.d("MainActivity", "External file intent - File: " + fileName + ", URI: " + fileUri);
+
+        // Show a toast to indicate the file is being processed
+        Toast.makeText(this, getString(R.string.opening_file, fileName), Toast.LENGTH_SHORT).show();
+
+        // Process the external file directly
+        processDocument(fileUri, fileName);
+    }
+
+    private void handleSharedUrl(String sharedText) {
+        android.util.Log.d("MainActivity", "=== HANDLING SHARED URL ===");
+        android.util.Log.d("MainActivity", "Shared text received: " + sharedText);
+
+        // Extract URL from shared text (might contain additional text)
+        String url = extractUrlFromSharedText(sharedText);
+        android.util.Log.d("MainActivity", "Extracted URL: " + url);
+
+        if (url != null && TextExtractorFactory.isSupportedWebUrl(url)) {
+            android.util.Log.d("MainActivity", "URL is supported, processing: " + url);
+
+            // Show a toast to indicate the URL is being processed
+            String title = WebToPDFProcessor.getTitleFromUrl(url);
+            Toast.makeText(this, getString(R.string.processing_shared_url, title), Toast.LENGTH_SHORT).show();
+
+            // Convert to URI and validate
+            Uri uri = Uri.parse(url);
+            android.util.Log.d("MainActivity", "Parsed URI: " + uri.toString());
+            android.util.Log.d("MainActivity", "URI scheme: " + uri.getScheme());
+            android.util.Log.d("MainActivity", "canHandleUri result: " + WebTextExtractorImpl.canHandleUri(uri));
+
+            // Double-check that the URI is valid for web processing
+            if (!WebTextExtractorImpl.canHandleUri(uri)) {
+                android.util.Log.e("MainActivity", "ERROR: Parsed URI is not valid for web processing: " + uri.toString());
+                showError("❌ Error procesando URL compartida: " + url);
+                return;
+            }
+
+            // Force web URL processing to avoid Content Provider issues
+            processWebUrl(uri, title);
+        } else {
+            android.util.Log.e("MainActivity", "URL not supported or invalid");
+            android.util.Log.e("MainActivity", "URL: " + url);
+            android.util.Log.e("MainActivity", "URL is null: " + (url == null));
+            if (url != null) {
+                android.util.Log.e("MainActivity", "isSupportedWebUrl result: " + TextExtractorFactory.isSupportedWebUrl(url));
+            }
+            showError("❌ URL no soportada o no válida: " + sharedText);
+        }
+    }
+
+    /**
+     * Extract URL from shared text (which might contain additional content)
+     */
+    private String extractUrlFromSharedText(String sharedText) {
+        android.util.Log.d("MainActivity", "extractUrlFromSharedText input: '" + sharedText + "'");
+
+        if (sharedText == null || sharedText.trim().isEmpty()) {
+            android.util.Log.d("MainActivity", "Shared text is null or empty");
+            return null;
+        }
+
+        // Look for http:// or https:// URLs in the text
+        String[] words = sharedText.split("\\s+");
+        android.util.Log.d("MainActivity", "Split into " + words.length + " words");
+
+        for (String word : words) {
+            word = word.trim();
+            android.util.Log.d("MainActivity", "Checking word: '" + word + "'");
+            if (word.startsWith("http://") || word.startsWith("https://")) {
+                android.util.Log.d("MainActivity", "Found URL in words: " + word);
+                return word;
+            }
+        }
+
+        // If the entire text looks like a URL
+        sharedText = sharedText.trim();
+        if (sharedText.startsWith("http://") || sharedText.startsWith("https://")) {
+            android.util.Log.d("MainActivity", "Entire text is URL: " + sharedText);
+            return sharedText;
+        }
+
+        android.util.Log.d("MainActivity", "No URL found in shared text");
+        return null;
     }
 
     @Override

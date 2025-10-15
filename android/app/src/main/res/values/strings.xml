@@ -115,6 +115,13 @@
     <string name="error_processing_file" formatted="false">❌ Error procesando %s: %s</string>
     <string name="opening_file">Abriendo %s...</string>
 
+    <!-- Web content messages -->
+    <string name="web_content_added_success">✅ Contenido web agregado: %s</string>
+    <string name="error_processing_web_content">❌ Error procesando contenido web: %s</string>
+    <string name="processing_shared_url">Procesando contenido de %s...</string>
+    <string name="connecting_to_web">Conectando a la página web...</string>
+    <string name="downloading_web_content">Descargando contenido web...</string>
+
     <!-- TTS (Text-to-Speech) -->
     <string name="tts_settings">Configuración de voz</string>
     <string name="tts_enabled">Lectura por voz</string>

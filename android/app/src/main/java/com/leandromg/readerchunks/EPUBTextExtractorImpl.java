@@ -24,6 +24,12 @@ public class EPUBTextExtractorImpl implements TextExtractor {
 
     @Override
     public String extractTextFromUri(Context context, Uri uri) throws IOException {
+        // Defensive check: this extractor should never be called for web URLs
+        String scheme = uri.getScheme();
+        if ("http".equals(scheme) || "https".equals(scheme)) {
+            throw new IOException("EPUBTextExtractorImpl cannot handle web URLs: " + uri.toString());
+        }
+
         InputStream inputStream = null;
         ZipInputStream zipInputStream = null;
 
