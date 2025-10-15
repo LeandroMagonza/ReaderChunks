@@ -347,6 +347,33 @@ Libro de 10,000 oraciones:
 - [x] **Configuración completa**: fuentes, espaciado, márgenes, modo oscuro/claro
 - [x] **Longitud de oraciones configurable**: adaptación inteligente según tamaño de fuente
 
+### 🌐 Funcionalidad de Contenido Web
+- [x] **Extracción de contenido web**: Soporte para URLs compartidas desde navegadores
+- [x] **Integración con Android Share**: Recibe enlaces compartidos automáticamente
+- [x] **Procesamiento de Wikipedia**: Funciona específicamente con artículos de Wikipedia
+- [x] **JSoup HTML Parser**: Extrae texto limpio de páginas web eliminando elementos no deseados
+- [x] **Sistema de debug**: Pantalla de logs para diagnosticar problemas con URLs
+- [x] **Validación de URLs**: Verificación automática de compatibilidad antes de procesar
+- [x] **Cache web**: Las páginas web se procesan y almacenan igual que documentos locales
+- [x] **Títulos inteligentes**: Extrae automáticamente el título de la página web
+
+#### Uso de la funcionalidad web:
+1. **Abrir navegador** → Buscar artículo de Wikipedia
+2. **Compartir** → Seleccionar "BookBits" de la lista
+3. **Procesamiento automático** → La app descarga y procesa el contenido
+4. **Lectura segmentada** → Lee el artículo usando los mismos modos que documentos locales
+
+#### Sitios web compatibles:
+- ✅ **Wikipedia** (todas las versiones de idioma)
+- ✅ **Páginas web generales** con contenido de texto
+- ✅ **Artículos de blog** y sitios de noticias
+- ✅ **Documentación técnica** en línea
+
+#### Sistema de debug para web:
+- **Acceso**: Menú → Configuración → Debug
+- **Información disponible**: URLs procesadas, errores de conexión, contenido extraído
+- **Funcionalidad**: Botón copiar para compartir logs con soporte técnico
+
 ### 🚀 Cómo Usar
 1. **Compilar**: `cd android && gradlew assembleDebug`
 2. **APK**: `android/app/build/outputs/apk/debug/app-debug.apk`

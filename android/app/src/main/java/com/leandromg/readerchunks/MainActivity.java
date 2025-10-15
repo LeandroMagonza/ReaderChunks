@@ -1,5 +1,8 @@
 package com.leandromg.readerchunks;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -124,8 +127,8 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     }
 
     private void setupClickListeners() {
-        btnAddDocument.setOnClickListener(v -> openDocumentPicker());
-        btnAddDocumentEmpty.setOnClickListener(v -> openDocumentPicker());
+        btnAddDocument.setOnClickListener(v -> showAddContentDialog());
+        btnAddDocumentEmpty.setOnClickListener(v -> showAddContentDialog());
     }
 
     private void openDocumentPicker() {
@@ -697,6 +700,283 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
         android.util.Log.d("MainActivity", "No URL found in shared text");
         return null;
+    }
+
+    /**
+     * Process text from clipboard and create a book from it
+     */
+    private void processClipboardText() {
+        android.util.Log.d("MainActivity", "=== PROCESSING CLIPBOARD TEXT ===");
+
+        // Get clipboard manager
+        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboardManager == null) {
+            android.util.Log.e("MainActivity", "ClipboardManager is null");
+            showError(getString(R.string.clipboard_error, "No se pudo acceder al portapapeles"));
+            return;
+        }
+
+        // Check if clipboard has data
+        if (!clipboardManager.hasPrimaryClip()) {
+            android.util.Log.d("MainActivity", "Clipboard is empty");
+            Toast.makeText(this, getString(R.string.clipboard_empty), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        if (clipData == null || clipData.getItemCount() == 0) {
+            android.util.Log.d("MainActivity", "Clipboard data is null or empty");
+            Toast.makeText(this, getString(R.string.clipboard_empty), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Get the text from clipboard
+        ClipData.Item clipItem = clipData.getItemAt(0);
+        CharSequence clipText = clipItem.getText();
+
+        if (clipText == null || clipText.toString().trim().isEmpty()) {
+            android.util.Log.d("MainActivity", "Clipboard contains no text");
+            Toast.makeText(this, getString(R.string.clipboard_no_text), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String text = clipText.toString().trim();
+        android.util.Log.d("MainActivity", "Clipboard text length: " + text.length());
+        android.util.Log.d("MainActivity", "Clipboard text preview: " + text.substring(0, Math.min(100, text.length())));
+
+        // Check if the clipboard contains a URL
+        if (isUrl(text)) {
+            android.util.Log.d("MainActivity", "Clipboard contains URL, processing as web content");
+            Uri uri = Uri.parse(text);
+            String title = WebToPDFProcessor.getTitleFromUrl(text);
+            processWebUrl(uri, title);
+            return;
+        }
+
+        // Process as plain text
+        processTextAsBook(text);
+    }
+
+    /**
+     * Check if text looks like a URL
+     */
+    private boolean isUrl(String text) {
+        text = text.trim();
+        return text.startsWith("http://") || text.startsWith("https://");
+    }
+
+    /**
+     * Process plain text and create a book from it
+     */
+    private void processTextAsBook(String text) {
+        android.util.Log.d("MainActivity", "=== PROCESSING TEXT AS BOOK ===");
+        android.util.Log.d("MainActivity", "Text length: " + text.length());
+
+        // Validate text length
+        if (text.length() < 10) {
+            showError("❌ El texto es demasiado corto para crear un libro");
+            return;
+        }
+
+        showLoading(true);
+        tvStatus.setText(getString(R.string.clipboard_processing));
+
+        executor.execute(() -> {
+            try {
+                // Update status during processing
+                runOnUiThread(() -> tvStatus.setText("Procesando texto..."));
+
+                // Generate a title from the first line or first few words
+                String title = generateTitleFromText(text);
+                android.util.Log.d("MainActivity", "Generated title: " + title);
+
+                // Create a book directly from the text
+                Book book = cacheManager.processAndCacheTextAsBook(text, title);
+                android.util.Log.d("MainActivity", "Successfully processed text. Book ID: " + book.getId());
+
+                runOnUiThread(() -> {
+                    tvStatus.setText("Guardando en biblioteca...");
+                });
+
+                // Small delay to show the final status
+                Thread.sleep(500);
+
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    books.add(0, book);
+                    bookAdapter.updateBooks(books);
+                    updateViewState();
+
+                    Toast.makeText(this, getString(R.string.clipboard_text_added), Toast.LENGTH_LONG).show();
+                });
+
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error processing clipboard text", e);
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    showError(getString(R.string.clipboard_error, e.getMessage()));
+                });
+            }
+        });
+    }
+
+    /**
+     * Generate a title from the beginning of the text
+     */
+    private String generateTitleFromText(String text) {
+        // Try to get the first line as title
+        String[] lines = text.split("\\n");
+        String firstLine = lines[0].trim();
+
+        // If first line is too long, take first few words
+        if (firstLine.length() > 50) {
+            String[] words = firstLine.split("\\s+");
+            StringBuilder titleBuilder = new StringBuilder();
+            for (int i = 0; i < Math.min(8, words.length); i++) {
+                if (titleBuilder.length() > 0) titleBuilder.append(" ");
+                titleBuilder.append(words[i]);
+                if (titleBuilder.length() > 45) break;
+            }
+            return titleBuilder.toString() + "...";
+        }
+
+        // If first line is reasonable length, use it
+        if (firstLine.length() > 3) {
+            return firstLine;
+        }
+
+        // Fallback: use default title with timestamp
+        return getString(R.string.clipboard_text_title) + " " +
+               android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", new java.util.Date());
+    }
+
+    /**
+     * Show dialog with options to add content from files or clipboard
+     */
+    private void showAddContentDialog() {
+        android.util.Log.d("MainActivity", "=== SHOWING ADD CONTENT DIALOG ===");
+
+        // Inflate the dialog layout
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_content, null);
+
+        // Get views from dialog
+        MaterialButton btnSelectFiles = dialogView.findViewById(R.id.btnSelectFiles);
+        MaterialButton btnSelectClipboard = dialogView.findViewById(R.id.btnSelectClipboard);
+        TextView tvClipboardStatus = dialogView.findViewById(R.id.tvClipboardStatus);
+
+        // Check clipboard status and update UI
+        ClipboardStatus clipboardStatus = getClipboardStatus();
+        updateClipboardButtonState(btnSelectClipboard, tvClipboardStatus, clipboardStatus);
+
+        // Create and show dialog
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        // Set up button listeners
+        btnSelectFiles.setOnClickListener(v -> {
+            dialog.dismiss();
+            openDocumentPicker();
+        });
+
+        btnSelectClipboard.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (clipboardStatus.isAvailable) {
+                processClipboardText();
+            }
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Get current clipboard status
+     */
+    private ClipboardStatus getClipboardStatus() {
+        ClipboardStatus status = new ClipboardStatus();
+
+        try {
+            ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboardManager == null) {
+                android.util.Log.w("MainActivity", "ClipboardManager is null");
+                status.isAvailable = false;
+                status.statusText = getString(R.string.clipboard_unavailable);
+                return status;
+            }
+
+            if (!clipboardManager.hasPrimaryClip()) {
+                android.util.Log.d("MainActivity", "Clipboard is empty");
+                status.isAvailable = false;
+                status.statusText = getString(R.string.clipboard_empty);
+                return status;
+            }
+
+            ClipData clipData = clipboardManager.getPrimaryClip();
+            if (clipData == null || clipData.getItemCount() == 0) {
+                android.util.Log.d("MainActivity", "Clipboard data is null or empty");
+                status.isAvailable = false;
+                status.statusText = getString(R.string.clipboard_empty);
+                return status;
+            }
+
+            ClipData.Item clipItem = clipData.getItemAt(0);
+            CharSequence clipText = clipItem.getText();
+
+            if (clipText == null || clipText.toString().trim().isEmpty()) {
+                android.util.Log.d("MainActivity", "Clipboard contains no text");
+                status.isAvailable = false;
+                status.statusText = getString(R.string.clipboard_no_text);
+                return status;
+            }
+
+            String text = clipText.toString().trim();
+            android.util.Log.d("MainActivity", "Clipboard text length: " + text.length());
+
+            // Check if it's a URL
+            if (isUrl(text)) {
+                android.util.Log.d("MainActivity", "Clipboard contains URL");
+                status.isAvailable = true;
+                status.statusText = getString(R.string.clipboard_url_detected);
+                return status;
+            }
+
+            // Regular text
+            android.util.Log.d("MainActivity", "Clipboard contains text");
+            status.isAvailable = true;
+            status.statusText = getString(R.string.clipboard_characters_detected, text.length());
+            return status;
+
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error checking clipboard status", e);
+            status.isAvailable = false;
+            status.statusText = getString(R.string.clipboard_unavailable);
+            return status;
+        }
+    }
+
+    /**
+     * Update clipboard button state based on clipboard status
+     */
+    private void updateClipboardButtonState(MaterialButton btnClipboard, TextView tvStatus, ClipboardStatus status) {
+        btnClipboard.setEnabled(status.isAvailable);
+
+        if (status.isAvailable) {
+            btnClipboard.setAlpha(1.0f);
+        } else {
+            btnClipboard.setAlpha(0.5f);
+        }
+
+        tvStatus.setText(status.statusText);
+        tvStatus.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Inner class to hold clipboard status information
+     */
+    private static class ClipboardStatus {
+        boolean isAvailable = false;
+        String statusText = "";
     }
 
     @Override

@@ -122,6 +122,24 @@
     <string name="connecting_to_web">Conectando a la página web...</string>
     <string name="downloading_web_content">Descargando contenido web...</string>
 
+    <!-- Clipboard functionality -->
+    <string name="paste_from_clipboard">Pegar desde portapapeles</string>
+    <string name="clipboard_empty">📋 El portapapeles está vacío</string>
+    <string name="clipboard_no_text">📋 No hay texto en el portapapeles</string>
+    <string name="clipboard_processing">Procesando texto del portapapeles...</string>
+    <string name="clipboard_text_added">📋 Texto agregado desde portapapeles</string>
+    <string name="clipboard_error">❌ Error procesando texto del portapapeles: %s</string>
+    <string name="clipboard_text_title">Texto del portapapeles</string>
+
+    <!-- Add content modal -->
+    <string name="add_content_title">Agregar contenido</string>
+    <string name="add_from_files">📄 Archivos</string>
+    <string name="add_from_clipboard">📋 Portapapeles</string>
+    <string name="clipboard_url_detected">🌐 URL detectada</string>
+    <string name="clipboard_characters_detected">📝 %d caracteres detectados</string>
+    <string name="clipboard_unavailable">📋 Portapapeles no disponible</string>
+    <string name="select_files">Seleccionar archivos</string>
+
     <!-- TTS (Text-to-Speech) -->
     <string name="tts_settings">Configuración de voz</string>
     <string name="tts_enabled">Lectura por voz</string>

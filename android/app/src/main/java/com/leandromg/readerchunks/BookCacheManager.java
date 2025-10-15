@@ -137,6 +137,60 @@ public class BookCacheManager {
         return book;
     }
 
+    /**
+     * Process plain text and create a cached book from it
+     */
+    public Book processAndCacheTextAsBook(String text, String title) throws IOException {
+        android.util.Log.d("BookCacheManager", "Processing text as book. Title: " + title + ", Text length: " + text.length());
+
+        // Generate a unique book ID based on the text content
+        String bookId = generateBookIdFromText(text);
+
+        if (isBookCached(bookId)) {
+            android.util.Log.d("BookCacheManager", "Book already cached with ID: " + bookId);
+            return loadBookMeta(bookId);
+        }
+
+        // Segment the text into sentences/paragraphs
+        List<String> sentences = SentenceSegmenter.segmentIntoSentences(text);
+        android.util.Log.d("BookCacheManager", "Segmented text into " + sentences.size() + " parts");
+
+        // Create book object
+        Book book = new Book(bookId, title, title + ".txt", sentences.size());
+
+        File bookDir = new File(booksDirectory, bookId);
+        if (!bookDir.exists()) {
+            bookDir.mkdirs();
+        }
+
+        saveContentToFile(bookDir, sentences);
+        saveBookMeta(book);
+        updateLibrary(book);
+
+        android.util.Log.d("BookCacheManager", "Successfully cached text as book with ID: " + bookId);
+        return book;
+    }
+
+    /**
+     * Generate a unique book ID from text content
+     */
+    private String generateBookIdFromText(String text) throws IOException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(text.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            return String.valueOf(text.hashCode());
+        }
+    }
+
     private void saveContentToFile(File bookDir, List<String> sentences) throws IOException {
         File contentFile = new File(bookDir, CONTENT_FILE);
         BufferedWriter writer = new BufferedWriter(new FileWriter(contentFile));
