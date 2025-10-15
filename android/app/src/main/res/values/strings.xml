@@ -194,4 +194,12 @@
     <string name="reading_mode_sentence">Oración</string>
     <string name="reading_mode_paragraph">Párrafo</string>
     <string name="reading_mode_description">Selecciona cómo mostrar el texto</string>
+
+    <!-- TTS Pitch Settings -->
+    <string name="pitch_low">Grave</string>
+    <string name="pitch_high">Agudo</string>
+    <string name="pitch_normal">Normal</string>
+
+    <!-- Additional units -->
+    <string name="characters_unit">caracteres</string>
 </resources>

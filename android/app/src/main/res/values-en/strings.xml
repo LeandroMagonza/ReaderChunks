@@ -134,4 +134,72 @@
     <string name="language_french">French</string>
     <string name="language_german">German</string>
     <string name="language_italian">Italian</string>
+
+    <!-- Unified Settings System -->
+    <string name="voice_settings">Voice Settings</string>
+    <string name="text_to_speech">Text-to-Speech</string>
+    <string name="tts_description">Settings for text-to-speech</string>
+    <string name="enable_tts">Enable text-to-speech</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="auto_scroll">Auto-advance</string>
+    <string name="speech_speed">Speech Speed</string>
+    <string name="speed_description">Adjust text-to-speech speed</string>
+    <string name="language_changed">Language changed successfully</string>
+    <string name="normal_text">Normal</string>
+    <string name="close">Close</string>
+
+    <!-- Reading Mode Settings -->
+    <string name="reading_mode">Reading Mode</string>
+    <string name="reading_mode_sentence">Sentence</string>
+    <string name="reading_mode_paragraph">Paragraph</string>
+    <string name="reading_mode_description">Select how to display text</string>
+    <string name="sentence_length">Sentence Length</string>
+    <string name="sentence_length_description">Adjust how many characters to show per sentence in bite-size mode. Automatically adapts to font size.</string>
+
+    <!-- TTS Pitch Settings -->
+    <string name="pitch_low">Low</string>
+    <string name="pitch_high">High</string>
+    <string name="pitch_normal">Normal</string>
+
+    <!-- Sentence Length -->
+    <string name="characters_unit">characters</string>
+
+    <!-- Web content messages -->
+    <string name="web_content_added_success">✅ Web content added: %s</string>
+    <string name="error_processing_web_content">❌ Error processing web content: %s</string>
+    <string name="processing_shared_url">Processing content from %s...</string>
+    <string name="connecting_to_web">Connecting to webpage...</string>
+    <string name="downloading_web_content">Downloading web content...</string>
+
+    <!-- Clipboard functionality -->
+    <string name="paste_from_clipboard">Paste from clipboard</string>
+    <string name="clipboard_empty">📋 Clipboard is empty</string>
+    <string name="clipboard_no_text">📋 No text in clipboard</string>
+    <string name="clipboard_processing">Processing clipboard text...</string>
+    <string name="clipboard_text_added">📋 Text added from clipboard</string>
+    <string name="clipboard_error">❌ Error processing clipboard text: %s</string>
+    <string name="clipboard_text_title">Clipboard text</string>
+
+    <!-- Add content modal -->
+    <string name="add_content_title">Add content</string>
+    <string name="add_from_files">📄 Files</string>
+    <string name="add_from_clipboard">📋 Clipboard</string>
+    <string name="clipboard_url_detected">(URL detected)</string>
+    <string name="clipboard_characters_detected">(%d characters detected)</string>
+    <string name="clipboard_unavailable">📋 Clipboard unavailable</string>
+    <string name="select_files">Select files</string>
+
+    <!-- Text selection context menu -->
+    <string name="process_text_action">BookBits</string>
+    <string name="selected_text_processed">✅ Selected text added to BookBits</string>
+
+    <!-- Debug functionality -->
+    <string name="debug_logs">Debug logs</string>
+    <string name="debug_logs_title">Debug Logs</string>
+    <string name="debug_logs_description">View debug logs</string>
+    <string name="debug_logs_cleared">Logs cleared</string>
+    <string name="close_debug">Close</string>
+    <string name="clear_logs">Clear logs</string>
+    <string name="refresh_logs">Refresh</string>
 </resources>

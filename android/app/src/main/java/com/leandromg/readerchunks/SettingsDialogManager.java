@@ -162,14 +162,14 @@ public class SettingsDialogManager {
             0
         ));
 
-        // Debug logs category
-        categories.add(new CategoryItem(
+        // Debug logs category - Commented out as it's not being used
+        /*categories.add(new CategoryItem(
             SettingsCategory.DEBUG_LOGS,
             "🐛",
             context.getString(R.string.debug_logs),
             context.getString(R.string.debug_logs_description),
             0
-        ));
+        ));*/
 
         return categories;
     }
@@ -276,7 +276,7 @@ public class SettingsDialogManager {
             tvPadding.setText(padding + " dp");
 
             int percentageValue = Math.round(sentenceMultiplier * 100);
-            tvSentenceLengthValue.setText(percentageValue + "% (" + maxSentenceLength + " caracteres)");
+            tvSentenceLengthValue.setText(percentageValue + "% (" + maxSentenceLength + " " + context.getString(R.string.characters_unit) + ")");
 
             int seekBarProgress = (int)((sentenceMultiplier - 0.5f) * 100 / 4.5f);
             seekBarSentenceLength.setProgress(seekBarProgress);
@@ -673,11 +673,11 @@ public class SettingsDialogManager {
         // Update the descriptive text
         String pitchText;
         if (pitch < 0.8f) {
-            pitchText = "Grave";
+            pitchText = context.getString(R.string.pitch_low);
         } else if (pitch > 1.2f) {
-            pitchText = "Agudo";
+            pitchText = context.getString(R.string.pitch_high);
         } else {
-            pitchText = "Normal";
+            pitchText = context.getString(R.string.pitch_normal);
         }
         pitchText += " (" + String.format("%.1f", pitch) + ")";
         tvPitchValue.setText(pitchText);

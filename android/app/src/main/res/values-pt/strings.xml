@@ -134,4 +134,72 @@
     <string name="language_french">Francês</string>
     <string name="language_german">Alemão</string>
     <string name="language_italian">Italiano</string>
+
+    <!-- Unified Settings System -->
+    <string name="voice_settings">Configurações de Voz</string>
+    <string name="text_to_speech">Síntese de Voz</string>
+    <string name="tts_description">Configurações para síntese de voz</string>
+    <string name="enable_tts">Habilitar síntese de voz</string>
+    <string name="enabled">Ativado</string>
+    <string name="disabled">Desativado</string>
+    <string name="auto_scroll">Avanço automático</string>
+    <string name="speech_speed">Velocidade da Voz</string>
+    <string name="speed_description">Ajustar a velocidade da síntese de voz</string>
+    <string name="language_changed">Idioma alterado com sucesso</string>
+    <string name="normal_text">Normal</string>
+    <string name="close">Fechar</string>
+
+    <!-- Reading Mode Settings -->
+    <string name="reading_mode">Modo de Leitura</string>
+    <string name="reading_mode_sentence">Frase</string>
+    <string name="reading_mode_paragraph">Parágrafo</string>
+    <string name="reading_mode_description">Selecione como exibir o texto</string>
+    <string name="sentence_length">Comprimento da Frase</string>
+    <string name="sentence_length_description">Ajuste quantos caracteres mostrar por frase no modo bite-size. Adapta-se automaticamente ao tamanho da fonte.</string>
+
+    <!-- TTS Pitch Settings -->
+    <string name="pitch_low">Grave</string>
+    <string name="pitch_high">Agudo</string>
+    <string name="pitch_normal">Normal</string>
+
+    <!-- Sentence Length -->
+    <string name="characters_unit">caracteres</string>
+
+    <!-- Web content messages -->
+    <string name="web_content_added_success">✅ Conteúdo web adicionado: %s</string>
+    <string name="error_processing_web_content">❌ Erro ao processar conteúdo web: %s</string>
+    <string name="processing_shared_url">Processando conteúdo de %s...</string>
+    <string name="connecting_to_web">Conectando à página web...</string>
+    <string name="downloading_web_content">Baixando conteúdo web...</string>
+
+    <!-- Clipboard functionality -->
+    <string name="paste_from_clipboard">Colar da área de transferência</string>
+    <string name="clipboard_empty">📋 A área de transferência está vazia</string>
+    <string name="clipboard_no_text">📋 Não há texto na área de transferência</string>
+    <string name="clipboard_processing">Processando texto da área de transferência...</string>
+    <string name="clipboard_text_added">📋 Texto adicionado da área de transferência</string>
+    <string name="clipboard_error">❌ Erro ao processar texto da área de transferência: %s</string>
+    <string name="clipboard_text_title">Texto da área de transferência</string>
+
+    <!-- Add content modal -->
+    <string name="add_content_title">Adicionar conteúdo</string>
+    <string name="add_from_files">📄 Arquivos</string>
+    <string name="add_from_clipboard">📋 Área de transferência</string>
+    <string name="clipboard_url_detected">(URL detectada)</string>
+    <string name="clipboard_characters_detected">(%d caracteres detectados)</string>
+    <string name="clipboard_unavailable">📋 Área de transferência indisponível</string>
+    <string name="select_files">Selecionar arquivos</string>
+
+    <!-- Text selection context menu -->
+    <string name="process_text_action">BookBits</string>
+    <string name="selected_text_processed">✅ Texto selecionado adicionado ao BookBits</string>
+
+    <!-- Debug functionality -->
+    <string name="debug_logs">Registros de depuração</string>
+    <string name="debug_logs_title">Logs de Debug</string>
+    <string name="debug_logs_description">Ver registros de depuração</string>
+    <string name="debug_logs_cleared">Logs limpos</string>
+    <string name="close_debug">Fechar</string>
+    <string name="clear_logs">Limpar logs</string>
+    <string name="refresh_logs">Atualizar</string>
 </resources>

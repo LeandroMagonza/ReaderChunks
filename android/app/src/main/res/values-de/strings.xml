@@ -68,6 +68,8 @@
     <string name="bionic_modern">Modern (lange Wörter)</string>
     <string name="preview">Vorschau</string>
     <string name="preview_text">Dies ist eine Vorschau des Textes mit den aktuellen Einstellungen. Hier können Sie sehen, wie der Text in der Anwendung mit der ausgewählten Schriftgröße, dem Abstand und den Rändern aussehen wird.</string>
+    <string name="sentence_length">Satzlänge</string>
+    <string name="sentence_length_description">Stellt ein, wie viele Zeichen pro Satz im Bite-Size-Modus angezeigt werden. Passt sich automatisch an die Schriftgröße an.</string>
     <string name="reset_defaults">Auf Standard zurücksetzen</string>
     <string name="language">Sprache</string>
     <string name="select_language">Sprache Auswählen</string>
@@ -134,4 +136,70 @@
     <string name="language_french">Französisch</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italienisch</string>
+
+    <!-- Unified Settings System -->
+    <string name="voice_settings">Spracheinstellungen</string>
+    <string name="text_to_speech">Text-zu-Sprache</string>
+    <string name="tts_description">Einstellungen für Text-zu-Sprache</string>
+    <string name="enable_tts">Text-zu-Sprache aktivieren</string>
+    <string name="enabled">Aktiviert</string>
+    <string name="disabled">Deaktiviert</string>
+    <string name="auto_scroll">Automatischer Vorschub</string>
+    <string name="speech_speed">Sprechgeschwindigkeit</string>
+    <string name="speed_description">Text-zu-Sprache-Geschwindigkeit anpassen</string>
+    <string name="language_changed">Sprache erfolgreich geändert</string>
+    <string name="normal_text">Normal</string>
+    <string name="close">Schließen</string>
+
+    <!-- Reading Mode Settings -->
+    <string name="reading_mode">Lesemodus</string>
+    <string name="reading_mode_sentence">Satz</string>
+    <string name="reading_mode_paragraph">Absatz</string>
+    <string name="reading_mode_description">Auswählen, wie Text angezeigt wird</string>
+
+    <!-- TTS Pitch Settings -->
+    <string name="pitch_low">Tief</string>
+    <string name="pitch_high">Hoch</string>
+    <string name="pitch_normal">Normal</string>
+
+    <!-- Sentence Length -->
+    <string name="characters_unit">Zeichen</string>
+
+    <!-- Web content messages -->
+    <string name="web_content_added_success">✅ Web-Inhalt hinzugefügt: %s</string>
+    <string name="error_processing_web_content">❌ Fehler beim Verarbeiten von Web-Inhalt: %s</string>
+    <string name="processing_shared_url">Inhalt von %s wird verarbeitet...</string>
+    <string name="connecting_to_web">Verbindung zur Webseite...</string>
+    <string name="downloading_web_content">Web-Inhalt wird heruntergeladen...</string>
+
+    <!-- Clipboard functionality -->
+    <string name="paste_from_clipboard">Aus Zwischenablage einfügen</string>
+    <string name="clipboard_empty">📋 Zwischenablage ist leer</string>
+    <string name="clipboard_no_text">📋 Kein Text in der Zwischenablage</string>
+    <string name="clipboard_processing">Text aus Zwischenablage wird verarbeitet...</string>
+    <string name="clipboard_text_added">📋 Text aus Zwischenablage hinzugefügt</string>
+    <string name="clipboard_error">❌ Fehler beim Verarbeiten von Zwischenablage-Text: %s</string>
+    <string name="clipboard_text_title">Zwischenablage-Text</string>
+
+    <!-- Add content modal -->
+    <string name="add_content_title">Inhalt hinzufügen</string>
+    <string name="add_from_files">📄 Dateien</string>
+    <string name="add_from_clipboard">📋 Zwischenablage</string>
+    <string name="clipboard_url_detected">(URL erkannt)</string>
+    <string name="clipboard_characters_detected">(%d Zeichen erkannt)</string>
+    <string name="clipboard_unavailable">📋 Zwischenablage nicht verfügbar</string>
+    <string name="select_files">Dateien auswählen</string>
+
+    <!-- Text selection context menu -->
+    <string name="process_text_action">BookBits</string>
+    <string name="selected_text_processed">✅ Ausgewählter Text zu BookBits hinzugefügt</string>
+
+    <!-- Debug functionality -->
+    <string name="debug_logs">Debug-Protokolle</string>
+    <string name="debug_logs_title">Debug-Protokolle</string>
+    <string name="debug_logs_description">Debug-Protokolle anzeigen</string>
+    <string name="debug_logs_cleared">Protokolle gelöscht</string>
+    <string name="close_debug">Schließen</string>
+    <string name="clear_logs">Protokolle löschen</string>
+    <string name="refresh_logs">Aktualisieren</string>
 </resources>

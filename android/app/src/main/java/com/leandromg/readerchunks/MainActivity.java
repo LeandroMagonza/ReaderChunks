@@ -110,6 +110,12 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     private void setupSettingsManager() {
         settingsManager = new SettingsManager(this);
         settingsDialogManager = new SettingsDialogManager(this, settingsManager, languageManager);
+
+        // Set up listener to handle settings changes (especially language changes)
+        settingsDialogManager.setSettingsChangeListener(() -> {
+            // Recreate activity to apply language changes immediately
+            recreate();
+        });
     }
 
     private void setupRecyclerView() {

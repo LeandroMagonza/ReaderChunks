@@ -68,6 +68,8 @@
     <string name="bionic_modern">Moderne (mots longs)</string>
     <string name="preview">Aperçu</string>
     <string name="preview_text">Ceci est un aperçu du texte avec les paramètres actuels. Ici vous pouvez voir à quoi ressemblera le texte dans l\'application avec la taille de police, l\'espacement et les marges sélectionnés.</string>
+    <string name="sentence_length">Longueur des phrases</string>
+    <string name="sentence_length_description">Ajuste le nombre de caractères à afficher par phrase en mode bite-size. S\'adapte automatiquement à la taille de police.</string>
     <string name="reset_defaults">Réinitialiser aux valeurs par défaut</string>
     <string name="language">Langue</string>
     <string name="select_language">Sélectionner la Langue</string>
@@ -134,4 +136,70 @@
     <string name="language_french">Français</string>
     <string name="language_german">Allemand</string>
     <string name="language_italian">Italien</string>
+
+    <!-- Unified Settings System -->
+    <string name="voice_settings">Paramètres Vocaux</string>
+    <string name="text_to_speech">Synthèse Vocale</string>
+    <string name="tts_description">Paramètres pour la synthèse vocale</string>
+    <string name="enable_tts">Activer la synthèse vocale</string>
+    <string name="enabled">Activé</string>
+    <string name="disabled">Désactivé</string>
+    <string name="auto_scroll">Avancement automatique</string>
+    <string name="speech_speed">Vitesse de la voix</string>
+    <string name="speed_description">Ajuster la vitesse de la synthèse vocale</string>
+    <string name="language_changed">Langue modifiée avec succès</string>
+    <string name="normal_text">Normal</string>
+    <string name="close">Fermer</string>
+
+    <!-- Reading Mode Settings -->
+    <string name="reading_mode">Mode de lecture</string>
+    <string name="reading_mode_sentence">Phrase</string>
+    <string name="reading_mode_paragraph">Paragraphe</string>
+    <string name="reading_mode_description">Sélectionner comment afficher le texte</string>
+
+    <!-- TTS Pitch Settings -->
+    <string name="pitch_low">Grave</string>
+    <string name="pitch_high">Aigu</string>
+    <string name="pitch_normal">Normal</string>
+
+    <!-- Sentence Length -->
+    <string name="characters_unit">caractères</string>
+
+    <!-- Web content messages -->
+    <string name="web_content_added_success">✅ Contenu web ajouté : %s</string>
+    <string name="error_processing_web_content">❌ Erreur lors du traitement du contenu web : %s</string>
+    <string name="processing_shared_url">Traitement du contenu de %s...</string>
+    <string name="connecting_to_web">Connexion à la page web...</string>
+    <string name="downloading_web_content">Téléchargement du contenu web...</string>
+
+    <!-- Clipboard functionality -->
+    <string name="paste_from_clipboard">Coller depuis le presse-papiers</string>
+    <string name="clipboard_empty">📋 Le presse-papiers est vide</string>
+    <string name="clipboard_no_text">📋 Aucun texte dans le presse-papiers</string>
+    <string name="clipboard_processing">Traitement du texte du presse-papiers...</string>
+    <string name="clipboard_text_added">📋 Texte ajouté depuis le presse-papiers</string>
+    <string name="clipboard_error">❌ Erreur lors du traitement du texte du presse-papiers : %s</string>
+    <string name="clipboard_text_title">Texte du presse-papiers</string>
+
+    <!-- Add content modal -->
+    <string name="add_content_title">Ajouter du contenu</string>
+    <string name="add_from_files">📄 Fichiers</string>
+    <string name="add_from_clipboard">📋 Presse-papiers</string>
+    <string name="clipboard_url_detected">(URL détectée)</string>
+    <string name="clipboard_characters_detected">(%d caractères détectés)</string>
+    <string name="clipboard_unavailable">📋 Presse-papiers non disponible</string>
+    <string name="select_files">Sélectionner des fichiers</string>
+
+    <!-- Text selection context menu -->
+    <string name="process_text_action">BookBits</string>
+    <string name="selected_text_processed">✅ Texte sélectionné ajouté à BookBits</string>
+
+    <!-- Debug functionality -->
+    <string name="debug_logs">Journaux de débogage</string>
+    <string name="debug_logs_title">Journaux de Débogage</string>
+    <string name="debug_logs_description">Voir les journaux de débogage</string>
+    <string name="debug_logs_cleared">Journaux effacés</string>
+    <string name="close_debug">Fermer</string>
+    <string name="clear_logs">Effacer les journaux</string>
+    <string name="refresh_logs">Actualiser</string>
 </resources>
