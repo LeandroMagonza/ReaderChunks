@@ -92,6 +92,13 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private boolean isScrollEnabled = true; // Can be toggled by clicking speed number
     private boolean isManualScrollActive = false; // For manual scroll activation
 
+    // Navigation configuration variables
+    private boolean isButtonNavigationEnabled = true;
+    private boolean isSwipeHorizontalEnabled = true;
+    private boolean isSwipeVerticalEnabled = true;
+    private boolean isTapHorizontalEnabled = false;
+    private boolean isTapVerticalEnabled = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Initialize language, theme and settings before setting content view
@@ -296,8 +303,9 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                 float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
 
+                // Check horizontal swipe first
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (isSwipeHorizontalEnabled && Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
                             // Right swipe - previous sentence/paragraph
                             previousSentence();
@@ -307,7 +315,63 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
                         }
                         return true;
                     }
+                } else {
+                    // Check vertical swipe
+                    if (isSwipeVerticalEnabled && Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffY < 0) {
+                            // Upward swipe - next sentence/paragraph
+                            nextSentence();
+                        } else {
+                            // Downward swipe - previous sentence/paragraph
+                            previousSentence();
+                        }
+                        return true;
+                    }
                 }
+                return false;
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                if (!isTapHorizontalEnabled && !isTapVerticalEnabled) {
+                    return false;
+                }
+
+                float x = e.getX();
+                float y = e.getY();
+                int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+
+                // Define tap zones (20% from each edge)
+                float horizontalZone = screenWidth * 0.2f;
+                float verticalZone = screenHeight * 0.2f;
+
+                // Check horizontal tap zones
+                if (isTapHorizontalEnabled) {
+                    if (x < horizontalZone) {
+                        // Left tap - previous sentence/paragraph
+                        previousSentence();
+                        return true;
+                    } else if (x > screenWidth - horizontalZone) {
+                        // Right tap - next sentence/paragraph
+                        nextSentence();
+                        return true;
+                    }
+                }
+
+                // Check vertical tap zones
+                if (isTapVerticalEnabled) {
+                    if (y < verticalZone) {
+                        // Top tap - previous sentence/paragraph
+                        previousSentence();
+                        return true;
+                    } else if (y > screenHeight - verticalZone) {
+                        // Bottom tap - next sentence/paragraph
+                        nextSentence();
+                        return true;
+                    }
+                }
+
                 return false;
             }
         });
@@ -924,8 +988,32 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             ttsManager.setLanguage(languageManager.getCurrentLanguage());
         }
 
+        // Load navigation settings
+        loadNavigationSettings();
+
         // Refresh text display with current content to apply bionic reading if needed
         updateDisplay();
+    }
+
+    private void loadNavigationSettings() {
+        if (settingsManager == null) return;
+
+        isButtonNavigationEnabled = settingsManager.isNavigationButtonsEnabled();
+        isSwipeHorizontalEnabled = settingsManager.isNavigationSwipeHorizontalEnabled();
+        isSwipeVerticalEnabled = settingsManager.isNavigationSwipeVerticalEnabled();
+        isTapHorizontalEnabled = settingsManager.isNavigationTapHorizontalEnabled();
+        isTapVerticalEnabled = settingsManager.isNavigationTapVerticalEnabled();
+
+        // Update button visibility
+        updateNavigationButtonsVisibility();
+    }
+
+    private void updateNavigationButtonsVisibility() {
+        if (btnPrevious != null && btnNext != null) {
+            int visibility = isButtonNavigationEnabled ? View.VISIBLE : View.GONE;
+            btnPrevious.setVisibility(visibility);
+            btnNext.setVisibility(visibility);
+        }
     }
 
     @Override

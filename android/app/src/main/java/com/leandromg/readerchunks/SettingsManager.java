@@ -23,6 +23,13 @@ public class SettingsManager {
     private static final String KEY_TTS_LANGUAGE_PREFIX = "tts_language_"; // + bookId
     private static final String KEY_SENTENCE_LENGTH_MULTIPLIER = "sentence_length_multiplier";
 
+    // Navigation method keys
+    private static final String KEY_NAV_BUTTONS = "nav_buttons";
+    private static final String KEY_NAV_SWIPE_HORIZONTAL = "nav_swipe_horizontal";
+    private static final String KEY_NAV_SWIPE_VERTICAL = "nav_swipe_vertical";
+    private static final String KEY_NAV_TAP_HORIZONTAL = "nav_tap_horizontal";
+    private static final String KEY_NAV_TAP_VERTICAL = "nav_tap_vertical";
+
     // Default values
     private static final boolean DEFAULT_DARK_MODE = false;
     private static final int DEFAULT_FONT_SIZE = 24; // sp
@@ -35,6 +42,13 @@ public class SettingsManager {
     private static final float DEFAULT_TTS_PITCH = 1.0f; // Normal pitch
     private static final String DEFAULT_TTS_VOICE_NAME = ""; // Empty = system default
     private static final float DEFAULT_SENTENCE_LENGTH_MULTIPLIER = 1.0f; // 100%
+
+    // Navigation method defaults (buttons, swipe horizontal, swipe vertical enabled by default)
+    private static final boolean DEFAULT_NAV_BUTTONS = true;
+    private static final boolean DEFAULT_NAV_SWIPE_HORIZONTAL = true;
+    private static final boolean DEFAULT_NAV_SWIPE_VERTICAL = true;
+    private static final boolean DEFAULT_NAV_TAP_HORIZONTAL = false;
+    private static final boolean DEFAULT_NAV_TAP_VERTICAL = false;
 
     // Ranges
     public static final int MIN_FONT_SIZE = 12;
@@ -364,6 +378,47 @@ public class SettingsManager {
         return calculateOptimalSentenceLength(context);
     }
 
+    // Navigation Methods
+    public boolean isNavigationButtonsEnabled() {
+        return prefs.getBoolean(KEY_NAV_BUTTONS, DEFAULT_NAV_BUTTONS);
+    }
+
+    public void setNavigationButtonsEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NAV_BUTTONS, enabled).apply();
+    }
+
+    public boolean isNavigationSwipeHorizontalEnabled() {
+        return prefs.getBoolean(KEY_NAV_SWIPE_HORIZONTAL, DEFAULT_NAV_SWIPE_HORIZONTAL);
+    }
+
+    public void setNavigationSwipeHorizontalEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NAV_SWIPE_HORIZONTAL, enabled).apply();
+    }
+
+    public boolean isNavigationSwipeVerticalEnabled() {
+        return prefs.getBoolean(KEY_NAV_SWIPE_VERTICAL, DEFAULT_NAV_SWIPE_VERTICAL);
+    }
+
+    public void setNavigationSwipeVerticalEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NAV_SWIPE_VERTICAL, enabled).apply();
+    }
+
+    public boolean isNavigationTapHorizontalEnabled() {
+        return prefs.getBoolean(KEY_NAV_TAP_HORIZONTAL, DEFAULT_NAV_TAP_HORIZONTAL);
+    }
+
+    public void setNavigationTapHorizontalEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NAV_TAP_HORIZONTAL, enabled).apply();
+    }
+
+    public boolean isNavigationTapVerticalEnabled() {
+        return prefs.getBoolean(KEY_NAV_TAP_VERTICAL, DEFAULT_NAV_TAP_VERTICAL);
+    }
+
+    public void setNavigationTapVerticalEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NAV_TAP_VERTICAL, enabled).apply();
+    }
+
     // Reset to defaults
     public void resetToDefaults() {
         prefs.edit()
@@ -377,6 +432,11 @@ public class SettingsManager {
             .putFloat(KEY_TTS_SPEECH_RATE, DEFAULT_TTS_SPEECH_RATE)
             .putString(KEY_TTS_VOICE_NAME, DEFAULT_TTS_VOICE_NAME)
             .putFloat(KEY_SENTENCE_LENGTH_MULTIPLIER, DEFAULT_SENTENCE_LENGTH_MULTIPLIER)
+            .putBoolean(KEY_NAV_BUTTONS, DEFAULT_NAV_BUTTONS)
+            .putBoolean(KEY_NAV_SWIPE_HORIZONTAL, DEFAULT_NAV_SWIPE_HORIZONTAL)
+            .putBoolean(KEY_NAV_SWIPE_VERTICAL, DEFAULT_NAV_SWIPE_VERTICAL)
+            .putBoolean(KEY_NAV_TAP_HORIZONTAL, DEFAULT_NAV_TAP_HORIZONTAL)
+            .putBoolean(KEY_NAV_TAP_VERTICAL, DEFAULT_NAV_TAP_VERTICAL)
             .apply();
     }
 }

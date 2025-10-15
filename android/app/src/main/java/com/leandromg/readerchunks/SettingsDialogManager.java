@@ -32,6 +32,7 @@ public class SettingsDialogManager {
         FONT,
         VOICE,
         READING_MODE,
+        NAVIGATION,
         DEBUG_LOGS
     }
 
@@ -162,6 +163,23 @@ public class SettingsDialogManager {
             0
         ));
 
+        // Navigation category
+        int enabledMethods = 0;
+        if (settingsManager.isNavigationButtonsEnabled()) enabledMethods++;
+        if (settingsManager.isNavigationSwipeHorizontalEnabled()) enabledMethods++;
+        if (settingsManager.isNavigationSwipeVerticalEnabled()) enabledMethods++;
+        if (settingsManager.isNavigationTapHorizontalEnabled()) enabledMethods++;
+        if (settingsManager.isNavigationTapVerticalEnabled()) enabledMethods++;
+
+        String navigationSubtitle = enabledMethods + " métodos habilitados";
+        categories.add(new CategoryItem(
+            SettingsCategory.NAVIGATION,
+            "🎮",
+            "Métodos de navegación",
+            navigationSubtitle,
+            0
+        ));
+
         // Debug logs category - Commented out as it's not being used
         /*categories.add(new CategoryItem(
             SettingsCategory.DEBUG_LOGS,
@@ -187,6 +205,9 @@ public class SettingsDialogManager {
                 break;
             case READING_MODE:
                 showReadingModeSettings();
+                break;
+            case NAVIGATION:
+                showNavigationSettings();
                 break;
             case DEBUG_LOGS:
                 showDebugLogs();
@@ -587,6 +608,71 @@ public class SettingsDialogManager {
         });
 
         showDialog(dialogView, context.getString(R.string.reading_mode));
+    }
+
+    private void showNavigationSettings() {
+        currentCategory = SettingsCategory.NAVIGATION;
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_settings_navigation, null);
+
+        ImageButton btnBack = dialogView.findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> showCategoryList());
+
+        // Get checkbox references
+        SwitchCompat switchButtons = dialogView.findViewById(R.id.switchNavigationButtons);
+        SwitchCompat switchSwipeHorizontal = dialogView.findViewById(R.id.switchNavigationSwipeHorizontal);
+        SwitchCompat switchSwipeVertical = dialogView.findViewById(R.id.switchNavigationSwipeVertical);
+        SwitchCompat switchTapHorizontal = dialogView.findViewById(R.id.switchNavigationTapHorizontal);
+        SwitchCompat switchTapVertical = dialogView.findViewById(R.id.switchNavigationTapVertical);
+
+        // Set current values
+        switchButtons.setChecked(settingsManager.isNavigationButtonsEnabled());
+        switchSwipeHorizontal.setChecked(settingsManager.isNavigationSwipeHorizontalEnabled());
+        switchSwipeVertical.setChecked(settingsManager.isNavigationSwipeVerticalEnabled());
+        switchTapHorizontal.setChecked(settingsManager.isNavigationTapHorizontalEnabled());
+        switchTapVertical.setChecked(settingsManager.isNavigationTapVerticalEnabled());
+
+        // Set up listeners
+        switchButtons.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setNavigationButtonsEnabled(isChecked);
+            hasActualChanges = true;
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        switchSwipeHorizontal.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setNavigationSwipeHorizontalEnabled(isChecked);
+            hasActualChanges = true;
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        switchSwipeVertical.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setNavigationSwipeVerticalEnabled(isChecked);
+            hasActualChanges = true;
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        switchTapHorizontal.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setNavigationTapHorizontalEnabled(isChecked);
+            hasActualChanges = true;
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        switchTapVertical.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setNavigationTapVerticalEnabled(isChecked);
+            hasActualChanges = true;
+            if (changeListener != null) {
+                changeListener.onSettingsChanged();
+            }
+        });
+
+        showDialog(dialogView, "Métodos de navegación");
     }
 
     private void showDebugLogs() {
