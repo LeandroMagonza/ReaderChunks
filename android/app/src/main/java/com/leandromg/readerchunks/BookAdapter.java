@@ -85,9 +85,15 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
             // Progress text with precise calculation
             double progressPercent = book.getPreciseProgressPercentage(cacheManager);
+
+            // Fix the display to show correct paragraph count when completed
+            int displayCurrentPosition = book.isCompleted()
+                ? book.getTotalSentences()
+                : book.getCurrentPosition() + 1;
+
             String progressText = itemView.getContext().getString(R.string.progress_completed_paragraphs,
                     progressPercent,
-                    book.getCurrentPosition() + 1,
+                    displayCurrentPosition,
                     book.getTotalSentences());
             tvBookProgress.setText(progressText);
 

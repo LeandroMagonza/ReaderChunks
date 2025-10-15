@@ -40,7 +40,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private TextView tvSentenceProgress;
     private MaterialButton btnPrevious;
     private MaterialButton btnNext;
-    private MaterialButton btnBack;
+    private ImageButton btnBack;
     private ImageButton btnFontSettings;
     private ImageButton btnTTSPlayStop;
     private View ttsControlBar;
@@ -98,6 +98,7 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     private boolean isSwipeVerticalEnabled = true;
     private boolean isTapHorizontalEnabled = false;
     private boolean isTapVerticalEnabled = false;
+    private boolean isBookCompleted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -567,24 +568,30 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
             int scrollY = scrollView.getScrollY();
             int maxScrollY = Math.max(1, tvSentence.getHeight() - scrollView.getHeight());
 
-            // Calculate scroll percentage
-            float scrollPercent = Math.min(1.0f, (float)scrollY / maxScrollY);
+            // If not scrollable, return beginning of paragraph
+            if (maxScrollY <= 1) {
+                return 0;
+            }
+
+            // Calculate scroll percentage with bounds check
+            float scrollPercent = Math.max(0.0f, Math.min(1.0f, (float)scrollY / maxScrollY));
 
             // Get paragraph text
             String paragraphText = bufferManager.getCurrentParagraphText();
             if (paragraphText == null || paragraphText.isEmpty()) {
-                return bufferManager.getCurrentCharPosition();
+                return 0;
             }
 
             // Calculate target character based on scroll percentage
+            // Use conservative calculation to avoid jumps
             int targetChar = (int)(paragraphText.length() * scrollPercent);
 
-            // Return the character position (no buffer needed)
-            return Math.min(targetChar, paragraphText.length() - 1);
+            // Ensure character position is within bounds
+            return Math.max(0, Math.min(targetChar, paragraphText.length() - 1));
 
         } catch (Exception e) {
-            // If calculation fails, return current position
-            return bufferManager.getCurrentCharPosition();
+            // If calculation fails, return safe fallback
+            return 0;
         }
     }
 
@@ -694,7 +701,16 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         // Update book object for real-time percentage calculation
         currentBook.setCurrentPosition(currentParagraphIndex);
-        // Note: Don't update currentCharPosition here - it should only be updated in saveProgressAsync()
+
+        // Update currentCharPosition in real-time for consistent progress calculation
+        if (isFullParagraphMode) {
+            // In paragraph mode, use scroll-based calculation if scrolled, otherwise use beginning
+            int scrollBasedCharPosition = calculateScrollBasedCharPosition();
+            currentBook.setCurrentCharPosition(scrollBasedCharPosition);
+        } else {
+            // In sentence mode, use current sentence position
+            currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
+        }
 
         // Show paragraph divider only in sentence mode at end of paragraphs
         if (isFullParagraphMode) {
@@ -871,36 +887,56 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
     }
 
     private void showCompletionDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.finished_reading))
-                .setMessage(getString(R.string.congratulations))
-                .setPositiveButton("Volver al inicio", (dialog, which) -> {
-                    finish();
-                })
-                .setNegativeButton("Leer otra vez", (dialog, which) -> {
-                    bufferManager.jumpToPosition(0, 0);
-                    saveProgressAsync();
-                    updateDisplay();
-                })
-                .setCancelable(false)
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_completion, null);
+        builder.setView(dialogView);
+        builder.setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+
+        MaterialButton btnContinuar = dialogView.findViewById(R.id.btnContinuar);
+        MaterialButton btnVolverInicio = dialogView.findViewById(R.id.btnVolverInicio);
+
+        btnContinuar.setOnClickListener(v -> {
+            // Marcar libro como completado al continuar leyendo después del final
+            markBookAsCompleted();
+            dialog.dismiss();
+        });
+
+        btnVolverInicio.setOnClickListener(v -> {
+            // Marcar libro como 100% completado cuando vuelve al inicio
+            markBookAsCompleted();
+            finish();
+        });
+
+        dialog.show();
+    }
+
+    private void markBookAsCompleted() {
+        if (currentBook != null) {
+            // Marcar como completado: última posición + 1 para indicar que se pasó del final
+            currentBook.setCurrentPosition(currentBook.getTotalSentences());
+            currentBook.setCurrentCharPosition(Integer.MAX_VALUE); // Marcador especial para 100%
+            isBookCompleted = true; // Activar bandera para evitar sobrescritura
+
+            // Guardar inmediatamente de forma síncrona para asegurar que se guarde
+            try {
+                cacheManager.saveBookMeta(currentBook);
+            } catch (Exception e) {
+                // Log error but continue
+            }
+
+            // Actualizar display para mostrar 100%
+            updateDisplay();
+        }
     }
 
     private void saveProgressAsync() {
-        if (currentBook == null) return;
+        if (currentBook == null || isBookCompleted) return; // No guardar si el libro está completado
 
         executor.execute(() -> {
             try {
-                currentBook.setCurrentPosition(bufferManager.getCurrentParagraphIndex());
-
-                // In paragraph mode, calculate character position based on scroll
-                if (isFullParagraphMode) {
-                    int scrollBasedCharPosition = calculateScrollBasedCharPosition();
-                    currentBook.setCurrentCharPosition(scrollBasedCharPosition);
-                } else {
-                    currentBook.setCurrentCharPosition(bufferManager.getCurrentCharPosition());
-                }
-
+                // Position is already updated in updateDisplay(), so we just need to save
                 currentBook.setLastReadDate(new Date());
                 currentBook.setFullParagraphMode(isFullParagraphMode); // Guardar modo de lectura
                 cacheManager.saveBookMeta(currentBook);

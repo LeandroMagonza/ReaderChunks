@@ -353,9 +353,14 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
     @Override
     public void onContinueReading(Book book) {
-        Intent intent = new Intent(this, SentenceReaderActivity.class);
-        intent.putExtra("book_id", book.getId());
-        startActivity(intent);
+        // If book is completed, reset progress before opening
+        if (book.isCompleted()) {
+            resetBookProgressAndOpen(book);
+        } else {
+            Intent intent = new Intent(this, SentenceReaderActivity.class);
+            intent.putExtra("book_id", book.getId());
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -447,6 +452,31 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
                 runOnUiThread(() -> {
                     bookAdapter.updateBooks(books);
                     Toast.makeText(this, getString(R.string.progress_reset_success), Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showError(getString(R.string.error_reset_progress, e.getMessage()));
+                });
+            }
+        });
+    }
+
+    private void resetBookProgressAndOpen(Book book) {
+        executor.execute(() -> {
+            try {
+                cacheManager.resetBookProgress(book.getId());
+
+                // Update the book object
+                book.setCurrentPosition(0);
+                book.setCurrentCharPosition(0);
+
+                runOnUiThread(() -> {
+                    bookAdapter.updateBooks(books);
+                    // Open the reader activity after successful reset
+                    Intent intent = new Intent(this, SentenceReaderActivity.class);
+                    intent.putExtra("book_id", book.getId());
+                    startActivity(intent);
                 });
 
             } catch (Exception e) {

@@ -18,6 +18,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.BookBits">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -138,11 +139,13 @@
         <activity
             android:name=".SentenceReaderActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.BookBits" />
 
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.BookBits"
             android:parentActivityName=".MainActivity" />
 

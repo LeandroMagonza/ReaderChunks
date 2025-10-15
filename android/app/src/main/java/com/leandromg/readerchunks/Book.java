@@ -73,11 +73,16 @@ public class Book {
             return 0.0;
         }
 
-        // Base percentage: completed paragraphs
+        // Special case: if marked as completed
+        if (currentCharPosition == Integer.MAX_VALUE || currentPosition >= totalSentences) {
+            return 100.0;
+        }
+
+        // Base percentage: completed paragraphs only (not the current one)
         double basePercentage = ((double) currentPosition / totalSentences) * 100.0;
 
         // If no character position or cache manager, return base percentage
-        if (currentCharPosition <= 0 || cacheManager == null) {
+        if (currentCharPosition < 0 || cacheManager == null) {
             return basePercentage;
         }
 
@@ -86,13 +91,16 @@ public class Book {
             String currentParagraphText = cacheManager.getSentence(id, currentPosition);
             if (currentParagraphText != null && currentParagraphText.length() > 0) {
                 // Progress within current paragraph (0.0 to 1.0)
-                double paragraphProgress = (double) currentCharPosition / currentParagraphText.length();
+                // Ensure character position is within bounds
+                int safeCharPosition = Math.max(0, Math.min(currentCharPosition, currentParagraphText.length() - 1));
+                double paragraphProgress = (double) safeCharPosition / currentParagraphText.length();
 
                 // Each paragraph is worth (100 / totalSentences) percent
                 double paragraphWeight = 100.0 / totalSentences;
 
-                // Add fractional progress within current paragraph
-                return basePercentage + (paragraphProgress * paragraphWeight);
+                // Add fractional progress within current paragraph (capped to prevent overshooting)
+                double additionalProgress = paragraphProgress * paragraphWeight;
+                return Math.min(100.0, basePercentage + additionalProgress);
             }
         } catch (Exception e) {
             // Return base percentage if can't read paragraph
@@ -102,7 +110,7 @@ public class Book {
     }
 
     public boolean isCompleted() {
-        return currentPosition >= totalSentences;
+        return currentPosition >= totalSentences || currentCharPosition == Integer.MAX_VALUE;
     }
 
     public boolean isStarted() {
