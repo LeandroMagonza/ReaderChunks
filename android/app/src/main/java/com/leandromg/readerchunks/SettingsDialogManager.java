@@ -166,8 +166,8 @@ public class SettingsDialogManager {
         categories.add(new CategoryItem(
             SettingsCategory.DEBUG_LOGS,
             "🐛",
-            "Debug Logs",
-            "Ver registros de debug",
+            context.getString(R.string.debug_logs),
+            context.getString(R.string.debug_logs_description),
             0
         ));
 

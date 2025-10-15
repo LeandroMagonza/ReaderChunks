@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Debug Logs"
+        android:text="@string/debug_logs_title"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -44,7 +44,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Limpiar Logs"
+            android:text="@string/clear_logs"
             android:layout_marginEnd="8dp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
@@ -53,7 +53,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Actualizar"
+            android:text="@string/refresh_logs"
             android:layout_marginStart="8dp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
@@ -63,7 +63,7 @@
         android:id="@+id/btnCloseDebug"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cerrar"
+        android:text="@string/close_debug"
         android:layout_marginTop="8dp"
         style="@style/Widget.Material3.Button" />
 

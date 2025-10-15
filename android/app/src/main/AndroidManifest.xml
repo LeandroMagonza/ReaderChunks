@@ -126,6 +126,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" />
             </intent-filter>
+
+            <!-- Intent filter for text selection context menu -->
+            <intent-filter android:label="@string/process_text_action">
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
         </activity>
 
         <activity

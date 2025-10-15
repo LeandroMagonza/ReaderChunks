@@ -19,47 +19,32 @@
     <!-- Files option -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectFiles"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        style="@style/AddContentButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/add_from_files"
         android:textSize="16sp"
-        android:gravity="start|center_vertical"
+        android:gravity="center"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:layout_marginBottom="12dp"
-        app:cornerRadius="12dp"
-        app:iconGravity="start"
-        app:iconPadding="12dp" />
+        app:cornerRadius="12dp" />
 
     <!-- Clipboard option -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectClipboard"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        style="@style/AddContentButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/add_from_clipboard"
         android:textSize="16sp"
-        android:gravity="start|center_vertical"
+        android:gravity="center"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
-        app:cornerRadius="12dp"
-        app:iconGravity="start"
-        app:iconPadding="12dp" />
-
-    <!-- Clipboard status -->
-    <TextView
-        android:id="@+id/tvClipboardStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="@color/text_secondary"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="16dp"
-        android:visibility="gone" />
+        app:cornerRadius="12dp" />
 
 </LinearLayout>

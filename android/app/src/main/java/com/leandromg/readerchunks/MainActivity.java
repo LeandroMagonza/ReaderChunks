@@ -588,6 +588,15 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
             } else {
                 android.util.Log.w("MainActivity", "ACTION_SEND but no EXTRA_TEXT found");
             }
+        } else if (Intent.ACTION_PROCESS_TEXT.equals(action)) {
+            // Handle text selection from other apps (context menu)
+            CharSequence selectedText = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
+            android.util.Log.d("MainActivity", "ACTION_PROCESS_TEXT with text: " + selectedText);
+            if (selectedText != null) {
+                handleSelectedText(selectedText.toString());
+            } else {
+                android.util.Log.w("MainActivity", "ACTION_PROCESS_TEXT but no EXTRA_PROCESS_TEXT found");
+            }
         } else {
             android.util.Log.w("MainActivity", "Unknown action: " + action);
         }
@@ -700,6 +709,39 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
 
         android.util.Log.d("MainActivity", "No URL found in shared text");
         return null;
+    }
+
+    /**
+     * Handle text selected from context menu in other apps
+     */
+    private void handleSelectedText(String selectedText) {
+        android.util.Log.d("MainActivity", "=== HANDLING SELECTED TEXT ===");
+        android.util.Log.d("MainActivity", "Selected text length: " + (selectedText != null ? selectedText.length() : 0));
+
+        if (selectedText == null || selectedText.trim().isEmpty()) {
+            android.util.Log.w("MainActivity", "Selected text is null or empty");
+            Toast.makeText(this, "❌ No se pudo obtener el texto seleccionado", Toast.LENGTH_SHORT).show();
+            finish(); // Close the activity since there's nothing to process
+            return;
+        }
+
+        String text = selectedText.trim();
+        android.util.Log.d("MainActivity", "Selected text preview: " + text.substring(0, Math.min(100, text.length())));
+
+        // Check if the selected text is a URL
+        if (isUrl(text)) {
+            android.util.Log.d("MainActivity", "Selected text is URL, processing as web content");
+            Uri uri = Uri.parse(text);
+            String title = WebToPDFProcessor.getTitleFromUrl(text);
+            processWebUrl(uri, title);
+        } else {
+            // Process as plain text
+            android.util.Log.d("MainActivity", "Processing selected text as plain text book");
+            processTextAsBook(text);
+        }
+
+        // Show success toast
+        Toast.makeText(this, getString(R.string.selected_text_processed), Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -862,11 +904,10 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
         // Get views from dialog
         MaterialButton btnSelectFiles = dialogView.findViewById(R.id.btnSelectFiles);
         MaterialButton btnSelectClipboard = dialogView.findViewById(R.id.btnSelectClipboard);
-        TextView tvClipboardStatus = dialogView.findViewById(R.id.tvClipboardStatus);
 
         // Check clipboard status and update UI
         ClipboardStatus clipboardStatus = getClipboardStatus();
-        updateClipboardButtonState(btnSelectClipboard, tvClipboardStatus, clipboardStatus);
+        updateClipboardButtonState(btnSelectClipboard, clipboardStatus);
 
         // Create and show dialog
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -958,17 +999,30 @@ public class MainActivity extends AppCompatActivity implements BookAdapter.OnBoo
     /**
      * Update clipboard button state based on clipboard status
      */
-    private void updateClipboardButtonState(MaterialButton btnClipboard, TextView tvStatus, ClipboardStatus status) {
+    private void updateClipboardButtonState(MaterialButton btnClipboard, ClipboardStatus status) {
         btnClipboard.setEnabled(status.isAvailable);
 
-        if (status.isAvailable) {
-            btnClipboard.setAlpha(1.0f);
-        } else {
-            btnClipboard.setAlpha(0.5f);
+        // Update button text to include status
+        String buttonText = getString(R.string.add_from_clipboard);
+        if (!status.statusText.isEmpty()) {
+            buttonText = buttonText + "\n" + status.statusText;
         }
+        btnClipboard.setText(buttonText);
 
-        tvStatus.setText(status.statusText);
-        tvStatus.setVisibility(View.VISIBLE);
+        // Apply appropriate style based on availability
+        if (!status.isAvailable) {
+            // Disabled style - override the default style
+            btnClipboard.setBackgroundTintList(getColorStateList(R.color.surface));
+            btnClipboard.setTextColor(getColorStateList(R.color.text_secondary));
+            btnClipboard.setStrokeColor(getColorStateList(R.color.text_secondary));
+            btnClipboard.setAlpha(0.6f);
+        } else {
+            // Enabled - use default style from AddContentButton
+            btnClipboard.setBackgroundTintList(getColorStateList(R.color.primary));
+            btnClipboard.setTextColor(getColorStateList(R.color.white));
+            btnClipboard.setStrokeColor(getColorStateList(R.color.primary));
+            btnClipboard.setAlpha(1.0f);
+        }
     }
 
     /**

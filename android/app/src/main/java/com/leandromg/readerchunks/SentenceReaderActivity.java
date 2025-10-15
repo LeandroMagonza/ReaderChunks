@@ -1481,8 +1481,8 @@ public class SentenceReaderActivity extends AppCompatActivity implements BufferM
 
         btnClearLogs.setOnClickListener(v -> {
             DebugLogger.clearLogs();
-            tvDebugLogs.setText("Logs limpiados");
-            Toast.makeText(this, "Logs borrados", Toast.LENGTH_SHORT).show();
+            tvDebugLogs.setText(getString(R.string.debug_logs_cleared));
+            Toast.makeText(this, getString(R.string.debug_logs_cleared), Toast.LENGTH_SHORT).show();
         });
 
         btnCloseDebug.setOnClickListener(v -> dialog.dismiss());

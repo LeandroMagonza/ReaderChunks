@@ -135,10 +135,23 @@
     <string name="add_content_title">Agregar contenido</string>
     <string name="add_from_files">📄 Archivos</string>
     <string name="add_from_clipboard">📋 Portapapeles</string>
-    <string name="clipboard_url_detected">🌐 URL detectada</string>
-    <string name="clipboard_characters_detected">📝 %d caracteres detectados</string>
+    <string name="clipboard_url_detected">(URL detectada)</string>
+    <string name="clipboard_characters_detected">(%d caracteres detectados)</string>
     <string name="clipboard_unavailable">📋 Portapapeles no disponible</string>
     <string name="select_files">Seleccionar archivos</string>
+
+    <!-- Text selection context menu -->
+    <string name="process_text_action">BookBits</string>
+    <string name="selected_text_processed">✅ Texto seleccionado agregado a BookBits</string>
+
+    <!-- Debug functionality -->
+    <string name="debug_logs">Registros de debug</string>
+    <string name="debug_logs_title">Debug Logs</string>
+    <string name="debug_logs_description">Ver registros de debug</string>
+    <string name="debug_logs_cleared">Logs limpiados</string>
+    <string name="close_debug">Cerrar</string>
+    <string name="clear_logs">Limpiar logs</string>
+    <string name="refresh_logs">Actualizar</string>
 
     <!-- TTS (Text-to-Speech) -->
     <string name="tts_settings">Configuración de voz</string>
